@@ -21,7 +21,7 @@
 
 任何实现、重试策略或新模块若改变该顺序，都必须重审 INV-02、03、04、08、09、10 的测试。
 
-## P2–P3 实现状态
+## P2–P4 实现状态
 
 - INV-01：领域对象拒绝不平衡凭证；PostgreSQL deferred constraint trigger 在提交点拒绝不足两行或借贷不等的凭证。单测和真实 PG 集成测试通过。
 - INV-02：开户、模拟入金和转账均将业务记录、Posting、projection 同事务写入。P3 在 JournalEntry、第二条 Posting、projection 和成功回执四处注入失败；每次账户余额、Transfer、幂等记录、JournalEntry 与 Posting 均没有残留。
@@ -30,11 +30,11 @@
 - INV-05：PostgreSQL 触发器拒绝 JournalEntry/Posting 的 UPDATE 与 DELETE，P2 集成测试通过。
 - INV-06：领域冲正工厂建立新的 REVERSAL 凭证并反转每条 Posting；数据库保留原凭证并以唯一 `reverses_entry_id` 限制重复冲正，PG 集成测试通过。
 - INV-07：每次账本写入都按 Posting/normal-side 聚合重算 projection；LedgerBalanceReader 独立读账并比较投影，P2 集成测试通过。
-- INV-08：服务层先检查调用者是否拥有源账户，再读取幂等回执；无权源账户返回统一 ACCOUNT_NOT_FOUND 错误。真实 HTTP 身份绑定和 CSRF 验证仍待 P4/P5。
+- INV-08：Controller 从服务端认证 principal 取得 owner ID；账户、历史、对账和转账服务在读取数据时校验归属。真实 HTTP 测试覆盖未认证、缺失 CSRF、跨客户 404 和本人数据访问。
 - INV-09：15 项 P3 真实 PostgreSQL 集成测试使用两条并发服务调用、独立事务与 CountDownLatch 屏障（不使用 Thread.sleep）；覆盖不同键超额支出、交叉转账、同键同意图及同键异意图。所有竞争均检查余额、转账记录、凭证及回执。
-- INV-10：转账在日志凭证写入前、Posting 写入中、Projection 更新和回执持久化时失败，整笔事务均回滚。提交成功但首次回执被丢弃后，服务层用原请求和原键返回已提交回执且没有重复资金移动；真实网络断连与浏览器恢复仍待 P4。
+- INV-10：转账在日志凭证写入前、Posting 写入中、Projection 更新和回执持久化时失败，整笔事务均回滚。P4 浏览器通过真实 HTTP 提交转账后丢弃首次响应，刷新恢复原意图并用原请求键重放；资金只移动一次。
 
-P3 的 15 项真实 PostgreSQL 测试与完整 40 项 Maven 回归均通过。账户 API、HTTP 身份认证、浏览器未知结果流程和 P5 安全审查不是上述服务层测试的结论。
+P4 完整 41 项 Maven 回归、其中 15 项真实 PostgreSQL 转账集成测试，以及 Chromium 浏览器流程均通过。P5 安全审查、CI 与受控查询计划实验仍需独立验收。
 
 ## 主要机制来源
 

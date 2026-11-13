@@ -11,11 +11,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import nz.ac.ledgercore.api.ApiProblems;
 
 public class CorrelationIdFilter extends OncePerRequestFilter {
 
 	public static final String HEADER_NAME = "X-Correlation-ID";
-	static final String REQUEST_ATTRIBUTE = CorrelationIdFilter.class.getName() + ".correlationId";
+	static final String REQUEST_ATTRIBUTE = ApiProblems.CORRELATION_ID_ATTRIBUTE;
 	static final String MDC_KEY = "correlationId";
 	private static final Pattern ACCEPTED_ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
 

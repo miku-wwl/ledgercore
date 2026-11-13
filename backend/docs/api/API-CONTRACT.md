@@ -1,35 +1,53 @@
-# LedgerCore HTTP API 合同草案
+# LedgerCore HTTP API 合同（P4 实现）
 
-本文件中的银行业务路由仍是目标合同。P1–P3 提供实际 OpenAPI 基础设施和服务层，但尚无已发布业务路由。`GET /actuator/health` 与 `GET /v3/api-docs` 公开，其余请求需认证；身份模块完成前认证使用默认拒绝策略。安全拒绝和 MVC 异常返回 RFC 9457 Problem Details 并附 correlationId。
+下列银行业务路由已由 Spring MVC 实现，并通过 OpenAPI 与真实 PostgreSQL HTTP 集成测试验证。`GET /actuator/health`、`GET /v3/api-docs`、`GET /api/auth/csrf`、注册与登录可匿名访问；其他业务路由需要服务端会话。写请求都需要有效 CSRF token。
 
-## 身份与账户
+## 身份与会话
 
-| 方法与路径 | 用途 |
-|---|---|
-| POST /api/auth/register | 创建客户身份；不接受客户 ID 或密码哈希 |
-| POST /api/auth/login | 建立服务端会话 Cookie |
-| POST /api/auth/logout | 使当前会话失效 |
-| GET /api/auth/me | 获取当前客户展示信息 |
-| GET /api/auth/csrf | 获取当前会话写请求所需的 CSRF token |
-| GET /api/accounts | 只列出当前客户账户 |
-| POST /api/accounts | 创建模拟账户并在同事务中写入模拟开户资金 |
-| GET /api/accounts/{accountId} | 只读本人账户详情；无权和不存在统一 404 |
-| GET /api/accounts/{accountId}/balance | 返回规范金额字符串、NZD 和投影更新时间 |
-| GET /api/accounts/{accountId}/transactions?cursor=&limit= | 对本人账户按稳定游标分页 |
+| 方法与路径 | 成功结果 | 访问规则 |
+|---|---|---|
+| GET /api/auth/csrf | `{ "token": "…" }` | 匿名；建立/读取当前 CSRF 会话 |
+| POST /api/auth/register | 201，客户展示信息与会话 Cookie | 匿名；邮箱去空白并转小写；密码 12–128 字符；不接受客户 ID 或密码哈希 |
+| POST /api/auth/login | 200，客户展示信息与会话 Cookie | 匿名；登录失败统一 401 |
+| GET /api/auth/me | 当前客户 ID、邮箱和展示名 | 已认证 |
+| POST /api/auth/logout | 204 | 已认证并验证 CSRF |
+
+Cookie 使用 HttpOnly、SameSite=Lax；`LEDGERCORE_COOKIE_SECURE` 控制 Secure 标记，生产 HTTPS 环境应启用。登录与注册将认证写入服务端 SecurityContext，并轮换已有会话 ID。
+
+## 账户、历史与对账
+
+| 方法与路径 | 成功结果 | 访问规则 |
+|---|---|---|
+| GET /api/accounts | 当前客户账户列表，含状态、币种、余额和创建时间 | 已认证；只列本人账户 |
+| POST /api/accounts | 201 与新账户表示；同一事务创建模拟开户资金 | 已认证并验证 CSRF |
+| GET /api/accounts/{accountId} | 本人账户详情 | 已认证；无权与不存在统一 404 |
+| GET /api/accounts/{accountId}/transactions?limit=20&cursor=… | 按创建时间与 UUID 稳定倒序的历史页 | 已认证且拥有账户；limit 限制在 1–100；cursor 为不透明 URL-safe 值 |
+| GET /api/accounts/{accountId}/transactions/{transferId} | 本账户视角、金额、方向和安全的分录教学视图 | 已认证且拥有账户和交易；对方只显示 `Counterparty`，不暴露其账户 ID |
+| GET /api/accounts/{accountId}/reconciliation | Posting 汇总、余额投影与 `matches` 结果 | 已认证且拥有账户；只读 |
+
+余额仍以规范 NZD 十进制字符串返回。账本 Posting 是权威数据；余额投影仅用于快速显示。未实现单独的 `/balance` 或 `/api/transfers/{transferId}` 路由。
 
 ## 转账
 
-POST /api/transfers 要求认证会话、有效 CSRF token 和 Idempotency-Key。请求示意：{sourceAccountId, targetAccountId, amount: "120.00"}。不接受 ownerCustomerId、ledger postings、客户端计算的余额或货币转换参数。
+`POST /api/transfers` 要求认证会话、有效 CSRF token 和 `Idempotency-Key` 请求头。请求示意：
 
-P3 `TransferService` 已在服务层实现上述资金动作、持久回执、相同键重放、不同意图冲突和统一账户错误；真实 HTTP 端点、身份主体映射与错误状态码尚未实现，不能把本合同视作已发布 API。首次成功回执包含 Transfer ID、规范金额、币种、时间。未知网络结果是浏览器状态，不是服务端断言成功或失败。
+```json
+{
+  "sourceAccountId": "uuid",
+  "targetAccountId": "uuid",
+  "amount": "120.00"
+}
+```
 
-GET /api/transfers/{transferId} 只返回已认证客户有权查看的转账。教学视图可以解释本人交易的借贷方向，但不暴露其他客户的身份、账户 ID 或可遍历账本。
+成功返回 200 和持久化回执（transferId、源/目标账户 ID、POSTED 状态、规范金额、币种和时间）。不得提交 `ownerCustomerId`、Posting、余额或换汇参数。服务端从当前认证 principal 取得客户 ID；资金操作、投影更新与成功回执在一个 PostgreSQL 事务提交。
+
+同键同意图返回原回执；同键不同意图返回 409。账户不存在、非本人账户或不可读取的转账均统一 404；账户未开放或键冲突为 409；余额不足为 422。客户端若提交后连接中断，应保留原请求与原键，并重试原意图以取得原结果。
 
 ## 格式与安全
 
-- JSON 金额采用有两位小数的十进制字符串；超过精度、非法字符、零、负数和 long 溢出均拒绝。
-- 单币种为 NZD。服务器不接受浏览器传来的 FX rate 或外部账户标识。
-- API 由 Spring Security 服务端会话认证；修改请求验证 CSRF。
-- 账户所有权在服务端每个资源入口及幂等回执重放时重新检查。
-- 未认证返回 401；格式/金额错误返回 400；已认证但无权资源返回 404；键冲突返回 409；余额不足使用明确的业务错误映射。
-- 关联请求使用 X-Correlation-ID；若客户端未提供或格式不合法，服务器产生新的安全 ID，并在响应与结构化日志中使用同一值。
+- JSON 金额采用恰好两位小数的十进制字符串；不使用二进制浮点数。只接受正 NZD 金额。
+- Spring Security 使用服务端会话 Cookie；Spring Security CSRF token 通过 `X-CSRF-TOKEN` 请求头发送。
+- 未认证返回 401；CSRF 缺失或无效返回 403；校验失败返回 400；无权资源统一返回 404。
+- 业务错误与 MVC 异常使用 RFC 9457 Problem Details，并包含 `correlationId`；身份/转账错误另含稳定 `code`。
+- `X-Correlation-ID` 若缺失或格式不合规，服务器生成新的 ID，并在响应头和错误详情中使用该 ID。
+- 所有权只从服务端认证主体派生，不信任请求体、query string 或浏览器缓存中的客户 ID。

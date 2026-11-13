@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 工作流：main-only；P0–P3 均已提交并推送到 main；未创建分支、Git worktree 或 PR。
-- 当前提交：P3 `a91c5f0`；`origin/main` 与本地一致。
-- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS。开始 P4 身份、业务 HTTP API 与 React 全栈集成。
+- 工作流：main-only；P0–P3 已提交并推送到 main；P4 在 main 上完成实现与验收，正在准备阶段提交；未创建分支、Git worktree 或 PR。
+- 当前基线：P4 验收基于 `53960bd` 加本地 P4 改动；提交后补录精确 SHA。
+- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS；P4 PASS；开始 P5 安全、CI、查询性能与最终验收。
 - 已验证工具：Temurin 21.0.13+9（ZIP SHA-256 `a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9`）；Spring Boot 4.0.9；Spring Modulith 2.0.8；Springdoc 3.0.3；Maven Wrapper 3.10.0。
 - 本地验证数据库：官方 EDB PostgreSQL 18.7 Windows 二进制，解压于 Git 忽略的 `work/postgresql-binaries`；集群位于 `work/postgresql-data`，仅监听 `127.0.0.1:55432`。`ledgercore_test` 是隔离测试库。P1–P3 使用真实本地 PostgreSQL，未使用 H2 或纯 Mock；Testcontainers 未使用。
 - 本地工具链、数据库、依赖缓存和日志均在 Git 忽略的 `work/` 下；不是 Git worktree。
@@ -20,8 +20,8 @@
 | P1 Java 基础 | PASS | Initializr 后端；V1 customers/accounts；PostgreSQL 18.7 迁移；安全默认拒绝、Problem Details、correlation ID、健康、OpenAPI；8 项 Maven 测试、真实打包应用启动与 HTTP 检查 | 注册/登录与账户 HTTP API 尚未实现（后续阶段） | 完成 |
 | P2 Ledger | PASS | 精确分币金额；客户账户生命周期；模拟储备开户资金与模拟入金；复式凭证、整笔冲正、PostgreSQL 账平/只追加约束、余额投影重算；17 项 P2 测试通过 | 转账、身份/API 与并发扣款不属于 P2 验收 | 完成 |
 | P3 Transfers/Concurrency | PASS | 原子转账、服务层源所有权检查、账户状态/余额校验、UUID 排序行锁、持久幂等、稳定回执、V3/V4 数据约束；15 项 P3 PostgreSQL 测试与完整回归通过 | HTTP 身份映射、公开路由与浏览器网络恢复属于 P4/P5 | 完成 |
-| P4 React/Integration | IN_PROGRESS | P3 TransferService 与 API 草案可复用；未知结果服务端原键恢复已验证 | 注册/登录、账户和转账 HTTP API、React UI、真实 Playwright、刷新后操作恢复 | 实现 Identity 和 API 边界，再接 React |
-| P5 Security/Testing/Acceptance | NOT_STARTED | 分层策略见 TEST-STRATEGY | 安全、查询计划、CI、最终提交检查 | P4 PASS 后开始 |
+| P4 React/Integration | PASS | 会话注册/登录、账户与转账 API、历史分页、分录详情、只读对账、React 全栈 UI；刷新后以原键恢复真实网络响应丢失；41 项 Maven 测试、前端构建、Chromium E2E 均通过 | P5 的威胁审查、CI 与查询性能实验 | 完成 |
+| P5 Security/Testing/Acceptance | IN_PROGRESS | P4 的全栈 HTTP、PostgreSQL 和浏览器验收通过 | 安全代码审查与负向测试、CI 数据库流水线、查询计划、发布前验收 | 完成并复核 main |
 | P6 Textbook | NOT_STARTED | 暂无教材章节或 PDF | 稳定源码基线、真实截图/实验、完整排版与逐页 QA | 仅在 P5 PASS 后启动正式出版 |
 
 ## 重要决定
@@ -53,12 +53,18 @@
 - P3 验收：完整 Maven `clean verify` 退出码 0，共 40 tests、0 failures、0 errors、0 skipped；其中 `TransferPostgresIntegrationTests` 15 项真实 PostgreSQL 测试通过，`ModuleArchitectureTests` 通过。
 - P3 覆盖：双事务超额支出仅允许余额范围内提交；双向交叉转账不死锁；同键同意图并发只产生一个转账，同键异意图返回冲突；检查源账户所有权和关闭账户；注入 JournalEntry、第二 Posting、projection、回执写入失败均无部分状态；丢弃首次成功结果后用原键恢复同一回执；数据库拒绝不匹配 Transfer/Posting 及未完成幂等记录。
 - P3 验证命令：`backend/mvnw.cmd -f backend/pom.xml -Dmaven.repo.local=D:\workshop\nov\ledgercore\work\m2 -Dstyle.color=never clean verify`；Java 21.0.13+9；Maven 缓存 `work/m2`；数据库 `ledgercore_test`。最终退出码 0。
+- P4 后端实现：`identity` 提供注册/登录/当前客户/退出与 CSRF 会话接口；`accounts` 提供本人账户查询、创建和详情；`transfers` 将服务端 principal、CSRF 与 `Idempotency-Key` 接到原子转账服务；`transactionhistory` 提供授权游标分页及不暴露对方账户 ID 的分录详情；`reconciliation` 独立比较 Posting 余额与投影。公共 API 错误单独成 Modulith 模块，避免异常映射形成依赖环。
+- P4 安全实现：BCrypt strength 12；服务端 session、登录轮换 Session ID；Cookie HttpOnly/SameSite=Lax，Secure 由 `LEDGERCORE_COOKIE_SECURE` 控制；CSRF 写请求保护；跨客户账户和历史统一返回 404。所有权身份由服务端主体派生。
+- P4 后端验收：使用 Temurin 21.0.13+9、真实 PostgreSQL 18.7 隔离库 `ledgercore_test`，`backend/mvnw.cmd clean verify` 退出码 0；41 tests、0 failures、0 errors、0 skipped。包含新全栈 HTTP/API 测试、15 项转账 PostgreSQL 测试、9 项账本 PostgreSQL 测试与 Modulith 架构检查。
+- P4 前端：React 19、TypeScript 5、Vite 8、shadcn/ui、Tailwind 4、TanStack Query；API 类型从运行中的 OpenAPI 生成；金额使用 BigInt 分币。`npm run build` 和无警告的 `npm run lint` 均通过。
+- P4 浏览器验收：`frontend/npm run test:e2e` 真实 Chromium 1 passed；流程包括注册/开户、CSRF、余额不足、真实转账、在服务端提交后丢弃网络响应、刷新并用原幂等键恢复、账户对账、历史分页与教学分录、跨客户 404、登出/登录、390px 无横向溢出。截图位于 Git 忽略的 `work/evidence/p4-dashboard-desktop.png` 与 `p4-dashboard-mobile.png`。
+- P4 浏览器断言复核：重对账卡位于账户详情页；E2E 在正确路由验证 `Ledger and projection match` 后再访问历史列表。首次运行因断言放错路由失败，修正后完整流程通过。
 - P0 检查：13 个 Markdown 文件的本地链接均可解析；必需的 12 份 P0 文档存在；INV-01 至 INV-10 全部有记录；暂存 diff 无空白错误。这些是文档设计检查，不是应用测试。
 
 ## NOT_RUN 与阻塞项
 
-- P4 真实 HTTP/浏览器/E2E 尚未完成；P5 最终 CI/安全验收与 P6 教材出版尚未开始。P3 测试只证明服务层与真实 PostgreSQL 的行为，不证明身份认证、业务路由或浏览器网络恢复。
-- 当前身份模块尚无注册、登录或会话创建用例；Security 的默认用户服务明确拒绝认证，业务 API 尚不可用。
-- GitHub Actions 结果 NOT_RUN；当前尚无身份登录流程、前端真实界面、E2E 截图、性能数据或教材 PDF。
+- P5 CI 结果、依赖/静态安全审查、负向安全验证、EXPLAIN (ANALYZE, BUFFERS) 查询计划与干净环境发布验收仍 NOT_RUN。
+- P6 教材与 PDF 尚未开始；须在 P5 PASS、确定可复现源码基线后再出版。
+- 当前完整应用只处理本地模拟 NZD 资金，没有真实银行、外部付款、生产容量或监管认证结论。
 
 P6 正式教材写作与 PDF 出版只有在 P5 PASS 后才开始；不得用 P0/P1 设计文档替代真实实现内容。

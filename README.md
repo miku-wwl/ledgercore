@@ -20,7 +20,7 @@ MVP 目标包括注册登录、模拟账户管理、账户余额、明确来源�
 | 前端 | React 19、TypeScript、Vite、shadcn/ui、Tailwind CSS、TanStack Query |
 | 验证 | JUnit、Mockito、真实 PostgreSQL 集成测试、Spring Modulith、Playwright、GitHub Actions |
 
-Spring Boot 4.0.9、Spring Modulith 2.0.8 和 OpenAPI 依赖已在 Java 21 上构建并运行验证。前端、Playwright 与 CI 仍是后续阶段工作。
+Spring Boot 4.0.9、Spring Modulith 2.0.8、业务 HTTP API 和 React 前端已在本机通过构建验证。P4 使用真实 PostgreSQL 与 Chromium Playwright 完成端到端流程；CI 与 P5 安全/查询计划审查仍在后续阶段。
 
 ## 账务模型
 
@@ -38,9 +38,9 @@ Spring Boot 4.0.9、Spring Modulith 2.0.8 和 OpenAPI 依赖已在 Java 21 上�
 
 ## 当前状态
 
-P0–P3 后端基础已完成：精确分币金额、客户账户生命周期、明确来源的模拟资金、不可变复式账本、原子内部转账、稳定顺序账户行锁、持久幂等回执和失败回滚。P1–P3 共 40 项测试通过；所有数据库集成和并发测试使用 PostgreSQL 18.7。
+P0–P4 已完成：精确分币金额、客户账户生命周期、明确来源的模拟资金、不可变复式账本、原子内部转账、稳定顺序账户行锁、持久幂等回执、注册/登录和会话安全、账户/历史/对账 API、React 界面与刷新后恢复未知转账。P4 完整 Maven 回归共 41 项测试通过；数据库集成和并发测试使用 PostgreSQL 18.7。前端生产构建、lint 与真实 Chromium 流程也通过。
 
-转账与账户操作目前是未公开给 HTTP 的应用服务；注册/登录、账户和转账 API、交易历史、对账、React 界面及真实浏览器中的未知结果恢复仍未实现。服务层的成功结果丢弃后以原键重放已通过数据库验证；身份模块完成前，除健康与 OpenAPI 端点外的请求仍会被拒绝。各阶段实际状态见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
+各阶段验收记录及待完成的 P5 安全审查、CI 和查询计划实验见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
 
 ### 本地运行与验证
 
@@ -69,6 +69,23 @@ $env:LEDGERCORE_TEST_DB_PASSWORD = 'choose-a-test-password'
 ```
 
 测试数据库需由开发者单独创建并授权给测试角色。不要把真实凭据提交到仓库。
+
+启动界面前，先按上述步骤运行后端，再于另一终端执行：
+
+```powershell
+cd .\frontend
+npm ci
+npm run dev
+```
+
+Vite 将 `/api` 代理到本机 Spring Boot 服务。浏览器验收需要已安装 Chromium，并且后端与隔离测试数据库可用：
+
+```powershell
+npm run build
+npm run test:e2e
+```
+
+Playwright 会检查注册、开户、CSRF、转账失败、提交后响应丢失与原键恢复、历史分页、账本对账、跨客户 404、登出/登录及窄屏布局。
 
 正式教材只能在 P5 工程最终验收后开始。教材必须固定源码提交、引用真实代码、标注未运行的场景，并以完整 PDF 渲染和逐页视觉检查作为出版验收。
 

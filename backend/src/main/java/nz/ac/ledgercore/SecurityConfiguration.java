@@ -5,13 +5,15 @@ import java.nio.charset.StandardCharsets;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.core.Ordered;
@@ -31,10 +33,13 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-	UserDetailsService denyAuthenticationUntilIdentityModuleIsImplemented() {
-		return username -> {
-			throw new UsernameNotFoundException("Identity authentication is not configured yet.");
-		};
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder(12);
+	}
+
+	@Bean
+	AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+		return configuration.getAuthenticationManager();
 	}
 
 	@Bean
@@ -42,7 +47,7 @@ public class SecurityConfiguration {
 		return http
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers("/actuator/health", "/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**",
-						"/swagger-ui.html")
+						"/swagger-ui.html", "/api/auth/csrf", "/api/auth/register", "/api/auth/login")
 				.permitAll()
 				.anyRequest().authenticated())
 			.csrf(Customizer.withDefaults())

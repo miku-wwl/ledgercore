@@ -4,6 +4,8 @@ import java.net.URI;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.servlet.http.HttpServletRequest;
+import nz.ac.ledgercore.api.ApiNotFoundException;
 
+@Order(Ordered.LOWEST_PRECEDENCE)
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
@@ -23,6 +27,17 @@ public class ApiExceptionHandler {
 			HttpServletRequest request) {
 		return problem(HttpStatus.BAD_REQUEST, "Request validation failed",
 				"One or more request fields are invalid.", request);
+	}
+
+	@ExceptionHandler(ApiNotFoundException.class)
+	ResponseEntity<ProblemDetail> handleNotFound(ApiNotFoundException exception, HttpServletRequest request) {
+		return problem(HttpStatus.NOT_FOUND, "Not Found", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	ResponseEntity<ProblemDetail> handleInvalidArgument(IllegalArgumentException exception,
+			HttpServletRequest request) {
+		return problem(HttpStatus.BAD_REQUEST, "Invalid request", exception.getMessage(), request);
 	}
 
 	@ExceptionHandler(Exception.class)
