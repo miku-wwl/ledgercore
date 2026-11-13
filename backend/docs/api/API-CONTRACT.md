@@ -1,6 +1,6 @@
 # LedgerCore HTTP API 合同草案
 
-本文件是 P0 的合同决策，不是已运行的 OpenAPI 文档。P1 建立真实 API 后，OpenAPI 文件才成为可执行合同。成功和错误响应均使用 JSON，错误采用 RFC 9457 Problem Details 风格并附 correlationId；不向客户端返回数据库异常、密码哈希或其他客户资料。
+本文件中的银行业务路由仍是目标合同。P1 已提供实际 OpenAPI 端点和相关 ID；当前 OpenAPI 尚无业务路由。`GET /actuator/health` 与 `GET /v3/api-docs` 公开，其余请求需认证；身份模块完成前认证使用默认拒绝策略。安全拒绝和 MVC 异常返回 RFC 9457 Problem Details 并附 correlationId。
 
 ## 身份与账户
 

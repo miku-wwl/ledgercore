@@ -14,13 +14,13 @@ MVP 目标包括注册登录、模拟账户管理、账户余额、明确来源�
 
 | 层 | 选择 |
 |---|---|
-| 后端 | Java 21、Spring Boot 4.x、Spring Modulith、Maven Wrapper |
+| 后端 | Java 21、Spring Boot 4.0.9、Spring Modulith 2.0.8、Maven Wrapper 3.10.0 |
 | 数据 | PostgreSQL、Spring Data JPA/Hibernate、Flyway |
-| 安全与 API | Spring Security、Bean Validation、OpenAPI |
+| 安全与 API | Spring Security、Bean Validation、springdoc-openapi 3.0.3 |
 | 前端 | React 19、TypeScript、Vite、shadcn/ui、Tailwind CSS、TanStack Query |
 | 验证 | JUnit、Mockito、真实 PostgreSQL 集成测试、Spring Modulith、Playwright、GitHub Actions |
 
-精确依赖版本将在 P1 工程创建并实际兼容验证后固定。README 中的技术清单是目标，不表示这些组件已经实现。
+Spring Boot 4.0.9、Spring Modulith 2.0.8 和 OpenAPI 依赖已在 Java 21 上构建并运行验证。前端、Playwright 与 CI 仍是后续阶段工作。
 
 ## 账务模型
 
@@ -38,7 +38,37 @@ MVP 目标包括注册登录、模拟账户管理、账户余额、明确来源�
 
 ## 当前状态
 
-仓库起始时只有 README 与 Apache-2.0 LICENSE，没有后端、前端、数据库迁移、测试、容器或 CI。当前工作先建立 P0 需求与金融设计，再进入 P1 实现。每阶段的真实验收状态见 IMPLEMENTATION-STATUS；不以文档数量代替可运行代码。
+P0 需求与金融设计已通过。P1 已建立可运行的 Java 后端骨架：客户与账户 Flyway V1 迁移、PostgreSQL 连接、Spring Security 的默认拒绝策略、相关 ID、RFC 9457 错误、健康端点和 OpenAPI 文档。P1 通过真实 PostgreSQL 18.7、应用启动和 HTTP 验证。
+
+当前尚未实现注册/登录、账户业务 API、账本分录、余额、转账、幂等、对账或 React 界面。身份模块完成前，除健康与 OpenAPI 端点外的请求都会被拒绝。各阶段实际状态见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
+
+### 本地运行与验证
+
+需要 Java 21 和 PostgreSQL。先创建本地角色与数据库，再设置连接环境变量；Flyway 会在启动时创建客户与账户基础表。
+
+```powershell
+psql -U postgres -c "CREATE ROLE ledgercore LOGIN PASSWORD 'choose-a-local-password';"
+psql -U postgres -c "CREATE DATABASE ledgercore OWNER ledgercore;"
+$env:LEDGERCORE_DB_URL = 'jdbc:postgresql://localhost:5432/ledgercore'
+$env:LEDGERCORE_DB_USERNAME = 'ledgercore'
+$env:LEDGERCORE_DB_PASSWORD = 'choose-a-local-password'
+.\backend\mvnw.cmd -f .\backend\pom.xml spring-boot:run
+```
+
+健康检查：`GET /actuator/health`。OpenAPI 文档：`GET /v3/api-docs`。
+
+运行测试需要一个独立的 PostgreSQL 测试数据库；测试不会清理或重建数据库：
+
+```powershell
+psql -U postgres -c "CREATE ROLE ledgercore_test LOGIN PASSWORD 'choose-a-test-password';"
+psql -U postgres -c "CREATE DATABASE ledgercore_test OWNER ledgercore_test;"
+$env:LEDGERCORE_TEST_DB_URL = 'jdbc:postgresql://localhost:5432/ledgercore_test'
+$env:LEDGERCORE_TEST_DB_USERNAME = 'ledgercore_test'
+$env:LEDGERCORE_TEST_DB_PASSWORD = 'choose-a-test-password'
+.\backend\mvnw.cmd -f .\backend\pom.xml clean verify
+```
+
+测试数据库需由开发者单独创建并授权给测试角色。不要把真实凭据提交到仓库。
 
 正式教材只能在 P5 工程最终验收后开始。教材必须固定源码提交、引用真实代码、标注未运行的场景，并以完整 PDF 渲染和逐页视觉检查作为出版验收。
 

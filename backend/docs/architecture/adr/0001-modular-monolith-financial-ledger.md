@@ -10,7 +10,7 @@
 
 ## 决策
 
-1. 使用 Java 21、Spring Boot 4.0.x、Spring Modulith 和 Maven Wrapper，部署形态为单一模块化单体，使用 PostgreSQL 与 Flyway。精确依赖以 P1 初始工程和实际兼容验证锁定。
+1. 使用 Java 21、Spring Boot 4.0.9、Spring Modulith 2.0.8 与 Maven Wrapper 3.10.0，部署形态为单一模块化单体，使用 PostgreSQL 与 Flyway。该版本组合已在 P1 构建、启动及 PostgreSQL 18.7 测试中验证。springdoc-openapi 使用 3.0.3。
 2. 会计事实使用不可变 JournalEntry 与 Posting；单币种 NZD，amountMinor 以 long 表示分并由 PostgreSQL BIGINT 存储。API 使用精确十进制金额字符串，界面格式化不使用浮点算术。
 3. 客户存款是贷方正常余额负债；初始资金由明确的 Simulation Reserve 资产账户对手方入账。
 4. Posting 账本是资金事实权威来源；余额投影可重建。扣款在账户行锁下读取账本余额，不以缓存或客户端余额授权。
@@ -24,4 +24,4 @@
 
 ## 决策证据
 
-参考审计见 backend/docs/upstream/BANK-OF-ANTHOS-REVIEW.md；金融事实见 backend/docs/domain/DOMAIN-MODEL.md；测试责任见 backend/docs/testing/TEST-STRATEGY.md。版本兼容须以 P1 构建为最终验证。
+参考审计见 backend/docs/upstream/BANK-OF-ANTHOS-REVIEW.md；金融事实见 backend/docs/domain/DOMAIN-MODEL.md；测试责任见 backend/docs/testing/TEST-STRATEGY.md。P1 只启用 Modulith 核心和模块验证，不启用事件持久化或事件可观测模块，因为当前没有异步事务事件需求；若后续增加，必须以持久化交付语义、迁移和真实数据库测试为前提。

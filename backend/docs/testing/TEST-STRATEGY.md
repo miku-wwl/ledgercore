@@ -22,4 +22,4 @@
 
 ## 阶段验收规则
 
-每一条结果都关联准确 Git SHA、命令、退出码与测试报告。缺失数据库/浏览器时标为 NOT_RUN 或 BLOCKED，不静默跳过，不将单元测试说成事务证明。P1 通过基础编译、迁移、启动、健康与 Modulith；P2/P3 只有真实 PostgreSQL 账务和并发场景通过后才可 PASS；P4 需要真实 Playwright 流程；P5 要求最终提交 CI 和干净环境验收。性能没有生产容量结论。
+每一条结果都关联准确 Git SHA、命令、退出码与测试报告。缺失数据库/浏览器时标为 NOT_RUN 或 BLOCKED，不静默跳过，不将单元测试说成事务证明。P1 使用本地 PostgreSQL 18.7 而非 Testcontainers：本机 Docker Engine 能返回版本，但启动独立数据库容器及后续控制命令超时；独立本地 PostgreSQL 实例可重复启动。测试固定连接到隔离数据库 `ledgercore_test`，不使用 H2 或纯 Mock。P1 通过基础编译、单元测试、迁移、应用启动、HTTP 健康与 Modulith；P2/P3 只有真实 PostgreSQL 账务和并发场景通过后才可 PASS；P4 需要真实 Playwright 流程；P5 要求最终提交 CI 和干净环境验收。性能没有生产容量结论。

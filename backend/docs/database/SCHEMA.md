@@ -1,19 +1,19 @@
 # PostgreSQL 数据模型与约束
 
-本文定义 P1/P2 的逻辑模型；实际 SQL 以 Flyway 迁移为准。当前仓库尚无数据库实现。数据库结构不得被误读为已运行的迁移。
+本文同时记录当前已迁移结构和后续逻辑模型。实际 SQL 以 Flyway 迁移为准。P1 的 V1 已在 PostgreSQL 18.7 上运行；账本、转账、投影和幂等表仍是 P2/P3 设计，尚无对应迁移。
 
 ## 表与所有权
 
-| 表 | 核心列 | 键与约束 |
+| 表 | 核心列 | 键与约束 | 实现状态 |
 |---|---|---|
-| customers | id UUID、email_normalized、password_hash、created_at | email_normalized 唯一；邮箱不保存明文密码 |
-| accounts | id UUID、owner_customer_id、display_name、status、created_at、closed_at | owner 外键；状态受约束；关闭不用 DELETE |
-| ledger_accounts | id UUID、account_id 可空、kind、normal_side、is_system | account_id 对客户子账本唯一；唯一的模拟储备系统账户 |
-| journal_entries | id UUID、entry_type、currency、created_at、reference、reverses_entry_id | reverses_entry_id 外键并唯一；不允许自我冲正 |
-| postings | id UUID、journal_entry_id、ledger_account_id、side、amount_minor BIGINT、currency | amount_minor > 0；side 为 DEBIT/CREDIT；父凭证与币种外键；按账本/凭证建立索引 |
-| account_balance_projection | ledger_account_id、balance_minor BIGINT、updated_at | 账本账户外键与主键；客户存款余额不可为负；不单独被业务接口任意修改 |
-| transfers | id UUID、owner_customer_id、source_account_id、target_account_id、amount_minor、journal_entry_id、created_at | 所有权与账本外键；源/目标不同；成功转账对应完整凭证 |
-| idempotency_records | owner_customer_id、operation、idempotency_key、request_fingerprint、transfer_id、response_payload、created_at | 三元业务键唯一；成功回执与 Transfer 同事务 |
+| customers | id UUID、email_normalized、password_hash、display_name、created_at、version | email_normalized 唯一；邮箱不保存明文密码 | P1 V1 已迁移；身份用例未实现 |
+| accounts | id UUID、owner_customer_id、display_name、status、currency、created_at、closed_at、version | owner 外键；状态与 NZD 受约束；关闭不用 DELETE | P1 V1 已迁移；账户用例未实现 |
+| ledger_accounts | id UUID、account_id 可空、kind、normal_side、is_system | account_id 对客户子账本唯一；唯一的模拟储备系统账户 | P2 设计，未迁移 |
+| journal_entries | id UUID、entry_type、currency、created_at、reference、reverses_entry_id | reverses_entry_id 外键并唯一；不允许自我冲正 | P2 设计，未迁移 |
+| postings | id UUID、journal_entry_id、ledger_account_id、side、amount_minor BIGINT、currency | amount_minor > 0；side 为 DEBIT/CREDIT；父凭证与币种外键；按账本/凭证建立索引 | P2 设计，未迁移 |
+| account_balance_projection | ledger_account_id、balance_minor BIGINT、updated_at | 账本账户外键与主键；客户存款余额不可为负；不单独被业务接口任意修改 | P2 设计，未迁移 |
+| transfers | id UUID、owner_customer_id、source_account_id、target_account_id、amount_minor、journal_entry_id、created_at | 所有权与账本外键；源/目标不同；成功转账对应完整凭证 | P3 设计，未迁移 |
+| idempotency_records | owner_customer_id、operation、idempotency_key、request_fingerprint、transfer_id、response_payload、created_at | 三元业务键唯一；成功回执与 Transfer 同事务 | P3 设计，未迁移 |
 
 金额列统一为 BIGINT 的最小货币单位；唯一支持币种 NZD。Postings 仍保留 currency 并用父凭证复合外键保证一致，为数据库约束和清晰查询服务，不表示 MVP 支持多币种。
 
@@ -39,7 +39,7 @@ PostgreSQL CHECK 可限制金额为正、side 枚举、币种 NZD、源和目标
 
 ### PostgreSQL 行为参考
 
-P0 选择 READ COMMITTED 与显式账户行锁。PostgreSQL 18 每条 SQL 命令开始时取得新快照；锁语句等待后，后续余额汇总语句能够读取此前已提交的 Posting。DEFERRED constraint trigger 可将跨行汇总检查延后至事务结束。以上是数据库产品文档说明；本地迁移和并发行为仍须在 P1/P3 用 LedgerCore 实际测试验证。
+P0 选择 READ COMMITTED 与显式账户行锁。PostgreSQL 18 每条 SQL 命令开始时取得新快照；锁语句等待后，后续余额汇总语句能够读取此前已提交的 Posting。DEFERRED constraint trigger 可将跨行汇总检查延后至事务结束。V1 已在 PostgreSQL 18.7 验证；账本约束、事务和并发行为仍须在 P2/P3 由 LedgerCore 实际测试验证。
 
 - [PostgreSQL 18 transaction isolation](https://www.postgresql.org/docs/18/transaction-iso.html)
 - [PostgreSQL 18 explicit locking](https://www.postgresql.org/docs/18/explicit-locking.html)

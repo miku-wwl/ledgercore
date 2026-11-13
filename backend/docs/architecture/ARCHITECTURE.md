@@ -2,7 +2,7 @@
 
 ## 决策边界
 
-LedgerCore 采用 Java 21、Spring Boot 4.0.x 与 Spring Modulith 的单体应用。所有业务能力运行于一个进程、使用同一 PostgreSQL 数据库；模块是代码与业务边界，不是部署单元。P1 建立真实 Maven Wrapper 后再锁定精确依赖版本。
+LedgerCore 采用 Java 21、Spring Boot 4.0.9 与 Spring Modulith 2.0.8 的单体应用。所有业务能力运行于一个进程、使用同一 PostgreSQL 数据库；模块是代码与业务边界，不是部署单元。Maven Wrapper 固定为 3.10.0，springdoc-openapi 固定为 3.0.3。该组合已在本机编译、启动并完成 PostgreSQL 18.7 集成验证。
 
 领域对象表达金额、正常余额方向和转账规则，不依赖 Spring MVC、JPA EntityManager、HTTP 或 React。Spring 的事务和持久化实现位于相应模块的应用/适配代码中；只有跨模块确有调用时才定义小型模块公开 API，不为目录齐全而制造空接口、DTO 或 Mapper。
 
@@ -17,11 +17,13 @@ LedgerCore 采用 Java 21、Spring Boot 4.0.x 与 Spring Modulith 的单体应�
 | TransactionHistory | 授权分页历史查询与稳定排序 | 调用 Accounts 的所有权查询和 Ledger/Transfers 的查询接口 |
 | Reconciliation | 账本与余额投影比较、差异结果 | 调用 Accounts 与 Ledger 只读接口 |
 
-建议包路径为 nz.ac.ledgercore.identity、accounts、ledger、transfers、transactionhistory、reconciliation。P1/P2 中的真实依赖模型必须通过 Spring Modulith 验证；若实现需要的依赖与此表冲突，先修正边界并更新 ADR，而不是忽略验证。
+代码以 `package-info.java` 将 `nz.ac.ledgercore.identity`、`accounts`、`ledger`、`transfers`、`transactionhistory`、`reconciliation` 声明为 Spring Modulith 模块。P1 已运行 `ApplicationModules.verify()`，当前模块无业务依赖。模块内的实际用例与可见 API 尚待 P2/P3 实现；届时依赖仍须通过验证。
+
+P1 没有启用 Modulith JPA 事件持久化：当前用例没有异步模块事件，也没有对应的事务交付需求。未来若引入跨事务事件，必须先定义持久交付与失败恢复语义，并新增迁移及 PostgreSQL 验证。
 
 ## 运行时资金路径
 
-浏览器同源请求 → Spring Security 会话身份和 CSRF 校验 → REST 适配器校验请求格式 → Transfers 应用用例 → Accounts 所有权与状态查询 → Ledger 领域规则和 PostgreSQL 事务 → Transfer、JournalEntry、Postings、余额投影、幂等回执一同提交 → HTTP 成功回执 → TanStack Query 更新已确认状态。
+计划中的浏览器同源请求路径为：Spring Security 会话身份和 CSRF 校验 → REST 适配器校验请求格式 → Transfers 应用用例 → Accounts 所有权与状态查询 → Ledger 领域规则和 PostgreSQL 事务 → Transfer、JournalEntry、Postings、余额投影、幂等回执一同提交 → HTTP 成功回执 → TanStack Query 更新已确认状态。当前实现仅有健康检查、OpenAPI、默认拒绝的安全配置和数据库基础表，尚不能执行银行业务请求。
 
 Controller 不判断会计方向，不自行读写 JPA EntityManager，也不将客户端提交的 owner ID 当作身份。所有权失败与资源不存在统一处理，避免用错误内容探测账户。
 
