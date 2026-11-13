@@ -24,4 +24,4 @@ This is a source-and-test review of the local NZD simulation application. It rec
 - Made Secure cookies the application default, while keeping explicit HTTP-only overrides for tests and CI.
 - Added structured transfer outcome, error classification, duration, and correlation fields without financial identifiers or values.
 
-The 42-test PostgreSQL-backed Maven suite, package startup, generated OpenAPI type check, and Chromium flow passed locally. The final pushed commit's GitHub `verify` and dependency-scan jobs are still required before P5 can be marked PASS.
+The 42-test PostgreSQL-backed Maven suite, package startup, generated OpenAPI type check, and Chromium flow passed locally. The verified source commit `484b9ad1c70ba052849ee1a40e15e35b6d888c12` also passed the GitHub `verify` and dependency-scan jobs in [run 43377985041](https://github.com/miku-wwl/ledgercore/actions/runs/43377985041).

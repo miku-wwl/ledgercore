@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 工作流：main-only；P0–P4 已提交并推送到 `main`；P5 开发与本地验证直接在 `main`；未创建分支、Git worktree 或 PR。
-- 当前基线：P4 提交 `98a86b2b5e9a3fab8e5c8d84f25bb49b1ed31aa4` 已推送到 `origin/main`；本地 P5 改动尚待提交和推送。
-- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS；P4 PASS；P5 IN_PROGRESS（本地代码/测试和性能实验通过，等待 P5 提交后的 GitHub CI 及最终验收）；P6 NOT_STARTED。
+- 工作流：main-only；P0–P5 已提交并推送到 `main`；P6 教材工作直接在 `main`；未创建分支、Git worktree 或 PR。
+- 固定教材源码基线：P5 应用提交 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 已推送到 `origin/main`，对应的 `verify` 与 `dependency-scan` 均通过；后续教材提交将引用此 SHA 的实现。
+- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS；P4 PASS；P5 PASS；P6 IN_PROGRESS（教材 skill 与需求已审阅，接下来编写章节、原创图、真实 UI 截图及 PDF）。
 - 已验证工具：Temurin 21.0.13+9（ZIP SHA-256 `a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9`）；Spring Boot 4.0.9；Spring Modulith 2.0.8；Springdoc 3.0.3；Maven Wrapper 3.10.0。
 - 本地验证数据库：官方 EDB PostgreSQL 18.7 Windows 二进制，解压于 Git 忽略的 `work/postgresql-binaries`；集群位于 `work/postgresql-data`，仅监听 `127.0.0.1:55432`。`ledgercore_test` 是隔离测试库。P1–P3 使用真实本地 PostgreSQL，未使用 H2 或纯 Mock；Testcontainers 未使用。
 - 本地工具链、数据库、依赖缓存和日志均在 Git 忽略的 `work/` 下；不是 Git worktree。
@@ -21,8 +21,8 @@
 | P2 Ledger | PASS | 精确分币金额；客户账户生命周期；模拟储备开户资金与模拟入金；复式凭证、整笔冲正、PostgreSQL 账平/只追加约束、余额投影重算；17 项 P2 测试通过 | 转账、身份/API 与并发扣款不属于 P2 验收 | 完成 |
 | P3 Transfers/Concurrency | PASS | 原子转账、服务层源所有权检查、账户状态/余额校验、UUID 排序行锁、持久幂等、稳定回执、V3/V4 数据约束；15 项 P3 PostgreSQL 测试与完整回归通过 | HTTP 身份映射、公开路由与浏览器网络恢复属于 P4/P5 | 完成 |
 | P4 React/Integration | PASS | 会话注册/登录、账户与转账 API、历史分页、分录详情、只读对账、React 全栈 UI；刷新后以原键恢复真实网络响应丢失；41 项 Maven 测试、前端构建、Chromium E2E 均通过 | P5 的威胁审查、CI 与查询性能实验 | 完成 |
-| P5 Security/Testing/Acceptance | IN_PROGRESS | 42 项后端测试、本地 PostgreSQL 18.7；输入/授权负向用例；日志脱敏与安全 Cookie 默认；结构化转账耗时/错误分类；npm 高危依赖门槛；合成数据查询计划和索引对比；干净 PostgreSQL 数据库上的打包应用与 Chromium 验收；main-only GitHub Actions 已编写 | 最终 P5 提交对应的 GitHub verify 与 OSV job 结果 | 提交并推送 P5，等待最终提交的两个 main CI job 通过后标记 PASS |
-| P6 Textbook | NOT_STARTED | 暂无教材章节或 PDF | 稳定源码基线、真实截图/实验、完整排版与逐页 QA | 仅在 P5 PASS 后启动正式出版 |
+| P5 Security/Testing/Acceptance | PASS | 42 项后端测试；全新 PostgreSQL 18.7 环境下打包应用、Flyway、OpenAPI 与 Chromium 验收；npm audit 0 high/critical；本地 Maven OSV 与 GitHub Actions 均通过 | npm 仍有 4 moderate、2 low；未进行外部渗透测试 | 已完成；不作生产认证或生产性能承诺 |
+| P6 Textbook | IN_PROGRESS | 固定源码基线 `484b9ad`；教材技能、出版 QA 与 P6 需求已审阅；20 章课程主线已确认 | 章节正文、原创 SVG、真实应用截图、可复现构建、最终 PDF 与逐页视觉/技术 QA | 先完成课程地图与源码锚点，再写作、制图与出版 |
 
 ## 重要决定
 
@@ -65,12 +65,14 @@
 - P5 干净数据库验收：新建临时 PostgreSQL 18.7 集群，从空库执行完整 42 项 Maven `clean verify`（0 failures/errors/skips）；随后启动打包 JAR，健康检查为 UP，Flyway V1–V4 验证通过。运行时 `/v3/api-docs` 重新生成的 TypeScript 与仓库文件无差异，真实 Chromium E2E 1 passed；验收后停止应用与临时数据库。
 - P5 性能实验：隔离 `ledgercore_perf` 数据库由 Flyway 空库执行 V1–V4；合成数据为 1,000 customers、10,000 accounts、50,000 transfers、120,000 postings。账本不平衡数与投影差异均为 0，V4 触发器约束在插入事务提交时执行通过。真实 `EXPLAIN (ANALYZE, BUFFERS)`、索引移除/恢复对比、环境和限制见 `backend/docs/performance/P5-PERFORMANCE-EXPERIMENT.md`；原始计划位于 Git 忽略的 `work/performance-baseline.txt` 和 `work/performance-index-comparison.txt`。
 - P5 CI：新增 `.github/workflows/ci.yml`，在 `main` push 或手动触发；两个 job 都限制为 `main` ref，运行 Java/PostgreSQL 集成与架构测试、前端 lint/build、OpenAPI 类型漂移检查、Chromium E2E、npm audit 与 Google OSV Maven 扫描；第三方 Action 固定到完整 SHA。工作流远程结果必须在最终 P5 提交推送后确认。
+- P5 GitHub Actions：固定应用提交 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 的 [run 43377985041](https://github.com/miku-wwl/ledgercore/actions/runs/43377985041) 中，完整 `verify` 与 `dependency-scan` 均成功。首轮 `7c804ac` 的 verify 因 `backend/mvnw` 缺少 Linux 可执行位而在 Maven 启动前失败；在 `484b9ad` 中将已跟踪模式修正为 `100755` 后完整重跑通过。
+- P6 来源固定：教材中的实现代码、架构解释、实验与截图以 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 为唯一源码基线；手册的后续元数据提交不改变该应用源码版本。
 - P0 检查：13 个 Markdown 文件的本地链接均可解析；必需的 12 份 P0 文档存在；INV-01 至 INV-10 全部有记录；暂存 diff 无空白错误。这些是文档设计检查，不是应用测试。
 
 ## NOT_RUN 与阻塞项
 
-- P5 最终提交对应的 GitHub Actions `verify` 与 `dependency-scan` 结果仍 NOT_RUN，须在推送后独立确认。空 PostgreSQL 数据库、打包应用、OpenAPI 类型无漂移和 Chromium 流程已完成本地最终验收；README、PRD、API 合同与现有路由已终审。OSV-Scanner 2.7.1 对 Maven Central 依赖图的本地扫描通过（187 个解析包，无已知问题）。OWASP Dependency-Check 在无 NVD API key 时无法更新本地漏洞库，因此不作为验收证据。
-- P6 教材与 PDF 尚未开始；须在 P5 PASS、确定可复现源码基线后再出版。
+- P5 验收已通过；npm audit 仍记录 4 moderate 与 2 low。没有外部渗透测试、生产负载压测、真实资金接入或监管认证结论。OWASP Dependency-Check 在无 NVD API key 时无法更新漏洞库，因此未作为验收证据。
+- P6 仍在写作：尚无已出版 PDF、完整章节、真实教材截图或最终逐页 QA 结果；在这些项目完成前不标记 P6 PASS。
 - 当前完整应用只处理本地模拟 NZD 资金，没有真实银行、外部付款、生产容量或监管认证结论。
 
-P6 正式教材写作与 PDF 出版只有在 P5 PASS 后才开始；不得用 P0/P1 设计文档替代真实实现内容。
+P6 正式教材只解释固定源码基线的实际行为；不得用 P0/P1 设计文档替代真实实现内容。

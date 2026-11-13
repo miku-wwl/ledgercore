@@ -12,7 +12,7 @@
 | transfers/TransferService.java、TransferController.java、V3/V4 migration | UUID 排序锁、READ COMMITTED、源余额校验、持久 Idempotency-Key、HTTP 错误映射及失败回滚 | P3/P4 代码；真实 PostgreSQL `TransferPostgresIntegrationTests` 和 Playwright 响应丢失流程 | VERIFIED（15 项 PG 转账测试；Chromium 真实网络恢复） | CI 尚未运行 |
 | transactionhistory / reconciliation | 本人交易游标分页、安全分录教学视图、Posting 与投影只读对账 | P4 service/controller；P5 真实 PostgreSQL 18.7 `EXPLAIN (ANALYZE, BUFFERS)` 查询计划 | VERIFIED | 单机合成数据，不代表生产规模或响应时限 |
 | frontend/src | React 页面、OpenAPI 类型客户端、分币 BigInt、CSRF 会话和未知转账恢复 | P4 源码；`npm run build`、`npm run lint`、Chromium Playwright 流程与截图；P5 `npm audit` | VERIFIED（构建/lint、1 E2E passed；审计 0 high/critical，另有 4 moderate、2 low） | 仅覆盖 MVP 的单一 Chromium 流程；npm 报告中的低/中危仍可见 |
-| `.github/workflows/ci.yml` | main-only Java/PostgreSQL、前端、OpenAPI、Chromium E2E、npm audit 与 OSV Maven 扫描 | P5 工作流源码；远程运行记录待 P5 推送 | CONFIGURED / NOT_RUN | 不能在远程 main job 变绿前标记 CI 通过 |
+| `.github/workflows/ci.yml` | main-only Java/PostgreSQL、前端、OpenAPI、Chromium E2E、npm audit 与 OSV Maven 扫描 | 固定提交 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 的 [GitHub Actions run](https://github.com/miku-wwl/ledgercore/actions/runs/43377985041) | VERIFIED（verify 与 dependency-scan 均成功） | 仅证明该提交及其运行环境；不构成生产部署认证 |
 | `backend/docs/security/P5-SECURITY-REVIEW.md` | 会话、所有权、CSRF、输入/错误泄露、日志与凭据边界 | 对照 P5 安全清单检查实现和 42 项 PostgreSQL 回归 | VERIFIED（本地审查） | 不是外部渗透测试或生产安全认证 |
 | `backend/docs/performance/P5-PERFORMANCE-EXPERIMENT.md` | 账户余额、交易历史、Posting 和对账 SQL 的执行计划与索引效果 | 本地 PostgreSQL 18.7；10,000 accounts、50,000 transfers、120,000 postings；原始计划在 Git 忽略的 `work/` | VERIFIED（数据约束通过；索引对比结束后恢复） | 单机、合成、单次 SQL 测量，不提供生产负载结论 |
 | ARCHITECTURE / ADR | Java 21、Spring Boot 4.0.9、Spring Modulith 2.0.8 模块边界 | [Spring Boot 4.0 system requirements](https://docs.spring.io/spring-boot/4.0/system-requirements.html)；[Spring Modulith verification](https://docs.spring.io/spring-modulith/reference/verification.html)；P4 `ModuleArchitectureTests` | VERIFIED（完整回归边界测试通过） | 不代表生产部署容量或认证安全审计 |
@@ -20,7 +20,7 @@
 | BANK-OF-ANTHOS-REVIEW | 五模块责任、流水模型、缓存/轮询取舍及单体版本 | 上游提交 db35fea9fd090150e2398106aadb475576f80d94 的 README、Java/SQL 源码、LICENSE | SOURCE-ANALYSED | 只检查固定源码快照；没有运行上游系统；未复制代码 |
 | ECHOCASE-REFERENCE-REVIEW | EchoCase 工程、测试隔离和教材来源经验 | 本机 EchoCase HEAD 9f68721e18f15ae603e6502fa46b8fa78f9df55c；当时有脏工作树；历史和模板修订清单分别固定不同来源 | SOURCE-ANALYSED | EchoCase 是只读对照；其历史技术栈、运行输出和未提交出版工作不证明 LedgerCore 行为 |
 | IMPLEMENTATION-STATUS | 起始 main 提交、分支和缺少工具 | 本轮 git status/fetch/branch/log；本机工具发现；JDK 压缩包 SHA-256 校验 | VERIFIED（只限观察时点） | 后续状态随环境和提交变化；不能外推到未来会话 |
-| LedgerCore P4 全栈行为 | 注册会话、账户所有权、转账幂等、分页历史、对账与刷新后网络结果恢复 | P4 完整回归 41 tests；P5 更新后 42 tests；干净 PostgreSQL 18.7 数据库；`npm run build`；Chromium E2E 1 passed | VERIFIED（P5 本地干净数据库验收） | 最终提交后的远程 CI/OSV 待通过；无生产安全认证结论 |
+| LedgerCore P4 全栈行为 | 注册会话、账户所有权、转账幂等、分页历史、对账与刷新后网络结果恢复 | P4 完整回归 41 tests；P5 更新后 42 tests；干净 PostgreSQL 18.7 数据库；`npm run build`；Chromium E2E 1 passed；P5 commit CI 双 job 通过 | VERIFIED（本地干净数据库与 GitHub CI） | 无外部渗透测试或生产安全认证结论 |
 
 ## 外部版本参考
 
