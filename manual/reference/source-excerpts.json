@@ -1,0 +1,95 @@
+{
+  "sourceCommit": "484b9ad1c70ba052849ee1a40e15e35b6d888c12",
+  "excerpts": [
+    {
+      "id": "money",
+      "path": "backend/src/main/java/nz/ac/ledgercore/ledger/Money.java",
+      "start": "public static Money parsePositiveNzd",
+      "end": "public Money plus",
+      "startLine": 12,
+      "endLine": 27,
+      "code": "\tpublic static Money parsePositiveNzd(String value) {\n\t\tif (value == null || !CANONICAL_NZD.matcher(value).matches()) {\n\t\t\tthrow new IllegalArgumentException(\"Amount must be a canonical NZD decimal string with two digits.\");\n\t\t}\n\t\ttry {\n\t\t\tlong minorUnits = new BigDecimal(value).movePointRight(2).longValueExact();\n\t\t\tif (minorUnits <= 0) {\n\t\t\t\tthrow new IllegalArgumentException(\"Amount must be greater than zero.\");\n\t\t\t}\n\t\t\treturn new Money(minorUnits);\n\t\t}\n\t\tcatch (ArithmeticException exception) {\n\t\t\tthrow new IllegalArgumentException(\"Amount exceeds the supported NZD range.\", exception);\n\t\t}\n\t}",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/ledger/Money.java#L12-L27"
+    },
+    {
+      "id": "journal_entry",
+      "path": "backend/src/main/java/nz/ac/ledgercore/ledger/JournalEntry.java",
+      "start": "public JournalEntry {",
+      "end": "public static JournalEntry transfer",
+      "startLine": 11,
+      "endLine": 54,
+      "code": "\tpublic JournalEntry {\n\t\tObjects.requireNonNull(id, \"id\");\n\t\tObjects.requireNonNull(type, \"type\");\n\t\tObjects.requireNonNull(postings, \"postings\");\n\t\tpostings = List.copyOf(postings);\n\t\tif ((type == JournalEntryType.REVERSAL) != (reversesEntryId != null)) {\n\t\t\tthrow new IllegalArgumentException(\"Only a reversal entry may reference the entry it reverses.\");\n\t\t}\n\t\tif (postings.size() < 2) {\n\t\t\tthrow new IllegalArgumentException(\"A journal entry requires at least two postings.\");\n\t\t}\n\n\t\tSet<UUID> ledgerAccountIds = new HashSet<>();\n\t\tlong debits = 0;\n\t\tlong credits = 0;\n\t\tfor (Posting posting : postings) {\n\t\t\tObjects.requireNonNull(posting, \"posting\");\n\t\t\tif (!ledgerAccountIds.add(posting.ledgerAccountId())) {\n\t\t\t\tthrow new IllegalArgumentException(\"A journal entry may post only once to each ledger account.\");\n\t\t\t}\n\t\t\tif (posting.side() == PostingSide.DEBIT) {\n\t\t\t\tdebits = Math.addExact(debits, posting.amountMinor());\n\t\t\t}\n\t\t\telse {\n\t\t\t\tcredits = Math.addExact(credits, posting.amountMinor());\n\t\t\t}\n\t\t}\n\t\tif (debits != credits) {\n\t\t\tthrow new IllegalArgumentException(\"Journal entry debits must equal credits.\");\n\t\t}\n\t}\n\n\tpublic static JournalEntry openingFunding(UUID reserveLedgerAccountId, UUID customerLedgerAccountId,\n\t\t\tMoney amount) {\n\t\treturn balancedFunding(JournalEntryType.OPENING_FUNDING, reserveLedgerAccountId, customerLedgerAccountId,\n\t\t\t\tamount);\n\t}\n\n\tpublic static JournalEntry simulatedDeposit(UUID reserveLedgerAccountId, UUID customerLedgerAccountId,\n\t\t\tMoney amount) {\n\t\treturn balancedFunding(JournalEntryType.SIMULATED_DEPOSIT, reserveLedgerAccountId, customerLedgerAccountId,\n\t\t\t\tamount);\n\t}",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/ledger/JournalEntry.java#L11-L54"
+    },
+    {
+      "id": "controller",
+      "path": "backend/src/main/java/nz/ac/ledgercore/transfers/TransferController.java",
+      "start": "@PostMapping",
+      "end": "private void logTransfer",
+      "startLine": 37,
+      "endLine": 59,
+      "code": "\t@PostMapping\n\tResponseEntity<TransferReceipt> transfer(@AuthenticationPrincipal CustomerPrincipal principal,\n\t\t\t@RequestHeader(\"Idempotency-Key\") String idempotencyKey, @Valid @RequestBody TransferRequest request) {\n\t\tMoney amount = Money.parsePositiveNzd(request.amount());\n\t\tlong startedAt = System.nanoTime();\n\t\ttry {\n\t\t\tTransferReceipt receipt = transferService.transfer(principal.customerId(), request.sourceAccountId(),\n\t\t\t\t\trequest.targetAccountId(), amount, idempotencyKey);\n\t\t\tlogTransfer(\"succeeded\", \"NONE\", startedAt);\n\t\t\treturn ResponseEntity.ok(receipt);\n\t\t}\n\t\tcatch (TransferException exception) {\n\t\t\tString outcome = exception.code() == TransferErrorCode.ACCOUNT_NOT_OPEN\n\t\t\t\t\t|| exception.code() == TransferErrorCode.IDEMPOTENCY_KEY_REUSED ? \"conflict\" : \"rejected\";\n\t\t\tlogTransfer(outcome, exception.code().name(), startedAt);\n\t\t\tthrow exception;\n\t\t}\n\t\tcatch (RuntimeException exception) {\n\t\t\tlogTransfer(\"internal_error\", \"UNEXPECTED\", startedAt);\n\t\t\tthrow exception;\n\t\t}\n\t}",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/transfers/TransferController.java#L37-L59"
+    },
+    {
+      "id": "account_entity",
+      "path": "backend/src/main/java/nz/ac/ledgercore/accounts/persistence/AccountEntity.java",
+      "start": "\t@Version",
+      "end": "\tprotected AccountEntity()",
+      "startLine": 47,
+      "endLine": 50,
+      "code": "\t@Version\n\t@Column(name = \"version\", nullable = false)\n\tprivate long version;",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/accounts/persistence/AccountEntity.java#L47-L50"
+    },
+    {
+      "id": "db_balance_trigger",
+      "path": "backend/src/main/resources/db/migration/V2__create_ledger_tables.sql",
+      "start": "CREATE FUNCTION ledgercore_assert_journal_entry_balanced()",
+      "end": "CREATE FUNCTION ledgercore_reject_ledger_history_change()",
+      "startLine": 76,
+      "endLine": 116,
+      "code": "CREATE FUNCTION ledgercore_assert_journal_entry_balanced()\nRETURNS TRIGGER\nLANGUAGE plpgsql\nAS $$\nDECLARE\n    target_entry_id UUID;\n    posting_count BIGINT;\n    debit_total NUMERIC;\n    credit_total NUMERIC;\nBEGIN\n    IF TG_TABLE_NAME = 'journal_entries' THEN\n        target_entry_id := NEW.id;\n    ELSE\n        target_entry_id := NEW.journal_entry_id;\n    END IF;\n\n    SELECT count(*),\n           COALESCE(sum(amount_minor) FILTER (WHERE side = 'DEBIT'), 0),\n           COALESCE(sum(amount_minor) FILTER (WHERE side = 'CREDIT'), 0)\n      INTO posting_count, debit_total, credit_total\n      FROM postings\n     WHERE journal_entry_id = target_entry_id;\n\n    IF posting_count < 2 OR debit_total <> credit_total THEN\n        RAISE EXCEPTION 'Journal entry % must contain at least two balanced postings', target_entry_id\n            USING ERRCODE = '23514', CONSTRAINT = 'ck_journal_entries_balanced';\n    END IF;\n    RETURN NULL;\nEND;\n$$;\n\nCREATE CONSTRAINT TRIGGER ct_journal_entries_balanced\n    AFTER INSERT ON journal_entries\n    DEFERRABLE INITIALLY DEFERRED\n    FOR EACH ROW EXECUTE FUNCTION ledgercore_assert_journal_entry_balanced();\n\nCREATE CONSTRAINT TRIGGER ct_postings_keep_entry_balanced\n    AFTER INSERT ON postings\n    DEFERRABLE INITIALLY DEFERRED\n    FOR EACH ROW EXECUTE FUNCTION ledgercore_assert_journal_entry_balanced();",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/resources/db/migration/V2__create_ledger_tables.sql#L76-L116"
+    },
+    {
+      "id": "transfer_transaction",
+      "path": "backend/src/main/java/nz/ac/ledgercore/transfers/TransferService.java",
+      "start": "\t@Transactional(isolation = Isolation.READ_COMMITTED)",
+      "end": "\tprivate void validateRequest",
+      "startLine": 42,
+      "endLine": 103,
+      "code": "\t@Transactional(isolation = Isolation.READ_COMMITTED)\n\tpublic TransferReceipt transfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,\n\t\t\tMoney amount, String idempotencyKey) {\n\t\tvalidateRequest(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey);\n\t\tif (!accountService.belongsTo(authenticatedCustomerId, sourceAccountId)) {\n\t\t\tthrow error(TransferErrorCode.ACCOUNT_NOT_FOUND, \"The source account was not found.\");\n\t\t}\n\t\tif (sourceAccountId.equals(targetAccountId)) {\n\t\t\tthrow error(TransferErrorCode.INVALID_REQUEST, \"A transfer requires two different accounts.\");\n\t\t}\n\n\t\tString fingerprint = fingerprint(authenticatedCustomerId, sourceAccountId, targetAccountId, amount);\n\t\tint reserved = jdbcTemplate.update(\"\"\"\n\t\t\t\tINSERT INTO idempotency_records\n\t\t\t\t\t(owner_customer_id, operation, idempotency_key, request_fingerprint)\n\t\t\t\tVALUES (?, ?, ?, ?)\n\t\t\t\tON CONFLICT (owner_customer_id, operation, idempotency_key) DO NOTHING\n\t\t\t\t\"\"\", authenticatedCustomerId, OPERATION, idempotencyKey, fingerprint);\n\t\tif (reserved == 0) {\n\t\t\treturn replayReceipt(authenticatedCustomerId, idempotencyKey, fingerprint);\n\t\t}\n\n\t\tlockAndValidateAccounts(sourceAccountId, targetAccountId);\n\t\tUUID transferId = UUID.randomUUID();\n\t\tUUID journalEntryId;\n\t\ttry {\n\t\t\tjournalEntryId = ledgerWriter.transferBetweenCustomerAccounts(sourceAccountId, targetAccountId, amount,\n\t\t\t\t\ttransferId);\n\t\t}\n\t\tcatch (InsufficientLedgerBalanceException exception) {\n\t\t\tthrow error(TransferErrorCode.INSUFFICIENT_FUNDS,\n\t\t\t\t\t\"The source account does not have enough available funds.\");\n\t\t}\n\t\tcatch (IllegalArgumentException exception) {\n\t\t\tthrow error(TransferErrorCode.ACCOUNT_NOT_FOUND, \"One of the accounts was not found.\");\n\t\t}\n\n\t\tjdbcTemplate.update(\"\"\"\n\t\t\t\tINSERT INTO transfers\n\t\t\t\t\t(id, owner_customer_id, source_account_id, target_account_id, amount_minor, currency, journal_entry_id)\n\t\t\t\tVALUES (?, ?, ?, ?, ?, 'NZD', ?)\n\t\t\t\t\"\"\", transferId, authenticatedCustomerId, sourceAccountId, targetAccountId, amount.minorUnits(),\n\t\t\t\tjournalEntryId);\n\t\tTimestamp createdAt = jdbcTemplate.queryForObject(\"SELECT created_at FROM transfers WHERE id = ?\",\n\t\t\t\tTimestamp.class, transferId);\n\t\tTransferReceipt receipt = new TransferReceipt(transferId, sourceAccountId, targetAccountId, \"POSTED\",\n\t\t\t\tamount.toNzdString(), \"NZD\", Objects.requireNonNull(createdAt, \"createdAt\").toInstant());\n\t\tint completed = jdbcTemplate.update(\"\"\"\n\t\t\t\tUPDATE idempotency_records\n\t\t\t\tSET status = 'SUCCEEDED', transfer_id = ?, response_payload = jsonb_build_object(\n\t\t\t\t\t'transferId', ?, 'sourceAccountId', ?, 'targetAccountId', ?, 'status', ?, 'amount', ?, 'currency', ?,\n\t\t\t\t\t'createdAt', ?::timestamptz)\n\t\t\t\tWHERE owner_customer_id = ? AND operation = ? AND idempotency_key = ? AND status = 'IN_PROGRESS'\n\t\t\t\"\"\", transferId, receipt.transferId(), receipt.sourceAccountId(), receipt.targetAccountId(), receipt.status(),\n\t\t\t\treceipt.amount(), receipt.currency(), receipt.createdAt().toString(), authenticatedCustomerId, OPERATION,\n\t\t\t\tidempotencyKey);\n\t\tif (completed != 1) {\n\t\t\tthrow new IllegalStateException(\"The transfer success receipt could not be finalized.\");\n\t\t}\n\t\treturn receipt;\n\t}",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/transfers/TransferService.java#L42-L103"
+    },
+    {
+      "id": "idempotency_reservation",
+      "path": "backend/src/main/java/nz/ac/ledgercore/transfers/TransferService.java",
+      "start": "\t\tint reserved = jdbcTemplate.update",
+      "end": "\t\tlockAndValidateAccounts(sourceAccountId, targetAccountId);",
+      "startLine": 54,
+      "endLine": 63,
+      "code": "\t\tint reserved = jdbcTemplate.update(\"\"\"\n\t\t\t\tINSERT INTO idempotency_records\n\t\t\t\t\t(owner_customer_id, operation, idempotency_key, request_fingerprint)\n\t\t\t\tVALUES (?, ?, ?, ?)\n\t\t\t\tON CONFLICT (owner_customer_id, operation, idempotency_key) DO NOTHING\n\t\t\t\t\"\"\", authenticatedCustomerId, OPERATION, idempotencyKey, fingerprint);\n\t\tif (reserved == 0) {\n\t\t\treturn replayReceipt(authenticatedCustomerId, idempotencyKey, fingerprint);\n\t\t}",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/transfers/TransferService.java#L54-L63"
+    },
+    {
+      "id": "sorted_locks",
+      "path": "backend/src/main/java/nz/ac/ledgercore/ledger/LedgerWriter.java",
+      "start": "\tprivate void lockLedgerAccounts",
+      "end": "\tprivate void requireOpenCustomerAccount",
+      "startLine": 169,
+      "endLine": 180,
+      "code": "\tprivate void lockLedgerAccounts(List<UUID> ledgerAccountIds) {\n\t\tList<UUID> sortedIds = new ArrayList<>(ledgerAccountIds.stream().distinct().toList());\n\t\tsortedIds.sort(Comparator.naturalOrder());\n\t\tfor (UUID id : sortedIds) {\n\t\t\tList<UUID> rows = jdbcTemplate.query(\"SELECT id FROM ledger_accounts WHERE id = ? FOR UPDATE\",\n\t\t\t\t\t(resultSet, rowNumber) -> resultSet.getObject(1, UUID.class), id);\n\t\t\tif (rows.isEmpty()) {\n\t\t\t\tthrow new IllegalArgumentException(\"Ledger account does not exist: \" + id);\n\t\t\t}\n\t\t}\n\t}",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/ledger/LedgerWriter.java#L169-L180"
+    },
+    {
+      "id": "history_query",
+      "path": "backend/src/main/java/nz/ac/ledgercore/transactionhistory/TransactionHistoryService.java",
+      "start": "\t\tString sql = \"\"\"",
+      "end": "\t\tList<TransactionView> rows;",
+      "startLine": 32,
+      "endLine": 44,
+      "code": "\t\tString sql = \"\"\"\n\t\t\t\tSELECT t.id, t.source_account_id, t.target_account_id, t.amount_minor, t.currency,\n\t\t\t\t       t.created_at, source.display_name AS source_name, target.display_name AS target_name\n\t\t\t\tFROM transfers t\n\t\t\t\tJOIN accounts current_account ON current_account.id = ? AND current_account.owner_customer_id = ?\n\t\t\t\tJOIN accounts source ON source.id = t.source_account_id\n\t\t\t\tJOIN accounts target ON target.id = t.target_account_id\n\t\t\t\tWHERE (t.source_account_id = ? OR t.target_account_id = ?)\n\t\t\t\t\"\"\";\n\t\tif (decoded != null) {\n\t\t\tsql += \" AND (t.created_at, t.id) < (?, ?)\";\n\t\t}\n\t\tsql += \" ORDER BY t.created_at DESC, t.id DESC LIMIT ?\";",
+      "url": "https://github.com/miku-wwl/ledgercore/blob/484b9ad1c70ba052849ee1a40e15e35b6d888c12/backend/src/main/java/nz/ac/ledgercore/transactionhistory/TransactionHistoryService.java#L32-L44"
+    }
+  ]
+}

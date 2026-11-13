@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 工作流：main-only；P0–P5 已提交并推送到 `main`；P6 教材工作直接在 `main`；未创建分支、Git worktree 或 PR。
+- 工作流：main-only；P0–P5 已提交并推送到 main；P6 教材、出版和状态更新均直接在 main 完成；未创建分支、Git worktree 或 PR。
 - 固定教材源码基线：P5 应用提交 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 已推送到 `origin/main`，对应的 `verify` 与 `dependency-scan` 均通过；后续教材提交将引用此 SHA 的实现。
-- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS；P4 PASS；P5 PASS；P6 IN_PROGRESS（教材 skill 与需求已审阅，接下来编写章节、原创图、真实 UI 截图及 PDF）。
+- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS；P4 PASS；P5 PASS；P6 PASS（20 章教材、22 幅原创 SVG、12 张真实截图、9 段固定源码摘录和 46 页 PDF 已完成；编辑与技术 QA 通过）。
 - 已验证工具：Temurin 21.0.13+9（ZIP SHA-256 `a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9`）；Spring Boot 4.0.9；Spring Modulith 2.0.8；Springdoc 3.0.3；Maven Wrapper 3.10.0。
 - 本地验证数据库：官方 EDB PostgreSQL 18.7 Windows 二进制，解压于 Git 忽略的 `work/postgresql-binaries`；集群位于 `work/postgresql-data`，仅监听 `127.0.0.1:55432`。`ledgercore_test` 是隔离测试库。P1–P3 使用真实本地 PostgreSQL，未使用 H2 或纯 Mock；Testcontainers 未使用。
 - 本地工具链、数据库、依赖缓存和日志均在 Git 忽略的 `work/` 下；不是 Git worktree。
@@ -22,7 +22,7 @@
 | P3 Transfers/Concurrency | PASS | 原子转账、服务层源所有权检查、账户状态/余额校验、UUID 排序行锁、持久幂等、稳定回执、V3/V4 数据约束；15 项 P3 PostgreSQL 测试与完整回归通过 | HTTP 身份映射、公开路由与浏览器网络恢复属于 P4/P5 | 完成 |
 | P4 React/Integration | PASS | 会话注册/登录、账户与转账 API、历史分页、分录详情、只读对账、React 全栈 UI；刷新后以原键恢复真实网络响应丢失；41 项 Maven 测试、前端构建、Chromium E2E 均通过 | P5 的威胁审查、CI 与查询性能实验 | 完成 |
 | P5 Security/Testing/Acceptance | PASS | 42 项后端测试；全新 PostgreSQL 18.7 环境下打包应用、Flyway、OpenAPI 与 Chromium 验收；npm audit 0 high/critical；本地 Maven OSV 与 GitHub Actions 均通过 | npm 仍有 4 moderate、2 low；未进行外部渗透测试 | 已完成；不作生产认证或生产性能承诺 |
-| P6 Textbook | IN_PROGRESS | 固定源码基线 `484b9ad`；教材技能、出版 QA 与 P6 需求已审阅；20 章课程主线已确认 | 章节正文、原创 SVG、真实应用截图、可复现构建、最终 PDF 与逐页视觉/技术 QA | 先完成课程地图与源码锚点，再写作、制图与出版 |
+| P6 Textbook | PASS | 固定源码基线 `484b9ad1c70ba052849ee1a40e15e35b6d888c12`；20 章、22 幅原创 SVG、12 张真实 UI 截图、9 段代码摘录、46 页 PDF | 无未通过的出版验收项；应用的已知范围限制见下文 | 出版完成；保持本书与固定源码版本一致 |
 
 ## 重要决定
 
@@ -66,13 +66,15 @@
 - P5 性能实验：隔离 `ledgercore_perf` 数据库由 Flyway 空库执行 V1–V4；合成数据为 1,000 customers、10,000 accounts、50,000 transfers、120,000 postings。账本不平衡数与投影差异均为 0，V4 触发器约束在插入事务提交时执行通过。真实 `EXPLAIN (ANALYZE, BUFFERS)`、索引移除/恢复对比、环境和限制见 `backend/docs/performance/P5-PERFORMANCE-EXPERIMENT.md`；原始计划位于 Git 忽略的 `work/performance-baseline.txt` 和 `work/performance-index-comparison.txt`。
 - P5 CI：新增 `.github/workflows/ci.yml`，在 `main` push 或手动触发；两个 job 都限制为 `main` ref，运行 Java/PostgreSQL 集成与架构测试、前端 lint/build、OpenAPI 类型漂移检查、Chromium E2E、npm audit 与 Google OSV Maven 扫描；第三方 Action 固定到完整 SHA。工作流远程结果必须在最终 P5 提交推送后确认。
 - P5 GitHub Actions：固定应用提交 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 的 [run 43377985041](https://github.com/miku-wwl/ledgercore/actions/runs/43377985041) 中，完整 `verify` 与 `dependency-scan` 均成功。首轮 `7c804ac` 的 verify 因 `backend/mvnw` 缺少 Linux 可执行位而在 Maven 启动前失败；在 `484b9ad` 中将已跟踪模式修正为 `100755` 后完整重跑通过。
+- P6 出版验收：20 章、22 幅原创 SVG、12 张真实 UI 截图、9 段固定源码摘录；46 页 PDF SHA-256 为 `baf7ff63b8e736139d5962d599e2a9a6e75594da693e32240e57cb29a2e97989`。编辑验收记录见 `manual/reference/EDITORIAL-ACCEPTANCE.md`。
+- P6 PDF QA：A4 46 页，27 个书签（含 20 章），97 个注释和 43 个外部链接，12,389 个可搜索汉字、35,150 个可搜索字符；46 页完整渲染，无空文本页、无越界字符；四张接触图和重点页经人工复核。
 - P6 来源固定：教材中的实现代码、架构解释、实验与截图以 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 为唯一源码基线；手册的后续元数据提交不改变该应用源码版本。
 - P0 检查：13 个 Markdown 文件的本地链接均可解析；必需的 12 份 P0 文档存在；INV-01 至 INV-10 全部有记录；暂存 diff 无空白错误。这些是文档设计检查，不是应用测试。
 
-## NOT_RUN 与阻塞项
+## 已知未执行项与范围限制
 
 - P5 验收已通过；npm audit 仍记录 4 moderate 与 2 low。没有外部渗透测试、生产负载压测、真实资金接入或监管认证结论。OWASP Dependency-Check 在无 NVD API key 时无法更新漏洞库，因此未作为验收证据。
-- P6 仍在写作：尚无已出版 PDF、完整章节、真实教材截图或最终逐页 QA 结果；在这些项目完成前不标记 P6 PASS。
+- P6 教材已完成编辑和 PDF 技术验收；剩余外部渗透测试、生产负载测试与合规认证不在本模拟应用范围内，不作为出版结论。详细证据与限制见 `manual/reference/EDITORIAL-ACCEPTANCE.md`。
 - 当前完整应用只处理本地模拟 NZD 资金，没有真实银行、外部付款、生产容量或监管认证结论。
 
 P6 正式教材只解释固定源码基线的实际行为；不得用 P0/P1 设计文档替代真实实现内容。

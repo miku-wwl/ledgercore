@@ -1,0 +1,33 @@
+{
+  "title": "企业级 Java 全栈与金融交易一致性工程",
+  "subtitle": "基于 LedgerCore，深入理解 Spring Boot、DDD、PostgreSQL、可靠事务与 React",
+  "englishTitle": "Enterprise Java Full-Stack Engineering: Building a Reliable Banking Ledger",
+  "edition": "第 1 版 · 2026",
+  "language": "zh-CN",
+  "repository": "https://github.com/miku-wwl/ledgercore",
+  "sourceCommit": "484b9ad1c70ba052849ee1a40e15e35b6d888c12",
+  "sourceDate": "2026-11-13",
+  "chapters": [
+    {"id":"01","title":"一次转账究竟要解决什么","file":"chapters/01-transfer-problem.md"},
+    {"id":"02","title":"用复式记账保存守恒关系","file":"chapters/02-double-entry.md"},
+    {"id":"03","title":"把不变量放进领域模型","file":"chapters/03-domain-invariants.md"},
+    {"id":"04","title":"模块化单体里的边界与协作","file":"chapters/04-modular-monolith.md"},
+    {"id":"05","title":"从 HTTP 请求走到用例","file":"chapters/05-http-use-case.md"},
+    {"id":"06","title":"JPA 管什么，SQL 又管什么","file":"chapters/06-jpa-and-sql.md"},
+    {"id":"07","title":"让数据库拒绝不合法的账本","file":"chapters/07-postgresql-schema.md"},
+    {"id":"08","title":"MVCC、快照与可见性","file":"chapters/08-mvcc.md"},
+    {"id":"09","title":"并发转账、行锁与死锁","file":"chapters/09-concurrency-locks.md"},
+    {"id":"10","title":"提交、回滚与原子边界","file":"chapters/10-atomic-commit.md"},
+    {"id":"11","title":"幂等键与丢失的响应","file":"chapters/11-idempotency.md"},
+    {"id":"12","title":"余额投影、历史与对账","file":"chapters/12-projections-reconciliation.md"},
+    {"id":"13","title":"REST、安全与账户所有权","file":"chapters/13-rest-security.md"},
+    {"id":"14","title":"React 仪表盘的状态边界","file":"chapters/14-react-dashboard.md"},
+    {"id":"15","title":"TanStack Query 管理服务端状态","file":"chapters/15-tanstack-query.md"},
+    {"id":"16","title":"表单、确认与恢复用户意图","file":"chapters/16-form-recovery.md"},
+    {"id":"17","title":"PostgreSQL 查询与索引取舍","file":"chapters/17-query-performance.md"},
+    {"id":"18","title":"用测试验证边界与故障","file":"chapters/18-testing.md"},
+    {"id":"19","title":"需求变化如何穿过全栈","file":"chapters/19-cross-stack-change.md"},
+    {"id":"20","title":"工程取舍、反例与推理方法","file":"chapters/20-tradeoffs.md"}
+  ],
+  "appendices": ["术语表", "固定源码索引", "参考资料", "出版验收记录"]
+}

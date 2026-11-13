@@ -20,7 +20,7 @@ MVP 目标包括注册登录、模拟账户管理、账户余额、明确来源�
 | 前端 | React 19、TypeScript、Vite、shadcn/ui、Tailwind CSS、TanStack Query |
 | 验证 | JUnit、Mockito、真实 PostgreSQL 集成测试、Spring Modulith、Playwright、GitHub Actions |
 
-Spring Boot 4.0.9、Spring Modulith 2.0.8、业务 HTTP API 和 React 前端已通过本机及 main CI 验证。P5 使用真实 PostgreSQL 和 Chromium Playwright 完成最终验收；固定应用源码基线 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 的 `verify` 与 Maven OSV 扫描均通过。P6 中文教材正在编写。
+Spring Boot 4.0.9、Spring Modulith 2.0.8、业务 HTTP API 和 React 前端已通过本机及 main CI 验证。P5 使用真实 PostgreSQL 和 Chromium Playwright 完成最终验收；固定应用源码基线 `484b9ad1c70ba052849ee1a40e15e35b6d888c12` 的 `verify` 与 Maven OSV 扫描均通过。P6 中文教材已完成出版验收：20 章、22 幅原创 SVG、12 张真实 UI 截图和 46 页 PDF，见 [教材说明](manual/README.md) 与 [编辑验收记录](manual/reference/EDITORIAL-ACCEPTANCE.md)。
 
 ## 账务模型
 
@@ -38,7 +38,7 @@ Spring Boot 4.0.9、Spring Modulith 2.0.8、业务 HTTP API 和 React 前端已�
 
 ## 当前状态
 
-P0–P5 已完成，P6 教材编写中：应用包含精确分币金额、明确资金来源的复式账本、原子内部转账、稳定顺序账户行锁、持久幂等回执、安全会话、账户/历史/对账 API，以及刷新后恢复未知结果的 React 流程。P5 的 42 项 Maven 回归、全新 PostgreSQL 18.7 数据库验收、前端构建/lint、OpenAPI 类型无漂移和 Chromium E2E 均通过；GitHub Actions `verify` 与 OSV Maven 扫描通过，见 [run 43377985041](https://github.com/miku-wwl/ledgercore/actions/runs/43377985041)。
+P0–P5 已完成；P6 教材 PDF 已完成出版与视觉验收。阶段状态及 main CI 证据见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。应用包含精确分币金额、明确资金来源的复式账本、原子内部转账、稳定顺序账户行锁、持久幂等回执、安全会话、账户/历史/对账 API，以及刷新后恢复未知结果的 React 流程。P5 的 42 项 Maven 回归、全新 PostgreSQL 18.7 数据库验收、前端构建/lint、OpenAPI 类型无漂移和 Chromium E2E 均通过；GitHub Actions `verify` 与 OSV Maven 扫描通过，见 [run 43377985041](https://github.com/miku-wwl/ledgercore/actions/runs/43377985041)。
 
 阶段状态、P5 安全审查与合成查询计划实验见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)、[P5 Security Review](backend/docs/security/P5-SECURITY-REVIEW.md) 和 [P5 性能实验](backend/docs/performance/P5-PERFORMANCE-EXPERIMENT.md)。
 

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="500" viewBox="0 0 1040 500">
+<rect width="100%" height="100%" rx="24" fill="#FBFCFE"/>
+<path d="M40 104 H1000" stroke="#E7EBF2" stroke-width="1"/>
+<text x="52" y="68" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#17263C">表单状态必须保留用户的原始意图</text>
+<text x="52" y="92" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="12" font-weight="600" fill="#66758B">LEDGERCORE · 机制图</text>
+<path d="M219.6 275.0 H230.6" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="42.0" y="190" width="173.6" height="170" rx="18" fill="#EAF2FF" stroke="#2D5D9F" stroke-width="2"/>
+<text x="128.8" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#2D5D9F">输入</text>
+<text x="128.8" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="128.8" dy="0em">来源 / 目标 / 金额</tspan><tspan x="128.8" dy="1.5em">校验两位小数</tspan></text>
+<circle cx="128.8" cy="342" r="4" fill="#2D5D9F"/>
+<path d="M415.2 275.0 H426.2" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="237.6" y="190" width="173.6" height="170" rx="18" fill="#FFF3DB" stroke="#A86B13" stroke-width="2"/>
+<text x="324.4" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#A86B13">确认</text>
+<text x="324.4" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="324.4" dy="0em">清楚展示两账户</tspan><tspan x="324.4" dy="1.5em">和总金额</tspan></text>
+<circle cx="324.4" cy="342" r="4" fill="#A86B13"/>
+<path d="M610.8 275.0 H621.8" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="433.2" y="190" width="173.6" height="170" rx="18" fill="#F1EDFF" stroke="#6551A8" stroke-width="2"/>
+<text x="520.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#6551A8">提交</text>
+<text x="520.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="520.0" dy="0em">sessionStorage 先存</tspan><tspan x="520.0" dy="1.5em">意图 + UUID 键</tspan></text>
+<circle cx="520.0" cy="342" r="4" fill="#6551A8"/>
+<path d="M806.4 275.0 H817.4" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="628.8" y="190" width="173.6" height="170" rx="18" fill="#E8F5EF" stroke="#2F7A55" stroke-width="2"/>
+<text x="715.5999999999999" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#2F7A55">明确成功 / 拒绝</text>
+<text x="715.5999999999999" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="715.5999999999999" dy="0em">回执确认后清除</tspan><tspan x="715.5999999999999" dy="1.5em">可重建新意图</tspan></text>
+<circle cx="715.6" cy="342" r="4" fill="#2F7A55"/>
+<rect x="824.4" y="190" width="173.6" height="170" rx="18" fill="#FFF0EE" stroke="#B24D42" stroke-width="2"/>
+<text x="911.1999999999999" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#B24D42">未知</text>
+<text x="911.1999999999999" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="911.1999999999999" dy="0em">重载同标签页</tspan><tspan x="911.1999999999999" dy="1.5em">仅用原键核实</tspan></text>
+<circle cx="911.2" cy="342" r="4" fill="#B24D42"/>
+<text x="52" y="438" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#53657B">同一过程的职责边界与可观察事实</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8B98AB"/></marker></defs>
+</svg>

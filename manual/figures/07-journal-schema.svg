@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="500" viewBox="0 0 1040 500">
+<rect width="100%" height="100%" rx="24" fill="#FBFCFE"/>
+<path d="M40 104 H1000" stroke="#E7EBF2" stroke-width="1"/>
+<text x="52" y="68" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#17263C">账本表用外键连接经济事件</text>
+<text x="52" y="92" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="12" font-weight="600" fill="#66758B">LEDGERCORE · 机制图</text>
+<path d="M307.0 275.0 H318.0" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="119.0" y="190" width="184.0" height="170" rx="18" fill="#EAF2FF" stroke="#2D5D9F" stroke-width="2"/>
+<text x="211.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#2D5D9F">journal_entries</text>
+<text x="211.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="211.0" dy="0em">一次经济事件</tspan><tspan x="211.0" dy="1.5em">币种 · 类型 · 时间</tspan></text>
+<circle cx="211.0" cy="342" r="4" fill="#2D5D9F"/>
+<path d="M513.0 275.0 H524.0" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="325.0" y="190" width="184.0" height="170" rx="18" fill="#FFF3DB" stroke="#A86B13" stroke-width="2"/>
+<text x="417.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#A86B13">postings</text>
+<text x="417.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="417.0" dy="0em">分录归属凭证</tspan><tspan x="417.0" dy="1.5em">正数分币 · 方向</tspan></text>
+<circle cx="417.0" cy="342" r="4" fill="#A86B13"/>
+<path d="M719.0 275.0 H730.0" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="531.0" y="190" width="184.0" height="170" rx="18" fill="#F1EDFF" stroke="#6551A8" stroke-width="2"/>
+<text x="623.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#6551A8">ledger_accounts</text>
+<text x="623.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="623.0" dy="0em">客户存款 / 储备</tspan><tspan x="623.0" dy="1.5em">正常余额方向</tspan></text>
+<circle cx="623.0" cy="342" r="4" fill="#6551A8"/>
+<rect x="737.0" y="190" width="184.0" height="170" rx="18" fill="#E8F5EF" stroke="#2F7A55" stroke-width="2"/>
+<text x="829.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#2F7A55">balance_projection</text>
+<text x="829.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="829.0" dy="0em">按账本账户</tspan><tspan x="829.0" dy="1.5em">快速读取余额</tspan></text>
+<circle cx="829.0" cy="342" r="4" fill="#2F7A55"/>
+<text x="52" y="438" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#53657B">同一过程的职责边界与可观察事实</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8B98AB"/></marker></defs>
+</svg>

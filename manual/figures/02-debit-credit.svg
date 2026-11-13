@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="500" viewBox="0 0 1040 500">
+<rect width="100%" height="100%" rx="24" fill="#FBFCFE"/>
+<path d="M40 104 H1000" stroke="#E7EBF2" stroke-width="1"/>
+<text x="52" y="68" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="27" font-weight="700" fill="#17263C">一个事件，两侧等额分录</text>
+<text x="52" y="92" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="12" font-weight="600" fill="#66758B">LEDGERCORE · 机制图</text>
+<path d="M410.0 275.0 H421.0" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="222.0" y="190" width="184.0" height="170" rx="18" fill="#FFF0EE" stroke="#B24D42" stroke-width="2"/>
+<text x="314.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#B24D42">付款负债账户</text>
+<text x="314.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="314.0" dy="0em">借方 2,500 分</tspan><tspan x="314.0" dy="1.5em">客户存款减少</tspan></text>
+<circle cx="314.0" cy="342" r="4" fill="#B24D42"/>
+<path d="M616.0 275.0 H627.0" stroke="#8B98AB" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="428.0" y="190" width="184.0" height="170" rx="18" fill="#FFF3DB" stroke="#A86B13" stroke-width="2"/>
+<text x="520.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#A86B13">同一凭证</text>
+<text x="520.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="520.0" dy="0em">总借方 = 总贷方</tspan><tspan x="520.0" dy="1.5em">币种均为 NZD</tspan></text>
+<circle cx="520.0" cy="342" r="4" fill="#A86B13"/>
+<rect x="634.0" y="190" width="184.0" height="170" rx="18" fill="#E8F5EF" stroke="#2F7A55" stroke-width="2"/>
+<text x="726.0" y="236" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="17" font-weight="700" fill="#2F7A55">收款负债账户</text>
+<text x="726.0" y="278" text-anchor="middle" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#39485E"><tspan x="726.0" dy="0em">贷方 2,500 分</tspan><tspan x="726.0" dy="1.5em">客户存款增加</tspan></text>
+<circle cx="726.0" cy="342" r="4" fill="#2F7A55"/>
+<text x="52" y="438" text-anchor="start" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="13" font-weight="400" fill="#53657B">同一过程的职责边界与可观察事实</text>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8B98AB"/></marker></defs>
+</svg>

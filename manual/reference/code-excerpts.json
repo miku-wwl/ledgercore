@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "484b9ad1c70ba052849ee1a40e15e35b6d888c12",
+  "repository": "https://github.com/miku-wwl/ledgercore",
+  "excerpts": [
+    {"id":"money","path":"backend/src/main/java/nz/ac/ledgercore/ledger/Money.java","start":"public static Money parsePositiveNzd","end":"public Money plus"},
+    {"id":"journal_entry","path":"backend/src/main/java/nz/ac/ledgercore/ledger/JournalEntry.java","start":"public JournalEntry {","end":"public static JournalEntry transfer"},
+    {"id":"controller","path":"backend/src/main/java/nz/ac/ledgercore/transfers/TransferController.java","start":"@PostMapping","end":"private void logTransfer"},
+    {"id":"account_entity","path":"backend/src/main/java/nz/ac/ledgercore/accounts/persistence/AccountEntity.java","start":"\t@Version","end":"\tprotected AccountEntity()"},
+    {"id":"db_balance_trigger","path":"backend/src/main/resources/db/migration/V2__create_ledger_tables.sql","start":"CREATE FUNCTION ledgercore_assert_journal_entry_balanced()","end":"CREATE FUNCTION ledgercore_reject_ledger_history_change()"},
+    {"id":"transfer_transaction","path":"backend/src/main/java/nz/ac/ledgercore/transfers/TransferService.java","start":"\t@Transactional(isolation = Isolation.READ_COMMITTED)","end":"\tprivate void validateRequest"},
+    {"id":"idempotency_reservation","path":"backend/src/main/java/nz/ac/ledgercore/transfers/TransferService.java","start":"\t\tint reserved = jdbcTemplate.update","end":"\t\tlockAndValidateAccounts(sourceAccountId, targetAccountId);"},
+    {"id":"sorted_locks","path":"backend/src/main/java/nz/ac/ledgercore/ledger/LedgerWriter.java","start":"\tprivate void lockLedgerAccounts","end":"\tprivate void requireOpenCustomerAccount"},
+    {"id":"history_query","path":"backend/src/main/java/nz/ac/ledgercore/transactionhistory/TransactionHistoryService.java","start":"\t\tString sql = \"\"\"","end":"\t\tList<TransactionView> rows;"}
+  ]
+}

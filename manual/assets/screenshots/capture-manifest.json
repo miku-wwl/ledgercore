@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "484b9ad1c70ba052849ee1a40e15e35b6d888c12",
+  "captureDate": "2026-11-13T06:51:24.466Z",
+  "application": "LedgerCore local packaged JAR + Vite frontend",
+  "database": "Disposable PostgreSQL 18.7 ledgercore_book database; synthetic example.test identity",
+  "browser": "Playwright Chromium 1.65 headless",
+  "scenarios": [
+    "registration and login view",
+    "two simulated accounts",
+    "confirmation",
+    "insufficient funds",
+    "posted transfer",
+    "committed response dropped",
+    "same-tab reload and same-key recovery",
+    "account reconciliation",
+    "history and journal detail",
+    "390px mobile layout"
+  ],
+  "note": "All captures are genuine local application screens; the lost response was injected after the backend returned HTTP 200 to the proxy."
+}
