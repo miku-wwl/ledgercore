@@ -4,7 +4,8 @@
 
 ## 当前基线
 
-- 工作流：main-only；P0 已提交 main；P1 验证通过，当前工作树待提交；未创建分支、Git worktree 或 PR。
+- 工作流：main-only；P0、P1 均已提交并推送到 main；未创建分支、Git worktree 或 PR。
+- 当前提交：P1 骨架 `5fe3dd9af6a17826d08ceac6a04235afbfa2c2f0`；`origin/main` 与本地一致。
 - 当前评估：P0 PASS；P1 已通过构建、单元/集成、迁移、应用启动、HTTP 和 Modulith 验收。接下来实施 P2 账本领域。
 - 已验证工具：Temurin 21.0.13+9（ZIP SHA-256 `a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9`）；Spring Boot 4.0.9；Spring Modulith 2.0.8；Springdoc 3.0.3；Maven Wrapper 3.10.0。
 - 本地验证数据库：官方 EDB PostgreSQL 18.7 Windows 二进制，解压于 Git 忽略的 `work/postgresql-binaries`；集群位于 `work/postgresql-data`，仅监听 `127.0.0.1:55432`。`ledgercore_test` 是隔离测试库。P1 使用真实本地 PostgreSQL，未使用 H2、Mock 或 Testcontainers。
@@ -17,7 +18,7 @@
 |---|---|---|---|---|
 | P0 Requirements/Domain/Architecture | PASS | PRD、领域模型、十项不变量、架构/数据库/API/测试策略、ADR、状态和来源地图已提交；Bank of Anthos 与 EchoCase 只读审计完成 | 后续实现可随工程证据修订 | 进入 P1 |
 | P1 Java 基础 | PASS | Initializr 后端；V1 customers/accounts；PostgreSQL 18.7 迁移；安全默认拒绝、Problem Details、correlation ID、健康、OpenAPI；8 项 Maven 测试、真实打包应用启动与 HTTP 检查 | 身份和账户用例仍未实现（属于后续阶段） | 进入 P2 |
-| P2 Ledger | NOT_STARTED | 领域约束见 DOMAIN-MODEL、LEDGER-INVARIANTS；数据库基础含 customers/accounts | LedgerAccount、JournalEntry、Posting、模拟储备、精确余额、数据库账平与不可变约束、真实 PostgreSQL 测试 | P1 PASS 后实现最小单位金额类型和可平衡的账本模型 |
+| P2 Ledger | IN_PROGRESS | 领域约束见 DOMAIN-MODEL、LEDGER-INVARIANTS；数据库基础含 customers/accounts | LedgerAccount、JournalEntry、Posting、模拟储备、精确余额、数据库账平与不可变约束、真实 PostgreSQL 测试 | 实现分币金额类型、账本领域对象及 V2 PostgreSQL 迁移 |
 | P3 Transfers/Concurrency | NOT_STARTED | 事务与锁协议见 ADR | 持久幂等、故障注入、确定性 PostgreSQL 竞争测试 | P2 PASS 后开始 |
 | P4 React/Integration | NOT_STARTED | UI 状态边界见 ARCHITECTURE | 真实 API 前端、真实浏览器及未知结果恢复 | P3 PASS 后开始 |
 | P5 Security/Testing/Acceptance | NOT_STARTED | 分层策略见 TEST-STRATEGY | 安全、查询计划、CI、最终提交检查 | P4 PASS 后开始 |
@@ -36,6 +37,7 @@
 ## 阶段验收证据
 
 - P0 提交：95d529600eb50c1b871ebeef1be0906ab701cc37，main。
+- P1 提交：5fe3dd9af6a17826d08ceac6a04235afbfa2c2f0，main / origin/main。
 - P1 当前实现包含真实迁移 `backend/src/main/resources/db/migration/V1__create_customer_and_account_tables.sql`；Flyway 在 PostgreSQL 18.7 执行并重复验证后保持 schema version 1。
 - P1 验证命令：`backend/mvnw.cmd -f backend/pom.xml -Dmaven.repo.local=D:\workshop\nov\ledgercore\work\m2 clean verify`；环境设置 `MAVEN_USER_HOME=D:\workshop\nov\ledgercore\work\maven-home`、`JAVA_HOME=Temurin 21.0.13+9` 和 `LEDGERCORE_TEST_DB_PASSWORD` 指向 `ledgercore_test`。最终退出码 0，8 tests、0 failures、0 errors。
 - P1 8 项：2 个相关 ID 纯单元测试；5 个真实随机端口 HTTP/PostgreSQL 应用集成测试（健康、ID 生成、401 Problem Details、OpenAPI、Flyway 实际表）；1 个 Spring Modulith 边界测试。
