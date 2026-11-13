@@ -1,6 +1,6 @@
 # 账本不变量及验证责任
 
-“借方”或“贷方”指 Posting 的会计方向。界面转入/转出必须由交易角色解释，不能替代账务语义。PostgreSQL 普通行级 CHECK 无法汇总多行；跨行的凭证平衡与投影一致性需由应用事务验证，并使用可延迟约束触发器在提交边界复核。
+“借方”或“贷方”指 Posting 的会计方向。界面转入/转出必须由交易角色解释，不能替代账务语义。PostgreSQL 普通行级 CHECK 无法汇总多行；V2 使用可延迟约束触发器在提交边界复核凭证借贷相等，应用写入在同一事务内重算并更新投影。
 
 | ID | 业务含义 | 应用层约束 | 数据库约束 | 主要测试 | 失败时的外部结果 |
 |---|---|---|---|---|---|
@@ -20,6 +20,16 @@
 转账先以认证主体和 Idempotency-Key 建立/读取持久意图；然后确认账户所有权和状态；对涉及的 LedgerAccount 按 UUID 排序加锁；在 READ COMMITTED 下读取源账本余额；验证金额和余额；追加 JournalEntry/Postings、更新投影、保存 Transfer 与回执；提交后才向 HTTP 层返回成功。
 
 任何实现、重试策略或新模块若改变该顺序，都必须重审 INV-02、03、04、08、09、10 的测试。
+
+## P2 实现状态
+
+- INV-01：领域对象拒绝不平衡凭证；PostgreSQL deferred constraint trigger 在提交点拒绝不足两行或借贷不等的凭证。单测和真实 PG 集成测试通过。
+- INV-02：开户、模拟入金、Posting、projection 同一事务；注入 Posting 写入故障后，账户、账本账户、凭证、Posting 和 projection 均回滚。Transfer 与幂等回执仍待 P3。
+- INV-03：客户余额采用贷方正常余额；Projection 有非负检查，冲正若使任何正常余额为负则拒绝。并发支出和透支竞争测试仍待 P3。
+- INV-05：PostgreSQL 触发器拒绝 JournalEntry/Posting 的 UPDATE 与 DELETE，P2 集成测试通过。
+- INV-06：领域冲正工厂建立新的 REVERSAL 凭证并反转每条 Posting；数据库保留原凭证并以唯一 `reverses_entry_id` 限制重复冲正，PG 集成测试通过。
+- INV-07：每次账本写入都按 Posting/normal-side 聚合重算 projection；LedgerBalanceReader 独立读账并比较投影，P2 集成测试通过。
+- INV-04、INV-08、INV-09 及转账范围内的 INV-10 尚未实现或验证，留给 P3–P5。
 
 ## 主要机制来源
 

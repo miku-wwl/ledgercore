@@ -1,17 +1,17 @@
 # PostgreSQL 数据模型与约束
 
-本文同时记录当前已迁移结构和后续逻辑模型。实际 SQL 以 Flyway 迁移为准。P1 的 V1 已在 PostgreSQL 18.7 上运行；账本、转账、投影和幂等表仍是 P2/P3 设计，尚无对应迁移。
+本文同时记录当前已迁移结构和后续逻辑模型。实际 SQL 以 Flyway 迁移为准。V1（customers/accounts）和 V2（ledger accounts/journals/postings/projection）已在 PostgreSQL 18.7 上运行；transfers 与 idempotency_records 仍是 P3 设计。
 
 ## 表与所有权
 
 | 表 | 核心列 | 键与约束 | 实现状态 |
 |---|---|---|
 | customers | id UUID、email_normalized、password_hash、display_name、created_at、version | email_normalized 唯一；邮箱不保存明文密码 | P1 V1 已迁移；身份用例未实现 |
-| accounts | id UUID、owner_customer_id、display_name、status、currency、created_at、closed_at、version | owner 外键；状态与 NZD 受约束；关闭不用 DELETE | P1 V1 已迁移；账户用例未实现 |
-| ledger_accounts | id UUID、account_id 可空、kind、normal_side、is_system | account_id 对客户子账本唯一；唯一的模拟储备系统账户 | P2 设计，未迁移 |
-| journal_entries | id UUID、entry_type、currency、created_at、reference、reverses_entry_id | reverses_entry_id 外键并唯一；不允许自我冲正 | P2 设计，未迁移 |
-| postings | id UUID、journal_entry_id、ledger_account_id、side、amount_minor BIGINT、currency | amount_minor > 0；side 为 DEBIT/CREDIT；父凭证与币种外键；按账本/凭证建立索引 | P2 设计，未迁移 |
-| account_balance_projection | ledger_account_id、balance_minor BIGINT、updated_at | 账本账户外键与主键；客户存款余额不可为负；不单独被业务接口任意修改 | P2 设计，未迁移 |
+| accounts | id UUID、owner_customer_id、display_name、status、currency、created_at、closed_at、version | owner 外键；状态与 NZD 受约束；关闭不用 DELETE | P1 V1 已迁移；P2 AccountService 实现开户、暂停/恢复、关闭 |
+| ledger_accounts | id UUID、customer_account_id 可空、kind、normal_side、is_system、currency | 客户存款账户唯一；唯一模拟储备账户；NZD 与借/贷正常方向受约束 | P2 V2 已迁移 |
+| journal_entries | id UUID、entry_type、currency、created_at、reference、reverses_entry_id | 冲正外键并唯一；不允许自我冲正；NZD | P2 V2 已迁移 |
+| postings | id UUID、journal_entry_id、ledger_account_id、side、amount_minor BIGINT、currency | amount_minor > 0；side 为 DEBIT/CREDIT；凭证与账本复合外键校验币种；按账本/凭证索引 | P2 V2 已迁移 |
+| account_balance_projection | ledger_account_id、balance_minor BIGINT、updated_at | 账本账户外键与主键；余额不可为负；按权威 Posting 汇总重建 | P2 V2 已迁移 |
 | transfers | id UUID、owner_customer_id、source_account_id、target_account_id、amount_minor、journal_entry_id、created_at | 所有权与账本外键；源/目标不同；成功转账对应完整凭证 | P3 设计，未迁移 |
 | idempotency_records | owner_customer_id、operation、idempotency_key、request_fingerprint、transfer_id、response_payload、created_at | 三元业务键唯一；成功回执与 Transfer 同事务 | P3 设计，未迁移 |
 
@@ -19,27 +19,27 @@
 
 ## 账本完整性
 
-PostgreSQL CHECK 可限制金额为正、side 枚举、币种 NZD、源和目标账户不同、外键存在及唯一幂等键；它不能安全地用普通 CHECK 汇总 Posting。Flyway 将增加可延迟的约束触发器，在事务提交时检查每张新凭证至少两条 Posting、借贷总额相等。JournalEntry 和 Posting 上的 UPDATE/DELETE 由触发器拒绝。应用领域校验先尽早给出业务错误，数据库约束负责守住提交边界。
+PostgreSQL CHECK 可限制金额为正、side 枚举和币种 NZD；外键及唯一键约束账本关联与冲正关系。它不能安全地用普通 CHECK 汇总 Posting。V2 已加入可延迟的约束触发器，在事务提交时检查新凭证至少有两条 Posting 且借贷总额相等。JournalEntry 和 Posting 上的 UPDATE/DELETE 由触发器拒绝。应用领域校验先尽早给出业务错误，数据库约束守住提交边界。
 
-账户余额投影只用于读取和快速展示；资金扣款仍由锁定的 LedgerAccount 行及其 Posting 净余额决定。投影在账务事务内更新，由 Reconciliation 再从账本独立重算。投影不一致时记录明确差异，不得改写 Posting 来追平。
+账户余额投影只用于读取和快速展示；账本余额通过 Posting 按 LedgerAccount 的正常方向聚合得出。每次账务写入都在持有相关 LedgerAccount 行锁后重算并更新投影，而不是从客户端金额或旧投影递增。Reconciliation 仍需在 P5 提供独立差异报告。投影不一致时不得改写 Posting 来追平。
 
 ## 并发读写协议
 
-转账以稳定的 UUID 顺序逐个执行 SELECT ... FOR UPDATE 锁定全部相关 LedgerAccount。持锁后，按 PostgreSQL READ COMMITTED 执行后续账本聚合读取；余额足够且账户可用时，在同一事务中追加分录、投影、Transfer 和回执。所有修改 Posting 的业务入口必须使用相同锁协议。历史查询按账户和稳定时间/ID 游标分页，不以时间戳单列保证唯一顺序。
+资金操作以稳定的 UUID 顺序逐个执行 SELECT ... FOR UPDATE 锁定相关 LedgerAccount。P2 的初始资金、模拟入金和冲正按此协议运行；P3 转账仍需锁定付款与收款账本账户、在 READ COMMITTED 下检查可用余额并原子提交 Transfer 与幂等回执。历史查询按账户和稳定时间/ID 游标分页，不以时间戳单列保证唯一顺序。
 
 ## 需要数据库验证的迁移结果
 
-- Flyway 全新数据库可建表、索引、触发器。
-- 迁移重复检查不会重建或删除账务事实。
-- 不平衡凭证在提交点失败。
-- 已过账行的 UPDATE/DELETE 失败。
+- Flyway V1/V2 在全新 PostgreSQL 18.7 测试库建表、索引和触发器：P2 PASS。
+- 不平衡凭证在提交点失败，相关行回滚：P2 PASS。
+- 已过账行的 UPDATE/DELETE 失败：P2 PASS。
+- Projection 与按 Posting 独立重算的余额一致：P2 PASS。
 - 相同所有者、操作和幂等键只出现一条成功回执。
-- 冲正保留原凭证。
-- 真实 PostgreSQL 并发测试验证唯一键、行锁和回滚。
+- 冲正保留原凭证：P2 PASS。
+- 同键幂等与真实并发转账尚未运行，留给 P3。
 
 ### PostgreSQL 行为参考
 
-P0 选择 READ COMMITTED 与显式账户行锁。PostgreSQL 18 每条 SQL 命令开始时取得新快照；锁语句等待后，后续余额汇总语句能够读取此前已提交的 Posting。DEFERRED constraint trigger 可将跨行汇总检查延后至事务结束。V1 已在 PostgreSQL 18.7 验证；账本约束、事务和并发行为仍须在 P2/P3 由 LedgerCore 实际测试验证。
+P0 选择 READ COMMITTED 与显式账户行锁。PostgreSQL 18 每条 SQL 命令开始时取得新快照；锁语句等待后，后续余额汇总语句能够读取此前已提交的 Posting。DEFERRED constraint trigger 可将跨行汇总检查延后至事务结束。V1/V2、账平、只追加、冲正和开账回滚已在 PostgreSQL 18.7 验证；同余额并发转账仍须在 P3 实测。
 
 - [PostgreSQL 18 transaction isolation](https://www.postgresql.org/docs/18/transaction-iso.html)
 - [PostgreSQL 18 explicit locking](https://www.postgresql.org/docs/18/explicit-locking.html)

@@ -1,6 +1,6 @@
 # ADR 0001：以单体模块和不可变双重记账为基础
 
-- 状态：Accepted for P0; implementation pending
+- 状态：Accepted for P0–P2 foundation; transfers, identity, and browser flow remain pending
 - 日期：2026-11-13
 - 范围：LedgerCore MVP
 
@@ -11,12 +11,13 @@
 ## 决策
 
 1. 使用 Java 21、Spring Boot 4.0.9、Spring Modulith 2.0.8 与 Maven Wrapper 3.10.0，部署形态为单一模块化单体，使用 PostgreSQL 与 Flyway。该版本组合已在 P1 构建、启动及 PostgreSQL 18.7 测试中验证。springdoc-openapi 使用 3.0.3。
-2. 会计事实使用不可变 JournalEntry 与 Posting；单币种 NZD，amountMinor 以 long 表示分并由 PostgreSQL BIGINT 存储。API 使用精确十进制金额字符串，界面格式化不使用浮点算术。
-3. 客户存款是贷方正常余额负债；初始资金由明确的 Simulation Reserve 资产账户对手方入账。
-4. Posting 账本是资金事实权威来源；余额投影可重建。扣款在账户行锁下读取账本余额，不以缓存或客户端余额授权。
-5. 转账、过账行、投影、Transfer 与成功幂等回执置于一个 PostgreSQL 事务。持久幂等按认证客户、操作、键唯一，并把请求指纹与稳定成功回执保存到同一提交。
-6. 会话 Cookie 加 CSRF；账户所有权始终由服务端身份和 owner 关系验证。浏览器在当前标签页保存原键和原意图，以处理响应未知。
-7. 先建立 Unit、真实 PostgreSQL Integration、Architecture 和浏览器 E2E 的职责，再依 P0–P6 顺序验收；P5 未完成前不出版正式教材。
+2. Accounts 使用 Spring Data JPA/Hibernate 表达账户映射和版本状态；Ledger 的复式账务写入使用 Spring JDBC，因为锁顺序、延迟约束触发器、不可变触发器及 posting/projection 同事务更新必须与实际 PostgreSQL SQL 明确对齐。领域记录保持纯 Java；模块服务仍通过同一 Spring 事务管理器协作。
+3. 会计事实使用不可变 JournalEntry 与 Posting；单币种 NZD，amountMinor 以 long 表示分并由 PostgreSQL BIGINT 存储。API 使用精确十进制金额字符串，界面格式化不使用浮点算术。
+4. 客户存款是贷方正常余额负债；初始资金由明确的 Simulation Reserve 资产账户对手方入账。
+5. Posting 账本是资金事实权威来源；余额投影可重建。资金操作在账户行锁下读取账本余额，不以缓存或客户端余额授权。
+6. 转账、过账行、投影、Transfer 与成功幂等回执将置于一个 PostgreSQL 事务。持久幂等按认证客户、操作、键唯一，并把请求指纹与稳定成功回执保存到同一提交。
+7. 会话 Cookie 加 CSRF；账户所有权始终由服务端身份和 owner 关系验证。浏览器在当前标签页保存原键和原意图，以处理响应未知。
+8. 先建立 Unit、真实 PostgreSQL Integration、Architecture 和浏览器 E2E 的职责，再依 P0–P6 顺序验收；P5 未完成前不出版正式教材。
 
 ## 后果
 

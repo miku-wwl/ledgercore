@@ -38,9 +38,9 @@ Spring Boot 4.0.9、Spring Modulith 2.0.8 和 OpenAPI 依赖已在 Java 21 上�
 
 ## 当前状态
 
-P0 需求与金融设计已通过。P1 已建立可运行的 Java 后端骨架：客户与账户 Flyway V1 迁移、PostgreSQL 连接、Spring Security 的默认拒绝策略、相关 ID、RFC 9457 错误、健康端点和 OpenAPI 文档。P1 通过真实 PostgreSQL 18.7、应用启动和 HTTP 验证。
+P0 需求与金融设计、P1 Java 应用基础、P2 账本核心均已完成。P2 包含精确分币金额、客户账户生命周期、明确对手账户的模拟资金、复式凭证、余额投影重算、整笔冲正，以及 PostgreSQL 账平和只追加约束；25 项测试在 PostgreSQL 18.7 上通过。
 
-当前尚未实现注册/登录、账户业务 API、账本分录、余额、转账、幂等、对账或 React 界面。身份模块完成前，除健康与 OpenAPI 端点外的请求都会被拒绝。各阶段实际状态见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
+当前仍未实现注册/登录、账户 HTTP API、内部转账、持久幂等、交易历史、对账或 React 界面。账户与账本操作目前是未公开给 HTTP 的应用服务；身份模块完成前，除健康与 OpenAPI 端点外的请求都会被拒绝。并发转账和请求重放将在 P3 实现。各阶段实际状态见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
 
 ### 本地运行与验证
 
