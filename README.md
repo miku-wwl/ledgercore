@@ -20,7 +20,7 @@ MVP 目标包括注册登录、模拟账户管理、账户余额、明确来源�
 | 前端 | React 19、TypeScript、Vite、shadcn/ui、Tailwind CSS、TanStack Query |
 | 验证 | JUnit、Mockito、真实 PostgreSQL 集成测试、Spring Modulith、Playwright、GitHub Actions |
 
-Spring Boot 4.0.9、Spring Modulith 2.0.8、业务 HTTP API 和 React 前端已在本机通过构建验证。P4 使用真实 PostgreSQL 与 Chromium Playwright 完成端到端流程；CI 与 P5 安全/查询计划审查仍在后续阶段。
+Spring Boot 4.0.9、Spring Modulith 2.0.8、业务 HTTP API 和 React 前端已在本机通过构建验证。P4 使用真实 PostgreSQL 与 Chromium Playwright 完成端到端流程；P5 的本地安全审查和 PostgreSQL 查询计划实验已完成，main 上的 GitHub CI 与最终验收待运行。
 
 ## 账务模型
 
@@ -38,9 +38,9 @@ Spring Boot 4.0.9、Spring Modulith 2.0.8、业务 HTTP API 和 React 前端已�
 
 ## 当前状态
 
-P0–P4 已完成：精确分币金额、客户账户生命周期、明确来源的模拟资金、不可变复式账本、原子内部转账、稳定顺序账户行锁、持久幂等回执、注册/登录和会话安全、账户/历史/对账 API、React 界面与刷新后恢复未知转账。P4 完整 Maven 回归共 41 项测试通过；数据库集成和并发测试使用 PostgreSQL 18.7。前端生产构建、lint 与真实 Chromium 流程也通过。
+P0–P4 已完成，P5 正在验收：精确分币金额、客户账户生命周期、明确来源的模拟资金、不可变复式账本、原子内部转账、稳定顺序账户行锁、持久幂等回执、注册/登录和会话安全、账户/历史/对账 API、React 界面与刷新后恢复未知转账。当前 P5 本地 Maven 回归共 42 项测试通过；数据库集成和并发测试使用 PostgreSQL 18.7。前端生产构建、lint 和 Chromium 流程通过。GitHub Actions 工作流已加入 main-only 流程，须等推送后的结果通过才能标记 P5 PASS。
 
-各阶段验收记录及待完成的 P5 安全审查、CI 和查询计划实验见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
+各阶段验收记录、P5 远程 CI 待验收事项与已完成的查询计划实验见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md) 和 [P5 性能实验](backend/docs/performance/P5-PERFORMANCE-EXPERIMENT.md)。
 
 ### 本地运行与验证
 
@@ -52,6 +52,7 @@ psql -U postgres -c "CREATE DATABASE ledgercore OWNER ledgercore;"
 $env:LEDGERCORE_DB_URL = 'jdbc:postgresql://localhost:5432/ledgercore'
 $env:LEDGERCORE_DB_USERNAME = 'ledgercore'
 $env:LEDGERCORE_DB_PASSWORD = 'choose-a-local-password'
+$env:LEDGERCORE_COOKIE_SECURE = 'false' # 仅供本地 HTTP 开发；默认值 true 适用于 HTTPS 部署
 .\backend\mvnw.cmd -f .\backend\pom.xml spring-boot:run
 ```
 

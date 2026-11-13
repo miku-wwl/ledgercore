@@ -18,7 +18,7 @@
 
 ## 测试数据与副作用
 
-集成测试使用专用本地 PostgreSQL 数据库和随机测试 ID/邮箱；明确检查连接目标，绝不清理或重建用户业务库。当前测试以 EDB PostgreSQL 18.7 本地隔离库运行；CI PostgreSQL 服务仍待 P5。P4 API 集成启动真实 Spring Boot HTTP 服务器，Playwright 通过 Vite 代理使用真实 HTTP，不导入生产模块内部类型。性能只使用公开的合成数据并保留版本、行数、索引、参数和计划。
+集成测试使用专用本地 PostgreSQL 数据库和随机测试 ID/邮箱；明确检查连接目标，绝不清理或重建用户业务库。当前本地测试以 EDB PostgreSQL 18.7 隔离库运行；P5 main-only GitHub Actions 已配置 PostgreSQL 18 服务，但远程结果须在 P5 提交后确认。P4 API 集成启动真实 Spring Boot HTTP 服务器，Playwright 通过 Vite 代理使用真实 HTTP，不导入生产模块内部类型。性能只使用公开的合成数据并保留版本、行数、索引、查询计划和限制。
 
 ## 阶段验收规则
 
@@ -26,4 +26,4 @@
 
 P4 后端完整 `clean verify` 退出码为 0，共 41 tests、0 failures、0 errors、0 skipped；其中 `FullStackApiPostgresIntegrationTests` 验证真实注册、CSRF/会话、账户、转账、幂等重放、历史、对账、所有权和登出，`TransferPostgresIntegrationTests` 15 项与 `ModuleArchitectureTests` 均通过。前端 `npm run build` 与 `npm run lint` 通过；`npm run test:e2e` 在 Chromium 为 1 passed。E2E 真正提交并丢弃首个转账 HTTP 响应，刷新后用原幂等键恢复同一回执。完整测试报告和 Playwright trace 保留在 Git 忽略的 `work/`。
 
-P5 CI 和干净环境验收、依赖/静态安全审查及受控查询计划实验仍待完成。性能没有生产容量结论。
+P5 的本地安全审查（见 [P5 Security Review](../security/P5-SECURITY-REVIEW.md)）、负向请求回归与 PostgreSQL 查询计划/索引对比已完成。临时空 PostgreSQL 18.7 集群上的 42 项 Maven 回归、打包应用健康检查、Flyway 验证、OpenAPI 类型无漂移和 Chromium E2E 1 passed 均通过。`npm audit` 报告 0 high/critical、4 moderate、2 low；OSV-Scanner 2.7.1 的 Maven 本地扫描解析 187 个依赖包且无已知问题。最终提交对应的 OSV/GitHub Actions 远程 job 仍待执行。性能没有生产容量结论。

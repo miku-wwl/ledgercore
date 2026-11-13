@@ -44,4 +44,9 @@ public record CustomerPrincipal(UUID customerId, String email, String passwordHa
 	public boolean isEnabled() {
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "CustomerPrincipal[customerId=" + customerId + "]";
+	}
 }

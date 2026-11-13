@@ -4,9 +4,9 @@
 
 ## 当前基线
 
-- 工作流：main-only；P0–P3 已提交并推送到 main；P4 在 main 上完成实现与验收，正在准备阶段提交；未创建分支、Git worktree 或 PR。
-- 当前基线：P4 验收基于 `53960bd` 加本地 P4 改动；提交后补录精确 SHA。
-- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS；P4 PASS；开始 P5 安全、CI、查询性能与最终验收。
+- 工作流：main-only；P0–P4 已提交并推送到 `main`；P5 开发与本地验证直接在 `main`；未创建分支、Git worktree 或 PR。
+- 当前基线：P4 提交 `98a86b2b5e9a3fab8e5c8d84f25bb49b1ed31aa4` 已推送到 `origin/main`；本地 P5 改动尚待提交和推送。
+- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS；P4 PASS；P5 IN_PROGRESS（本地代码/测试和性能实验通过，等待 P5 提交后的 GitHub CI 及最终验收）；P6 NOT_STARTED。
 - 已验证工具：Temurin 21.0.13+9（ZIP SHA-256 `a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9`）；Spring Boot 4.0.9；Spring Modulith 2.0.8；Springdoc 3.0.3；Maven Wrapper 3.10.0。
 - 本地验证数据库：官方 EDB PostgreSQL 18.7 Windows 二进制，解压于 Git 忽略的 `work/postgresql-binaries`；集群位于 `work/postgresql-data`，仅监听 `127.0.0.1:55432`。`ledgercore_test` 是隔离测试库。P1–P3 使用真实本地 PostgreSQL，未使用 H2 或纯 Mock；Testcontainers 未使用。
 - 本地工具链、数据库、依赖缓存和日志均在 Git 忽略的 `work/` 下；不是 Git worktree。
@@ -21,7 +21,7 @@
 | P2 Ledger | PASS | 精确分币金额；客户账户生命周期；模拟储备开户资金与模拟入金；复式凭证、整笔冲正、PostgreSQL 账平/只追加约束、余额投影重算；17 项 P2 测试通过 | 转账、身份/API 与并发扣款不属于 P2 验收 | 完成 |
 | P3 Transfers/Concurrency | PASS | 原子转账、服务层源所有权检查、账户状态/余额校验、UUID 排序行锁、持久幂等、稳定回执、V3/V4 数据约束；15 项 P3 PostgreSQL 测试与完整回归通过 | HTTP 身份映射、公开路由与浏览器网络恢复属于 P4/P5 | 完成 |
 | P4 React/Integration | PASS | 会话注册/登录、账户与转账 API、历史分页、分录详情、只读对账、React 全栈 UI；刷新后以原键恢复真实网络响应丢失；41 项 Maven 测试、前端构建、Chromium E2E 均通过 | P5 的威胁审查、CI 与查询性能实验 | 完成 |
-| P5 Security/Testing/Acceptance | IN_PROGRESS | P4 的全栈 HTTP、PostgreSQL 和浏览器验收通过 | 安全代码审查与负向测试、CI 数据库流水线、查询计划、发布前验收 | 完成并复核 main |
+| P5 Security/Testing/Acceptance | IN_PROGRESS | 42 项后端测试、本地 PostgreSQL 18.7；输入/授权负向用例；日志脱敏与安全 Cookie 默认；结构化转账耗时/错误分类；npm 高危依赖门槛；合成数据查询计划和索引对比；干净 PostgreSQL 数据库上的打包应用与 Chromium 验收；main-only GitHub Actions 已编写 | 最终 P5 提交对应的 GitHub verify 与 OSV job 结果 | 提交并推送 P5，等待最终提交的两个 main CI job 通过后标记 PASS |
 | P6 Textbook | NOT_STARTED | 暂无教材章节或 PDF | 稳定源码基线、真实截图/实验、完整排版与逐页 QA | 仅在 P5 PASS 后启动正式出版 |
 
 ## 重要决定
@@ -59,11 +59,17 @@
 - P4 前端：React 19、TypeScript 5、Vite 8、shadcn/ui、Tailwind 4、TanStack Query；API 类型从运行中的 OpenAPI 生成；金额使用 BigInt 分币。`npm run build` 和无警告的 `npm run lint` 均通过。
 - P4 浏览器验收：`frontend/npm run test:e2e` 真实 Chromium 1 passed；流程包括注册/开户、CSRF、余额不足、真实转账、在服务端提交后丢弃网络响应、刷新并用原幂等键恢复、账户对账、历史分页与教学分录、跨客户 404、登出/登录、390px 无横向溢出。截图位于 Git 忽略的 `work/evidence/p4-dashboard-desktop.png` 与 `p4-dashboard-mobile.png`。
 - P4 浏览器断言复核：重对账卡位于账户详情页；E2E 在正确路由验证 `Ledger and projection match` 后再访问历史列表。首次运行因断言放错路由失败，修正后完整流程通过。
+- P5 安全与负向验证：后端 `mvnw clean verify` 在 PostgreSQL 18.7 上退出码 0，共 42 tests、0 failures、0 errors、0 skipped。包含坏 JSON、无效 UUID 路径和缺失 `Idempotency-Key` 均返回 400，CSRF 与跨客户访问负向检查，以及 `CustomerPrincipal.toString()` 不输出邮箱或密码哈希的回归测试。安全边界与证据见 [P5 Security Review](../security/P5-SECURITY-REVIEW.md)。
+- P5 日志与会话设置：日志使用 Spring Boot Logstash JSON 格式；结构化 `ledger.transfer` 事件记录稳定错误码、结果分类、时长和 correlation ID，不包含账户 ID、金额或幂等键。意外 HTTP 错误仅记录关联 ID 和异常类型，不写异常消息/堆栈。`CustomerPrincipal` 为不可变类并覆盖脱敏 `toString()`。生产默认 `Secure` Cookie；测试 profile 和 CI 的明文 HTTP 环境显式关闭。
+- P5 前端依赖审计：`npm audit --registry=https://registry.npmjs.org --audit-level=high` 退出码 0；完整报告有 2 low、4 moderate、0 high、0 critical，均沿 shadcn/ts-morph 依赖链。CI 门槛失败于 high/critical；报告及审计阈值在 P5 文档中保留。
+- P5 干净数据库验收：新建临时 PostgreSQL 18.7 集群，从空库执行完整 42 项 Maven `clean verify`（0 failures/errors/skips）；随后启动打包 JAR，健康检查为 UP，Flyway V1–V4 验证通过。运行时 `/v3/api-docs` 重新生成的 TypeScript 与仓库文件无差异，真实 Chromium E2E 1 passed；验收后停止应用与临时数据库。
+- P5 性能实验：隔离 `ledgercore_perf` 数据库由 Flyway 空库执行 V1–V4；合成数据为 1,000 customers、10,000 accounts、50,000 transfers、120,000 postings。账本不平衡数与投影差异均为 0，V4 触发器约束在插入事务提交时执行通过。真实 `EXPLAIN (ANALYZE, BUFFERS)`、索引移除/恢复对比、环境和限制见 `backend/docs/performance/P5-PERFORMANCE-EXPERIMENT.md`；原始计划位于 Git 忽略的 `work/performance-baseline.txt` 和 `work/performance-index-comparison.txt`。
+- P5 CI：新增 `.github/workflows/ci.yml`，在 `main` push 或手动触发；两个 job 都限制为 `main` ref，运行 Java/PostgreSQL 集成与架构测试、前端 lint/build、OpenAPI 类型漂移检查、Chromium E2E、npm audit 与 Google OSV Maven 扫描；第三方 Action 固定到完整 SHA。工作流远程结果必须在最终 P5 提交推送后确认。
 - P0 检查：13 个 Markdown 文件的本地链接均可解析；必需的 12 份 P0 文档存在；INV-01 至 INV-10 全部有记录；暂存 diff 无空白错误。这些是文档设计检查，不是应用测试。
 
 ## NOT_RUN 与阻塞项
 
-- P5 CI 结果、依赖/静态安全审查、负向安全验证、EXPLAIN (ANALYZE, BUFFERS) 查询计划与干净环境发布验收仍 NOT_RUN。
+- P5 最终提交对应的 GitHub Actions `verify` 与 `dependency-scan` 结果仍 NOT_RUN，须在推送后独立确认。空 PostgreSQL 数据库、打包应用、OpenAPI 类型无漂移和 Chromium 流程已完成本地最终验收；README、PRD、API 合同与现有路由已终审。OSV-Scanner 2.7.1 对 Maven Central 依赖图的本地扫描通过（187 个解析包，无已知问题）。OWASP Dependency-Check 在无 NVD API key 时无法更新本地漏洞库，因此不作为验收证据。
 - P6 教材与 PDF 尚未开始；须在 P5 PASS、确定可复现源码基线后再出版。
 - 当前完整应用只处理本地模拟 NZD 资金，没有真实银行、外部付款、生产容量或监管认证结论。
 

@@ -5,8 +5,8 @@
 ## 表与所有权
 
 | 表 | 核心列 | 键与约束 | 实现状态 |
-|---|---|---|
-| customers | id UUID、email_normalized、password_hash、display_name、created_at、version | email_normalized 唯一；邮箱不保存明文密码 | P1 V1 已迁移；身份用例未实现 |
+|---|---|---|---|
+| customers | id UUID、email_normalized、password_hash、display_name、created_at、version | email_normalized 唯一；邮箱不保存明文密码 | P1 V1 已迁移；P4 注册/登录与会话身份已实现 |
 | accounts | id UUID、owner_customer_id、display_name、status、currency、created_at、closed_at、version | owner 外键；状态与 NZD 受约束；关闭不用 DELETE | P1 V1 已迁移；P2 AccountService 实现开户、暂停/恢复、关闭 |
 | ledger_accounts | id UUID、customer_account_id 可空、kind、normal_side、is_system、currency | 客户存款账户唯一；唯一模拟储备账户；NZD 与借/贷正常方向受约束 | P2 V2 已迁移 |
 | journal_entries | id UUID、entry_type、currency、created_at、reference、reverses_entry_id | 冲正外键并唯一；不允许自我冲正；NZD | P2 V2 已迁移 |
@@ -21,7 +21,7 @@
 
 PostgreSQL CHECK 可限制金额为正、side 枚举和币种 NZD；外键及唯一键约束账本关联与冲正关系。它不能安全地用普通 CHECK 汇总 Posting。V2 已加入可延迟的约束触发器，在事务提交时检查新凭证至少有两条 Posting 且借贷总额相等。JournalEntry 和 Posting 上的 UPDATE/DELETE 由触发器拒绝。应用领域校验先尽早给出业务错误，数据库约束守住提交边界。
 
-账户余额投影只用于读取和快速展示；账本余额通过 Posting 按 LedgerAccount 的正常方向聚合得出。每次账务写入都在持有相关 LedgerAccount 行锁后重算并更新投影，而不是从客户端金额或旧投影递增。Reconciliation 仍需在 P5 提供独立差异报告。投影不一致时不得改写 Posting 来追平。
+账户余额投影只用于读取和快速展示；账本余额通过 Posting 按 LedgerAccount 的正常方向聚合得出。每次账务写入都在持有相关 LedgerAccount 行锁后重算并更新投影，而不是从客户端金额或旧投影递增。P4 的只读 Reconciliation API 独立返回账本余额、投影余额和匹配结果；P5 查询计划实验记录了两条查询的本地 PostgreSQL 执行计划。投影不一致时不得改写 Posting 来追平。
 
 ## 并发读写协议
 

@@ -39,6 +39,13 @@ class FullStackApiPostgresIntegrationTests {
 
 		String aliceSource = createAccount(alice, "Alice spending");
 		String aliceSecond = createAccount(alice, "Alice reserve");
+		assertThat(alice.call("POST", "/api/accounts", "{", true).statusCode()).isEqualTo(400);
+		assertThat(alice.call("GET", "/api/accounts/not-a-uuid", null, false).statusCode()).isEqualTo(400);
+		HttpResponse<String> invalidCursor = alice.call("GET",
+				"/api/accounts/" + aliceSource + "/transactions?cursor=private-cursor-value", null, false);
+		assertThat(invalidCursor.statusCode()).isEqualTo(400);
+		assertThat(invalidCursor.body()).contains("One or more request values are invalid.")
+			.doesNotContain("private-cursor-value");
 		assertThat(alice.call("POST", "/api/accounts", "{\"displayName\":\"CSRF missing\"}", false).statusCode())
 				.isEqualTo(403);
 
@@ -53,6 +60,7 @@ class FullStackApiPostgresIntegrationTests {
 
 		String transferIntent = "{\"sourceAccountId\":\"" + aliceSource + "\",\"targetAccountId\":\"" + bobAccount
 				+ "\",\"amount\":\"10.00\"}";
+		assertThat(alice.call("POST", "/api/transfers", transferIntent, true).statusCode()).isEqualTo(400);
 		HttpResponse<String> first = alice.call("POST", "/api/transfers", transferIntent, true, "p4-transfer-key-1");
 		assertThat(first.statusCode()).isEqualTo(200);
 		assertThat(first.body()).contains("\"status\":\"POSTED\"", "\"amount\":\"10.00\"");

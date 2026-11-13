@@ -2,6 +2,9 @@ package nz.ac.ledgercore.transfers;
 
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.spi.LoggingEventBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +26,8 @@ import nz.ac.ledgercore.ledger.Money;
 @RequestMapping("/api/transfers")
 public class TransferController {
 
+	private static final Logger logger = LoggerFactory.getLogger(TransferController.class);
+
 	private final TransferService transferService;
 
 	public TransferController(TransferService transferService) {
@@ -33,9 +38,42 @@ public class TransferController {
 	ResponseEntity<TransferReceipt> transfer(@AuthenticationPrincipal CustomerPrincipal principal,
 			@RequestHeader("Idempotency-Key") String idempotencyKey, @Valid @RequestBody TransferRequest request) {
 		Money amount = Money.parsePositiveNzd(request.amount());
-		TransferReceipt receipt = transferService.transfer(principal.customerId(), request.sourceAccountId(),
-				request.targetAccountId(), amount, idempotencyKey);
-		return ResponseEntity.ok(receipt);
+		long startedAt = System.nanoTime();
+		try {
+			TransferReceipt receipt = transferService.transfer(principal.customerId(), request.sourceAccountId(),
+					request.targetAccountId(), amount, idempotencyKey);
+			logTransfer("succeeded", "NONE", startedAt);
+			return ResponseEntity.ok(receipt);
+		}
+		catch (TransferException exception) {
+			String outcome = exception.code() == TransferErrorCode.ACCOUNT_NOT_OPEN
+					|| exception.code() == TransferErrorCode.IDEMPOTENCY_KEY_REUSED ? "conflict" : "rejected";
+			logTransfer(outcome, exception.code().name(), startedAt);
+			throw exception;
+		}
+		catch (RuntimeException exception) {
+			logTransfer("internal_error", "UNEXPECTED", startedAt);
+			throw exception;
+		}
+	}
+
+	private void logTransfer(String outcome, String errorCode, long startedAt) {
+		LoggingEventBuilder event;
+		if ("internal_error".equals(outcome)) {
+			event = logger.atError();
+		}
+		else if ("conflict".equals(outcome) || "rejected".equals(outcome)) {
+			event = logger.atWarn();
+		}
+		else {
+			event = logger.atInfo();
+		}
+		event
+			.addKeyValue("event.name", "ledger.transfer")
+			.addKeyValue("outcome", outcome)
+			.addKeyValue("error.code", errorCode)
+			.addKeyValue("duration.ms", (System.nanoTime() - startedAt) / 1_000_000.0);
+		event.log("Transfer attempt completed");
 	}
 
 	public record TransferRequest(@NotNull UUID sourceAccountId, @NotNull UUID targetAccountId,

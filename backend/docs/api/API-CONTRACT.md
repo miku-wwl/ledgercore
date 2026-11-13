@@ -1,4 +1,4 @@
-# LedgerCore HTTP API 合同（P4 实现）
+# LedgerCore HTTP API 合同（P4 路由；P5 验证与错误处理）
 
 下列银行业务路由已由 Spring MVC 实现，并通过 OpenAPI 与真实 PostgreSQL HTTP 集成测试验证。`GET /actuator/health`、`GET /v3/api-docs`、`GET /api/auth/csrf`、注册与登录可匿名访问；其他业务路由需要服务端会话。写请求都需要有效 CSRF token。
 
@@ -24,6 +24,8 @@ Cookie 使用 HttpOnly、SameSite=Lax；`LEDGERCORE_COOKIE_SECURE` 控制 Secure
 | GET /api/accounts/{accountId}/transactions?limit=20&cursor=… | 按创建时间与 UUID 稳定倒序的历史页 | 已认证且拥有账户；limit 限制在 1–100；cursor 为不透明 URL-safe 值 |
 | GET /api/accounts/{accountId}/transactions/{transferId} | 本账户视角、金额、方向和安全的分录教学视图 | 已认证且拥有账户和交易；对方只显示 `Counterparty`，不暴露其账户 ID |
 | GET /api/accounts/{accountId}/reconciliation | Posting 汇总、余额投影与 `matches` 结果 | 已认证且拥有账户；只读 |
+
+账户 HTTP API 目前只提供列出、创建和查看。领域服务实现了暂停、恢复及关闭规则，但这些转换没有暴露为客户可调用的路由。
 
 余额仍以规范 NZD 十进制字符串返回。账本 Posting 是权威数据；余额投影仅用于快速显示。未实现单独的 `/balance` 或 `/api/transfers/{transferId}` 路由。
 
