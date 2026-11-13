@@ -38,13 +38,13 @@ Spring Boot 4.0.9、Spring Modulith 2.0.8 和 OpenAPI 依赖已在 Java 21 上�
 
 ## 当前状态
 
-P0 需求与金融设计、P1 Java 应用基础、P2 账本核心均已完成。P2 包含精确分币金额、客户账户生命周期、明确对手账户的模拟资金、复式凭证、余额投影重算、整笔冲正，以及 PostgreSQL 账平和只追加约束；25 项测试在 PostgreSQL 18.7 上通过。
+P0–P3 后端基础已完成：精确分币金额、客户账户生命周期、明确来源的模拟资金、不可变复式账本、原子内部转账、稳定顺序账户行锁、持久幂等回执和失败回滚。P1–P3 共 40 项测试通过；所有数据库集成和并发测试使用 PostgreSQL 18.7。
 
-当前仍未实现注册/登录、账户 HTTP API、内部转账、持久幂等、交易历史、对账或 React 界面。账户与账本操作目前是未公开给 HTTP 的应用服务；身份模块完成前，除健康与 OpenAPI 端点外的请求都会被拒绝。并发转账和请求重放将在 P3 实现。各阶段实际状态见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
+转账与账户操作目前是未公开给 HTTP 的应用服务；注册/登录、账户和转账 API、交易历史、对账、React 界面及真实浏览器中的未知结果恢复仍未实现。服务层的成功结果丢弃后以原键重放已通过数据库验证；身份模块完成前，除健康与 OpenAPI 端点外的请求仍会被拒绝。各阶段实际状态见 [IMPLEMENTATION-STATUS](backend/docs/engineering/IMPLEMENTATION-STATUS.md)。
 
 ### 本地运行与验证
 
-需要 Java 21 和 PostgreSQL。先创建本地角色与数据库，再设置连接环境变量；Flyway 会在启动时创建客户与账户基础表。
+需要 Java 21 和 PostgreSQL。先创建本地角色与数据库，再设置连接环境变量；Flyway 会在启动时执行当前版本的 V1–V4 迁移。
 
 ```powershell
 psql -U postgres -c "CREATE ROLE ledgercore LOGIN PASSWORD 'choose-a-local-password';"

@@ -1,6 +1,6 @@
 # LedgerCore HTTP API 合同草案
 
-本文件中的银行业务路由仍是目标合同。P1 已提供实际 OpenAPI 端点和相关 ID；当前 OpenAPI 尚无业务路由。`GET /actuator/health` 与 `GET /v3/api-docs` 公开，其余请求需认证；身份模块完成前认证使用默认拒绝策略。安全拒绝和 MVC 异常返回 RFC 9457 Problem Details 并附 correlationId。
+本文件中的银行业务路由仍是目标合同。P1–P3 提供实际 OpenAPI 基础设施和服务层，但尚无已发布业务路由。`GET /actuator/health` 与 `GET /v3/api-docs` 公开，其余请求需认证；身份模块完成前认证使用默认拒绝策略。安全拒绝和 MVC 异常返回 RFC 9457 Problem Details 并附 correlationId。
 
 ## 身份与账户
 
@@ -21,7 +21,7 @@
 
 POST /api/transfers 要求认证会话、有效 CSRF token 和 Idempotency-Key。请求示意：{sourceAccountId, targetAccountId, amount: "120.00"}。不接受 ownerCustomerId、ledger postings、客户端计算的余额或货币转换参数。
 
-首次成功返回 Transfer ID、状态 POSTED、规范金额、币种、时间以及便于重复提交的稳定回执。余额不足为明确业务错误，不写入成功 Transfer。相同键相同请求返回原始回执；相同键不同请求返回 409。账户授权失败以 404 响应。未知网络结果是浏览器状态，不是服务端断言成功或失败。
+P3 `TransferService` 已在服务层实现上述资金动作、持久回执、相同键重放、不同意图冲突和统一账户错误；真实 HTTP 端点、身份主体映射与错误状态码尚未实现，不能把本合同视作已发布 API。首次成功回执包含 Transfer ID、规范金额、币种、时间。未知网络结果是浏览器状态，不是服务端断言成功或失败。
 
 GET /api/transfers/{transferId} 只返回已认证客户有权查看的转账。教学视图可以解释本人交易的借贷方向，但不暴露其他客户的身份、账户 ID 或可遍历账本。
 

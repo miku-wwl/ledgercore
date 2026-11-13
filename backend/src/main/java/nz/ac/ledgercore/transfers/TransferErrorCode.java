@@ -1,0 +1,10 @@
+package nz.ac.ledgercore.transfers;
+
+public enum TransferErrorCode {
+	UNAUTHENTICATED,
+	INVALID_REQUEST,
+	ACCOUNT_NOT_FOUND,
+	ACCOUNT_NOT_OPEN,
+	INSUFFICIENT_FUNDS,
+	IDEMPOTENCY_KEY_REUSED
+}

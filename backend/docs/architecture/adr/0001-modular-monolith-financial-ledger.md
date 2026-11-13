@@ -1,6 +1,6 @@
 # ADR 0001：以单体模块和不可变双重记账为基础
 
-- 状态：Accepted for P0–P2 foundation; transfers, identity, and browser flow remain pending
+- 状态：Accepted for P0–P3 ledger/transfer backend; identity HTTP flow and browser recovery remain pending
 - 日期：2026-11-13
 - 范围：LedgerCore MVP
 
@@ -15,7 +15,7 @@
 3. 会计事实使用不可变 JournalEntry 与 Posting；单币种 NZD，amountMinor 以 long 表示分并由 PostgreSQL BIGINT 存储。API 使用精确十进制金额字符串，界面格式化不使用浮点算术。
 4. 客户存款是贷方正常余额负债；初始资金由明确的 Simulation Reserve 资产账户对手方入账。
 5. Posting 账本是资金事实权威来源；余额投影可重建。资金操作在账户行锁下读取账本余额，不以缓存或客户端余额授权。
-6. 转账、过账行、投影、Transfer 与成功幂等回执将置于一个 PostgreSQL 事务。持久幂等按认证客户、操作、键唯一，并把请求指纹与稳定成功回执保存到同一提交。
+6. P3 已在一个 PostgreSQL READ COMMITTED 事务中写入转账过账行、投影、Transfer 与成功幂等回执。持久幂等按客户、操作和键唯一，并将请求指纹与稳定回执保存在同一提交；UUID 排序的 LedgerAccount 行锁保护源余额。
 7. 会话 Cookie 加 CSRF；账户所有权始终由服务端身份和 owner 关系验证。浏览器在当前标签页保存原键和原意图，以处理响应未知。
 8. 先建立 Unit、真实 PostgreSQL Integration、Architecture 和浏览器 E2E 的职责，再依 P0–P6 顺序验收；P5 未完成前不出版正式教材。
 

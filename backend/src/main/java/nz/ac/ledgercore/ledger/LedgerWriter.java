@@ -53,6 +53,33 @@ public class LedgerWriter {
 		return entry.id();
 	}
 
+	/** Locks both customer ledgers in UUID order so account lifecycle checks cannot race a transfer. */
+	@Transactional
+	public void lockCustomerDepositLedgers(UUID firstCustomerAccountId, UUID secondCustomerAccountId) {
+		lockLedgerAccounts(List.of(customerLedgerAccountId(firstCustomerAccountId),
+				customerLedgerAccountId(secondCustomerAccountId)));
+	}
+
+	/** Writes a balanced transfer after locking and checking its source ledger account. */
+	@Transactional
+	public UUID transferBetweenCustomerAccounts(UUID sourceCustomerAccountId, UUID targetCustomerAccountId,
+			Money amount, UUID transferId) {
+		requirePositive(amount);
+		if (sourceCustomerAccountId.equals(targetCustomerAccountId)) {
+			throw new IllegalArgumentException("A transfer must use two distinct customer accounts.");
+		}
+		UUID sourceLedgerAccountId = customerLedgerAccountId(sourceCustomerAccountId);
+		UUID targetLedgerAccountId = customerLedgerAccountId(targetCustomerAccountId);
+		lockLedgerAccounts(List.of(sourceLedgerAccountId, targetLedgerAccountId));
+		Money sourceBalance = balanceReader.ledgerBalanceForLedgerAccount(sourceLedgerAccountId);
+		if (sourceBalance.minorUnits() < amount.minorUnits()) {
+			throw new InsufficientLedgerBalanceException();
+		}
+		JournalEntry entry = JournalEntry.transfer(sourceLedgerAccountId, targetLedgerAccountId, amount);
+		writeEntryAndRefreshProjections(entry, "transfer:" + transferId);
+		return entry.id();
+	}
+
 	@Transactional
 	public UUID reverseJournalEntry(UUID journalEntryId) {
 		JournalEntry original = loadJournalEntry(journalEntryId);

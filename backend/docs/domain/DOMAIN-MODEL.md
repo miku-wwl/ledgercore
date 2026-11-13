@@ -1,6 +1,6 @@
 # LedgerCore 领域模型
 
-P2 已实现 `Money`、`LedgerAccount`、`JournalEntry`、`Posting`、客户账户生命周期、固定开户模拟资金、模拟入金、余额投影重算与整笔冲正。Transfer、幂等记录、交易历史和对账结果仍是后续设计；当前应用服务没有对应 HTTP 路由。
+P2 实现 `Money`、`LedgerAccount`、`JournalEntry`、`Posting`、客户账户生命周期、固定开户模拟资金、模拟入金、余额投影重算与整笔冲正。P3 增加 `TransferService`、双边转账凭证、`Transfer` 与成功幂等回执，并以 PostgreSQL V3/V4 约束事务与重放。交易历史、对账结果、身份认证及所有业务 HTTP 路由仍待后续阶段；当前转账服务没有公开 HTTP 入口。
 
 ## 账务约定
 

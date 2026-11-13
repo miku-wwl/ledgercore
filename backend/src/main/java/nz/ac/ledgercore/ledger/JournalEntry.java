@@ -52,6 +52,19 @@ public record JournalEntry(UUID id, JournalEntryType type, UUID reversesEntryId,
 				amount);
 	}
 
+	public static JournalEntry transfer(UUID sourceLedgerAccountId, UUID targetLedgerAccountId, Money amount) {
+		Objects.requireNonNull(amount, "amount");
+		if (sourceLedgerAccountId.equals(targetLedgerAccountId)) {
+			throw new IllegalArgumentException("A transfer must use two distinct ledger accounts.");
+		}
+		if (amount.minorUnits() <= 0) {
+			throw new IllegalArgumentException("Transfer amount must be greater than zero.");
+		}
+		return new JournalEntry(UUID.randomUUID(), JournalEntryType.TRANSFER, null, List.of(
+				new Posting(sourceLedgerAccountId, PostingSide.DEBIT, amount.minorUnits()),
+				new Posting(targetLedgerAccountId, PostingSide.CREDIT, amount.minorUnits())));
+	}
+
 	public static JournalEntry reversalOf(JournalEntry original) {
 		Objects.requireNonNull(original, "original");
 		if (original.type() == JournalEntryType.REVERSAL) {
