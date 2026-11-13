@@ -4,11 +4,11 @@
 
 ## 当前基线
 
-- 工作流：main-only；P0–P2 均已提交并推送到 main；未创建分支、Git worktree 或 PR。
-- 当前提交：P2 `205f2f9`；`origin/main` 与本地一致。
-- 当前评估：P0 PASS；P1 PASS；P2 PASS。接下来实施 P3 转账、并发与持久幂等。
+- 工作流：main-only；P0–P3 均已提交并推送到 main；未创建分支、Git worktree 或 PR。
+- 当前提交：P3 `a91c5f0`；`origin/main` 与本地一致。
+- 当前评估：P0 PASS；P1 PASS；P2 PASS；P3 PASS。开始 P4 身份、业务 HTTP API 与 React 全栈集成。
 - 已验证工具：Temurin 21.0.13+9（ZIP SHA-256 `a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9`）；Spring Boot 4.0.9；Spring Modulith 2.0.8；Springdoc 3.0.3；Maven Wrapper 3.10.0。
-- 本地验证数据库：官方 EDB PostgreSQL 18.7 Windows 二进制，解压于 Git 忽略的 `work/postgresql-binaries`；集群位于 `work/postgresql-data`，仅监听 `127.0.0.1:55432`。`ledgercore_test` 是隔离测试库。P1/P2 使用真实本地 PostgreSQL，未使用 H2 或纯 Mock；Testcontainers 未使用。
+- 本地验证数据库：官方 EDB PostgreSQL 18.7 Windows 二进制，解压于 Git 忽略的 `work/postgresql-binaries`；集群位于 `work/postgresql-data`，仅监听 `127.0.0.1:55432`。`ledgercore_test` 是隔离测试库。P1–P3 使用真实本地 PostgreSQL，未使用 H2 或纯 Mock；Testcontainers 未使用。
 - 本地工具链、数据库、依赖缓存和日志均在 Git 忽略的 `work/` 下；不是 Git worktree。
 - 参考：EchoCase 是只读对照，读取时本地 HEAD 为 `9f68721e18f15ae603e6502fa46b8fa78f9df55c`，工作区存在未提交改动和未跟踪教材文件；Bank of Anthos 固定审计提交 `db35fea9fd090150e2398106aadb475576f80d94`。两个参考仓库均未修改。
 
@@ -19,8 +19,8 @@
 | P0 Requirements/Domain/Architecture | PASS | PRD、领域模型、十项不变量、架构/数据库/API/测试策略、ADR、状态和来源地图已提交；Bank of Anthos 与 EchoCase 只读审计完成 | 后续实现可随工程证据修订 | 进入 P1 |
 | P1 Java 基础 | PASS | Initializr 后端；V1 customers/accounts；PostgreSQL 18.7 迁移；安全默认拒绝、Problem Details、correlation ID、健康、OpenAPI；8 项 Maven 测试、真实打包应用启动与 HTTP 检查 | 注册/登录与账户 HTTP API 尚未实现（后续阶段） | 完成 |
 | P2 Ledger | PASS | 精确分币金额；客户账户生命周期；模拟储备开户资金与模拟入金；复式凭证、整笔冲正、PostgreSQL 账平/只追加约束、余额投影重算；17 项 P2 测试通过 | 转账、身份/API 与并发扣款不属于 P2 验收 | 完成 |
-| P3 Transfers/Concurrency | IN_PROGRESS | 事务协议与锁顺序见 ADR；P2 账本服务可复用 | 持久幂等、故障注入、确定性 PostgreSQL 竞争测试、真实转账用例 | 实现 Transfer 及同事务幂等回执 |
-| P4 React/Integration | NOT_STARTED | UI 状态边界见 ARCHITECTURE | 真实 API 前端、真实浏览器及未知结果恢复 | P3 PASS 后开始 |
+| P3 Transfers/Concurrency | PASS | 原子转账、服务层源所有权检查、账户状态/余额校验、UUID 排序行锁、持久幂等、稳定回执、V3/V4 数据约束；15 项 P3 PostgreSQL 测试与完整回归通过 | HTTP 身份映射、公开路由与浏览器网络恢复属于 P4/P5 | 完成 |
+| P4 React/Integration | IN_PROGRESS | P3 TransferService 与 API 草案可复用；未知结果服务端原键恢复已验证 | 注册/登录、账户和转账 HTTP API、React UI、真实 Playwright、刷新后操作恢复 | 实现 Identity 和 API 边界，再接 React |
 | P5 Security/Testing/Acceptance | NOT_STARTED | 分层策略见 TEST-STRATEGY | 安全、查询计划、CI、最终提交检查 | P4 PASS 后开始 |
 | P6 Textbook | NOT_STARTED | 暂无教材章节或 PDF | 稳定源码基线、真实截图/实验、完整排版与逐页 QA | 仅在 P5 PASS 后启动正式出版 |
 
@@ -47,12 +47,18 @@
 - P2 覆盖：真实 PostgreSQL 18.7 执行 V1/V2；开户资金和模拟入金双重记账；projection 与账本余额一致；拒绝不平衡凭证和 UPDATE/DELETE；重复开户资金与无效金额拒绝；整笔冲正；账户暂停/恢复/零余额关闭；写入故障回滚。
 - P2 命令：`backend/mvnw.cmd -f backend/pom.xml -Dmaven.repo.local=D:\workshop\nov\ledgercore\work\m2 -Dstyle.color=never clean verify`；`JAVA_HOME` 为 `work/toolchain/jdk21/jdk-21.0.13+9`，`MAVEN_USER_HOME` 为 `work/maven-home`，测试连接隔离库 `ledgercore_test`。最终退出码 0。
 - P2 Flyway：V2 `backend/src/main/resources/db/migration/V2__create_ledger_tables.sql` 在 PostgreSQL 18.7 测试库执行并由集成测试验证。
+- P3 提交：`a91c5f0`，main / origin/main。
+- P3 实现：`TransferService.transfer` 使用显式 READ COMMITTED；先检查服务层传入的客户 ID 对付款账户的所有权，再以客户/操作/Idempotency-Key 唯一键保留事务内意图，按 UUID 顺序锁付款和收款账本，检查账户开放状态与权威 Posting 余额，写入双边 TRANSFER 凭证、两个 projection、Transfer 及包含 POSTED 回执的 JSONB 幂等记录后提交。失败请求连同预留一并回滚；同键同意图返回原回执，同键异意图冲突。
+- P3 Flyway：V3 创建 transfers/idempotency_records 并在提交点校验 Transfer 与账本凭证匹配；V4 约束幂等记录只能以 SUCCEEDED 状态提交且成功后不可修改/删除。V1–V4 在隔离 PostgreSQL 18.7 测试库运行通过。
+- P3 验收：完整 Maven `clean verify` 退出码 0，共 40 tests、0 failures、0 errors、0 skipped；其中 `TransferPostgresIntegrationTests` 15 项真实 PostgreSQL 测试通过，`ModuleArchitectureTests` 通过。
+- P3 覆盖：双事务超额支出仅允许余额范围内提交；双向交叉转账不死锁；同键同意图并发只产生一个转账，同键异意图返回冲突；检查源账户所有权和关闭账户；注入 JournalEntry、第二 Posting、projection、回执写入失败均无部分状态；丢弃首次成功结果后用原键恢复同一回执；数据库拒绝不匹配 Transfer/Posting 及未完成幂等记录。
+- P3 验证命令：`backend/mvnw.cmd -f backend/pom.xml -Dmaven.repo.local=D:\workshop\nov\ledgercore\work\m2 -Dstyle.color=never clean verify`；Java 21.0.13+9；Maven 缓存 `work/m2`；数据库 `ledgercore_test`。最终退出码 0。
 - P0 检查：13 个 Markdown 文件的本地链接均可解析；必需的 12 份 P0 文档存在；INV-01 至 INV-10 全部有记录；暂存 diff 无空白错误。这些是文档设计检查，不是应用测试。
 
 ## NOT_RUN 与阻塞项
 
-- P3 的转账并发和持久幂等验收尚未完成；P4 React/Playwright、P5 最终 CI/安全验收、P6 教材出版尚未开始。P2 以外未声称通过的功能不得视为已验收。
+- P4 真实 HTTP/浏览器/E2E 尚未完成；P5 最终 CI/安全验收与 P6 教材出版尚未开始。P3 测试只证明服务层与真实 PostgreSQL 的行为，不证明身份认证、业务路由或浏览器网络恢复。
 - 当前身份模块尚无注册、登录或会话创建用例；Security 的默认用户服务明确拒绝认证，业务 API 尚不可用。
-- GitHub Actions 结果 NOT_RUN；当前尚无前端真实界面、E2E 截图、性能数据或教材 PDF。
+- GitHub Actions 结果 NOT_RUN；当前尚无身份登录流程、前端真实界面、E2E 截图、性能数据或教材 PDF。
 
 P6 正式教材写作与 PDF 出版只有在 P5 PASS 后才开始；不得用 P0/P1 设计文档替代真实实现内容。
