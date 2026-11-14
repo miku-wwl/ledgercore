@@ -17,7 +17,7 @@ Decision: Luna/Opus collaborative engineering. Repository: https://github.com/mi
 |---|---|---|
 | 1 | FINISHED | `ROUND-1-HANDOFF.md`; final SHA `b584b95` |
 | 2 | ACCEPTED_WITH_NONBLOCKING_RISKS | `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md`, `evidence/round2/` |
-| 3 | NOT_STARTED — next authorized round (GPT-6 Luna, E4–E11) | Start from `ROUND-2-HANDOFF.md`; owner decision OD-1 must be made before E8 is accepted |
+| 3 | IN_PROGRESS — GPT-6 Luna, E4–E11 | Stage 0 baseline passed and Policy B recorded in `ADR/0005`; see `ROUND-3-PLAN.md` |
 | 4 | NOT_STARTED | E12, final audit, V2 PDF |
 
 The original Round 1 authorization statement is kept for the record: only Round 1 was authorized at that time, and E4–E12 and final V2 PDF publication were out of scope for it. The V1 textbook remains unchanged.
@@ -41,6 +41,7 @@ The original Round 1 authorization statement is kept for the record: only Round 
 - Experiments are hypothesis-first. Preserve raw outputs and negative results. Never invent results or convert synthetic data into production claims.
 - All money, organizations, accounts, and employees are fictional. No real bank, payment rail, cloud service, or money movement.
 - The final V2 PDF is reserved for Round 4; no final V2 PDF work may begin in Round 1.
+- Round 3 must stop after E11 and its handoff; E12 and final V2 PDF remain Round 4 scope.
 
 ## Advancement conditions
 

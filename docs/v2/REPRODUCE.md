@@ -118,3 +118,26 @@ A populated V4 database can only be upgraded by an application build that contai
   `evidence/round2/performance/PRE-REGISTRATION.md`. The harness `Round2PerformanceFollowUpHarness` refuses any database
   not named `ledgercore_r2_perf_*`; `CHECKPOINT` requires `GRANT pg_checkpoint TO ledgercore_r2`. R2-P3 exports the
   baseline with `git archive b584b95 backend` into a scratch directory; it never checks out another commit.
+
+## Round 3 isolated baseline
+
+Round 3 uses the existing disposable cluster `work/pg-round2-audit` on port 55436, never the persistent service on 55432. Check its configuration and status before use:
+
+    work\postgresql-binaries\pgsql\bin\pg_ctl.exe status -D work\pg-round2-audit
+    work\postgresql-binaries\pgsql\bin\pg_ctl.exe -D work\pg-round2-audit -l work\pg-round3-baseline.log -w start
+    work\postgresql-binaries\pgsql\bin\psql.exe -X -h 127.0.0.1 -p 55436 -U postgres -d postgres -Atc "SELECT datname FROM pg_database ORDER BY datname"
+
+The observed starting test used a newly created database `ledgercore_round3_baseline` owned by `ledgercore_r2`. It passed 75 tests, 0 failures/errors/skips, and applied V1–V7 to an empty schema. That database is preserved as baseline evidence; do not reuse it for destructive experiments. Create a new purpose-specific database for each independent experiment:
+
+    work\postgresql-binaries\pgsql\bin\psql.exe -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 55436 -U postgres -d postgres -c "CREATE DATABASE ledgercore_round3_<purpose> OWNER ledgercore_r2"
+
+Set `JAVA_HOME` to `work\toolchain\jdk21\jdk-21.0.13+9`, add its `bin` to process `PATH`, set `MAVEN_USER_HOME` to `work\maven-home`, and `MAVEN_OPTS` to `-Dmaven.repo.local=D:\workshop\nov\ledgercore\work\m2`. For tests, explicitly set:
+
+    $env:LEDGERCORE_TEST_DB_URL = 'jdbc:postgresql://127.0.0.1:55436/ledgercore_round3_<purpose>'
+    $env:LEDGERCORE_TEST_DB_USERNAME = 'ledgercore_r2'
+    $env:LEDGERCORE_TEST_DB_PASSWORD = ''
+    .\backend\mvnw.cmd --batch-mode --no-transfer-progress -f backend\pom.xml clean verify
+
+Record the exact target database and confirm the output's JDBC URL. For recovery or clearing tests, use a separate cluster/database and explicit credentials; never run destructive scenarios against the baseline database. Stop only the verified disposable cluster after no test or application process depends on it:
+
+    work\postgresql-binaries\pgsql\bin\pg_ctl.exe -D work\pg-round2-audit -m fast -w stop

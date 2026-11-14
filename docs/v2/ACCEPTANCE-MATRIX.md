@@ -1,5 +1,22 @@
 # Acceptance Matrix
 
+## Round 3 stage gates
+
+| Stage | Status | Evidence |
+|---|---|---|
+| Stage 0 baseline | PASS | Fresh `ledgercore_round3_baseline`, PostgreSQL 18.7, V1–V7; 75 tests, 0 failures/errors/skips; `evidence/round3/baseline/BASELINE.md` |
+| Policy B design | DECIDED; verification pending | `ADR/0005-corporate-payment-approval-and-clearing.md`; INV-15 added without changing INV-01–INV-14 |
+| E4 durable events | NOT_RUN | Pre-registered; no implementation or experiment yet |
+| E5 clearing simulator | NOT_RUN | Not started |
+| E6 fault laboratory | NOT_RUN | Pre-registered; no injection run yet |
+| E7 independent reconciliation | NOT_RUN | Not started |
+| E8 security and audit | NOT_RUN | Not started; Policy B acceptance remains pending |
+| E9 observability/performance | NOT_RUN | R2-10/R2-12 pre-registered; no Round 3 measurements yet |
+| E10 recovery | NOT_RUN | No backup/restore or PITR claim |
+| E11 full stack | NOT_RUN | No Round 3 browser journeys or screenshots yet |
+
+The historical matrix below remains the Round 1/2 record. A Round 3 stage will move to VALIDATED only after its required evidence, direct-main push, and relevant CI run pass.
+
 | Gate | Acceptance evidence | E0 | E1 | E2 | E3 | Round 2 audit |
 |---|---|---:|---:|---:|---:| ---: |
 | Main-only workflow | Branch, HEAD, remote, clean tracked tree; direct push and CI | PASS; E0 commit a7fe0de and its GitHub Actions run 43531591907 succeeded | PASS; commit eab8175501e77dfc57b1d9ea404a73ed86c8ae26 and run 43536790093 succeeded | PASS; commit 500089581ac38741f475030ca706cd034a1a9c92 and run 43543154101 succeeded on main | PASS; H04 registration `81a9038`; final evidence commit `9e7a442`; direct-main CI runs 43546776607, 43550956746, and 43552848920 succeeded | PASS: `0a885c8`, `1b6ed68`, and the evidence commits pushed directly to `main`; no branch, worktree, or PR; CI runs 43560923022, 43561592007, and 43563660267 succeeded |

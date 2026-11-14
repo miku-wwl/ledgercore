@@ -14,3 +14,7 @@ Friday Payday: a fictional New Zealand bank supports a corporation preparing, in
 | E3 | Measure concurrency and query behavior before changing the write path | Committed hypotheses, repeatable workloads, raw measurements, real EXPLAIN ANALYZE BUFFERS output, analysis and verdict |
 
 Round 2 is an independent Claude Opus 5.5 audit and remediation of E0–E3. Round 3 owns E4–E11 after Round 2 disposition. Round 4 owns E12 and final V2 PDF publication. See EXECUTION-PLAN.md for the binding scope and workflow.
+
+## Round 3 execution state
+
+Round 3 began from accepted main SHA `0db728171f7a28119ed4c4f19437896878f03fc6`. Stage 0 baseline passed on a new disposable PostgreSQL 18.7 database (75 backend tests, no failures). Policy B, independently approved corporate payments, is recorded in `ADR/0005-corporate-payment-approval-and-clearing.md`. The active scope, dependencies, preservation rules and stage gates are in `ROUND-3-PLAN.md`. Stop after E11; do not start E12 or final PDF publication.
