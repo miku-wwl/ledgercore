@@ -16,7 +16,7 @@ function Get-Sha256Hex {
     param([Parameter(Mandatory = $true)][string] $Path)
 
     $algorithm = [Security.Cryptography.SHA256]::Create()
-    $stream = [IO.File]::OpenRead($Path)
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
     try {
         $digest = $algorithm.ComputeHash($stream)
         $builder = New-Object Text.StringBuilder
