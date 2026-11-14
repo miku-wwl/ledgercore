@@ -1,0 +1,63 @@
+       database        | port  | schema_under_test 
+-----------------------+-------+-------------------
+ ledgercore_r2_v7_r201 | 55436 | V6
+
+BEGIN
+INSERT 0 4
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 3
+INSERT 0 3
+INSERT 0 4
+INSERT 0 4
+COMMIT
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+== Initial state
+           name           |  status  | items | total_minor 
+--------------------------+----------+-------+-------------
+ R2-01 batch A (approved) | APPROVED |     2 |      270000
+ R2-01 batch B (draft)    | DRAFT    |     1 |        1000
+ R2-01 batch C (terminal) | FAILED   |     1 |        5000
+
+== Control 1: in-place amount change on an APPROVED batch item (expected: rejected with 55000)
+psql:evidence/round2/reproductions/R2-01-cross-batch-item-reassignment.sql:65: ERROR:  Payroll item intent is immutable after submission.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_intent_mutability() line 23 at RAISE
+== Control 2: move a DRAFT item INTO the APPROVED batch (expected: rejected, NEW batch is checked)
+psql:evidence/round2/reproductions/R2-01-cross-batch-item-reassignment.sql:69: ERROR:  Payroll item identity and batch membership are immutable.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_intent_mutability() line 7 at RAISE
+== R2-01 attempt 1: move an APPROVED item OUT to the DRAFT batch
+psql:evidence/round2/reproductions/R2-01-cross-batch-item-reassignment.sql:73: ERROR:  Payroll item identity and batch membership are immutable.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_intent_mutability() line 7 at RAISE
+== R2-01 attempt 2: move the other APPROVED item out AND change its amount and payee in the same statement
+psql:evidence/round2/reproductions/R2-01-cross-batch-item-reassignment.sql:79: ERROR:  Payroll item identity and batch membership are immutable.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_intent_mutability() line 7 at RAISE
+== R2-01 attempt 3: move an item OUT of a terminal (FAILED) batch, then delete it from the draft
+psql:evidence/round2/reproductions/R2-01-cross-batch-item-reassignment.sql:83: ERROR:  Payroll item identity and batch membership are immutable.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_intent_mutability() line 7 at RAISE
+psql:evidence/round2/reproductions/R2-01-cross-batch-item-reassignment.sql:84: ERROR:  Payroll item intent is immutable after submission.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_intent_mutability() line 23 at RAISE
+== Final state (an APPROVED batch whose item set no longer matches its approved digest is a defect)
+           name           |  status  | has_approved_digest | items | total_minor 
+--------------------------+----------+---------------------+-------+-------------
+ R2-01 batch A (approved) | APPROVED | t                   |     2 |      270000
+ R2-01 batch B (draft)    | DRAFT    | f                   |     1 |        1000
+ R2-01 batch C (terminal) | FAILED   | t                   |     1 |        5000
+
+ employee_reference |       now_in_batch       | amount_minor | result_status 
+--------------------+--------------------------+--------------+---------------
+ EMP-A1             | R2-01 batch A (approved) |       150000 | PENDING
+ EMP-A2             | R2-01 batch A (approved) |       120000 | PENDING
+ EMP-B1             | R2-01 batch B (draft)    |         1000 | PENDING
+ EMP-C1             | R2-01 batch C (terminal) |         5000 | FAILED
+
+ surviving_results_for_terminal_batch_item 
+-------------------------------------------
+                                         1
+

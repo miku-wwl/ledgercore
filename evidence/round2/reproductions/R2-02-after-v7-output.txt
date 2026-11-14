@@ -1,0 +1,73 @@
+       database        | port  
+-----------------------+-------
+ ledgercore_r2_v7_r202 | 55436
+
+BEGIN
+INSERT 0 3
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 3
+INSERT 0 3
+COMMIT
+UPDATE 1
+UPDATE 1
+UPDATE 1
+BEGIN
+INSERT 0 1
+INSERT 0 2
+UPDATE 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+COMMIT
+UPDATE 1
+== Before: PayrollService.countsFor() SQL and the item/result correspondence
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+             1 |               1 |            1
+
+== Control: UPDATE of a terminal result (expected: rejected by enforce_payroll_item_result_transition)
+psql:evidence/round2/reproductions/R2-02-payroll-result-deletion.sql:82: ERROR:  A terminal payroll item result is immutable.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_result_transition() line 15 at RAISE
+== R2-02 attempt 1: DELETE the terminal SUCCEEDED result that links item 1 to its ledger transfer
+psql:evidence/round2/reproductions/R2-02-payroll-result-deletion.sql:85: ERROR:  A payroll item result is retained for as long as its item exists.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_result_retention() line 4 at RAISE
+== R2-02 attempt 2: DELETE the terminal FAILED result of item 2
+psql:evidence/round2/reproductions/R2-02-payroll-result-deletion.sql:87: ERROR:  A payroll item result is retained for as long as its item exists.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_result_retention() line 4 at RAISE
+== R2-02 attempt 3: DELETE the PENDING result of the still-unpaid item 3
+psql:evidence/round2/reproductions/R2-02-payroll-result-deletion.sql:89: ERROR:  A payroll item result is retained for as long as its item exists.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_result_retention() line 4 at RAISE
+== After: items still exist, results are gone
+ items | results 
+-------+---------
+     3 |       3
+
+== After: countsFor() now reports zero pending, which finishIfReady() treats as complete
+ pending_count | succeeded_count | failed_count | finish_if_ready_decision 
+---------------+-----------------+--------------+--------------------------
+             1 |               1 |            1 | stay PROCESSING
+
+== The decision is accepted by the database (no constraint checks result existence after item insert)
+psql:evidence/round2/reproductions/R2-02-payroll-result-deletion.sql:107: ERROR:  Payroll batch ba000000-0000-4000-8000-000000000011 cannot finish with 3 item(s), 3 result(s), and 1 pending.
+CONTEXT:  PL/pgSQL function enforce_payroll_batch_transition() line 69 at RAISE
+== Ledger truth versus payroll record: the transfer exists, no payroll result references it
+             transfer_id              | amount_minor | referenced_by_payroll_result 
+--------------------------------------+--------------+------------------------------
+ 7f000000-0000-4000-8000-000000000001 |         1000 | t
+
+== A replacement result can be INSERTed directly in a terminal state (no insert-time lifecycle check)
+psql:evidence/round2/reproductions/R2-02-payroll-result-deletion.sql:114: ERROR:  A payroll item result must be created PENDING with no attempts.
+CONTEXT:  PL/pgSQL function enforce_payroll_item_result_creation() line 20 at RAISE
+   status   | items | results 
+------------+-------+---------
+ PROCESSING |     3 |       3
+

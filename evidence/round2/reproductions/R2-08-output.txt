@@ -1,0 +1,52 @@
+         database         | port  
+--------------------------+-------
+ ledgercore_r2_repro_r208 | 55436
+
+BEGIN
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 4
+INSERT 0 2
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+== Populated V4 state: one committed personal transfer
+ transfers | postings 
+-----------+----------
+         1 |        4
+
+== Attempt 1: apply the committed, unmodified V5 in its own transaction (as Flyway does)
+psql:backend/src/main/resources/db/migration/V5__add_organizations_and_corporate_account_ownership.sql:62: ERROR:  Posted ledger history is append-only; record a new reversal entry
+CONTEXT:  PL/pgSQL function ledgercore_reject_ledger_history_change() line 3 at RAISE
+psql:backend/src/main/resources/db/migration/V5__add_organizations_and_corporate_account_ownership.sql:66: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+psql:backend/src/main/resources/db/migration/V5__add_organizations_and_corporate_account_ownership.sql:70: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+psql:backend/src/main/resources/db/migration/V5__add_organizations_and_corporate_account_ownership.sql:74: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+psql:backend/src/main/resources/db/migration/V5__add_organizations_and_corporate_account_ownership.sql:77: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+psql:backend/src/main/resources/db/migration/V5__add_organizations_and_corporate_account_ownership.sql:79: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+psql:backend/src/main/resources/db/migration/V5__add_organizations_and_corporate_account_ownership.sql:81: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+== After attempt 1 (the failed transaction rolled back): V5 objects exist?
+ organizations_table_exists | transfer_owner_column_exists 
+----------------------------+------------------------------
+ f                          | f
+
+== Attempt 2: the Round 2 remedy, inside ONE transaction: disable only the append-only trigger, run V5, re-enable
+COMMIT
+== After attempt 2: backfill result, trigger state, and append-only protection
+                  id                  | owner_backfilled | personal_source 
+--------------------------------------+------------------+-----------------
+ 7f000000-0000-4000-8000-000000000081 | t                | t
+
+          tgname          | tgenabled 
+--------------------------+-----------
+ tr_transfers_append_only | O
+
+psql:evidence/round2/reproductions/R2-08-v5-upgrade-of-populated-v4.sql:69: ERROR:  Posted ledger history is append-only; record a new reversal entry
+CONTEXT:  PL/pgSQL function ledgercore_reject_ledger_history_change() line 3 at RAISE
+ debits | credits 
+--------+---------
+ 102500 |  102500
+

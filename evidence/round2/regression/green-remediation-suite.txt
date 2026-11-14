@@ -1,0 +1,21 @@
+Round 2 green run after remediation (V7 + Java fixes + V5 legacy-upgrade callback), working tree on top of b584b95
+Database: fresh ledgercore_r2_green2 on disposable PostgreSQL 18.7 cluster 127.0.0.1:55436
+Command: mvnw --batch-mode --no-transfer-progress -f backend/pom.xml clean verify   (exit 0, BUILD SUCCESS)
+
+nz.ac.ledgercore.CorrelationIdTests                                         tests=  2 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.FullStackApiPostgresIntegrationTests                       tests=  1 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.LedgerCoreApplicationTests                                 tests=  5 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests             tests=  7 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.ModuleArchitectureTests                                    tests=  1 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.accounts.AccountDomainTests                                tests=  3 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.identity.CustomerPrincipalTests                            tests=  1 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.ledger.JournalEntryTests                                   tests=  3 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests                      tests=  9 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.ledger.MoneyTests                                          tests=  3 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests         tests=  1 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.payroll.PayrollContentDigestTests                          tests=  1 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests           tests= 19 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests                    tests=  4 failures=0 errors=0 skipped=0
+nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests                 tests= 15 failures=0 errors=0 skipped=0
+
+TOTAL tests=75 failures=0 errors=0 skipped=0

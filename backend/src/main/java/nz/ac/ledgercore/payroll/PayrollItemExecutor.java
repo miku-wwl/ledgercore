@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import nz.ac.ledgercore.ledger.Money;
+import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
 import nz.ac.ledgercore.transfers.TransferErrorCode;
 import nz.ac.ledgercore.transfers.TransferException;
 import nz.ac.ledgercore.transfers.TransferReceipt;
@@ -18,12 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PayrollItemExecutor {
 
+    /** Terminal result code when the batch creator's debit authority is no longer active at execution time. */
+    static final String DEBIT_AUTHORITY_REVOKED = "DEBIT_AUTHORITY_REVOKED";
+
     private final JdbcTemplate jdbcTemplate;
     private final TransferService transferService;
+    private final OrganizationAuthorizationService authorizationService;
 
-    public PayrollItemExecutor(JdbcTemplate jdbcTemplate, TransferService transferService) {
+    public PayrollItemExecutor(JdbcTemplate jdbcTemplate, TransferService transferService,
+            OrganizationAuthorizationService authorizationService) {
         this.jdbcTemplate = jdbcTemplate;
         this.transferService = transferService;
+        this.authorizationService = authorizationService;
     }
 
     /**
@@ -72,7 +79,8 @@ public class PayrollItemExecutor {
             throw new PayrollException("BATCH_NOT_PROCESSING", "Payroll items can only execute while the batch is processing.",
                     HttpStatus.CONFLICT);
         }
-        String idempotencyKey = "payroll-" + item.batchId() + "-" + item.itemId();
+        // Stable payroll operation identity (unchanged since E2): one key per batch item, scoped to the batch creator.
+        String idempotencyKey = TransferService.PAYROLL_IDEMPOTENCY_KEY_PREFIX + item.batchId() + "-" + item.itemId();
         try {
             TransferReceipt receipt = transferService.transferAndRecord(item.makerCustomerId(), item.payerAccountId(),
                     item.payeeAccountId(), new Money(item.amountMinor()), idempotencyKey,
@@ -80,8 +88,17 @@ public class PayrollItemExecutor {
             return new ExecutionResult(item.itemId(), true, "SUCCEEDED", receipt.transferId(), null);
         }
         catch (TransferException exception) {
+            // TransferService reports an unauthorized source as ACCOUNT_NOT_FOUND so the HTTP API never discloses
+            // account existence. Payroll accounts are foreign-key protected, so distinguish the authorization
+            // outcome explicitly instead of recording a misleading "account not found" result (R2-05).
+            if (exception.code() == TransferErrorCode.ACCOUNT_NOT_FOUND
+                    && !authorizationService.canDebitAccount(item.makerCustomerId(), item.payerAccountId())) {
+                throw new PayrollItemTransferFailure(item.batchId(), item.itemId(), DEBIT_AUTHORITY_REVOKED,
+                        "The batch creator no longer holds active PAYROLL_MAKER debit authority for the payer "
+                                + "account; no transfer was made.", exception);
+            }
             if (isPermanentBusinessFailure(exception.code())) {
-                throw new PayrollItemTransferFailure(item.batchId(), item.itemId(), exception.code(),
+                throw new PayrollItemTransferFailure(item.batchId(), item.itemId(), exception.code().name(),
                         exception.getMessage(), exception);
             }
             throw new PayrollException("TRANSFER_EXECUTION_ERROR",

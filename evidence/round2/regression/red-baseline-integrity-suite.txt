@@ -1,0 +1,25 @@
+Round 2 red run: new PayrollIntegrityPostgresIntegrationTests against UNMODIFIED baseline b584b9570eee2d2b4c08505b19336b08dfc37a77
+Database: fresh ledgercore_r2_red on disposable PostgreSQL 18.7 cluster 127.0.0.1:55436, Flyway V1-V6 only
+Command: mvnw -Dtest=PayrollIntegrityPostgresIntegrationTests -Dsurefire.failIfNoSpecifiedTests=false test
+Surefire totals: tests=19 failures=12 errors=0 skipped=0 time=52.812s
+Exit code: 1 (expected: the suite encodes the corrected behaviour)
+
+pass approvalRemainsValidAfterTheApproverLosesTheirRole
+FAIL approvedItemsCannotBeMovedToAnotherBatchOrRewrittenThere :: Expecting code to raise a throwable.
+FAIL batchCompletionFailsClosedWhenAResultRowIsMissing :: Expecting code to raise a throwable.
+FAIL completedPayrollHistoryCannotBeMovedOrErased :: Expecting code to raise a throwable.
+pass concurrentBatchesSharingOnePayerNeverOverdrawIt
+FAIL draftItemsStayInTheirBatchButCanBeDeletedWithTheirPendingResult :: Expecting code to raise a throwable.
+FAIL itemChangesRacingApprovalCannotAlterTheApprovedContent :: Expecting code to raise a throwable.
+FAIL nonMembersCannotProbeBatchStateThroughApprovalOrRejection :: Expecting actual throwable to be an instance of: nz.ac.ledgercore.api.ApiNotFoundException but was: nz.ac.ledgercore.payroll.PayrollException: Only a submitted payroll batch can be approved. at nz.ac.
+pass overlappingExecutionsOfOneBatchPayEachItemExactlyOnce
+pass payrollRejectsZeroNonCanonicalAndOverflowingAmounts
+FAIL payrollResultsCannotBeDeletedInAnyState :: Expecting code to raise a throwable.
+pass progressCountsStayExactAndIsolatedWhenOtherOrganizationsHavePayrollRows
+FAIL publicTransfersCannotClaimReservedPayrollIdempotencyKeys :: Expecting code to raise a throwable.
+FAIL resultsCannotBeForgedOrAdvancedOutsideProcessing :: Expecting code to raise a throwable.
+FAIL revokedCreatorRoleFailsItemsClosedWithAnExplicitReason :: Expecting ArrayList: ["ACCOUNT_NOT_FOUND", "ACCOUNT_NOT_FOUND"] to contain only: ["DEBIT_AUTHORITY_REVOKED"] element(s) not found: ["DEBIT_AUTHORITY_REVOKED"] and element(s) not expected: ["ACCOUNT_NO
+FAIL succeededResultMustReferenceTheTransferThatPaysItsItem :: Expecting code to raise a throwable.
+FAIL suspendedCreatorMembershipFailsItemsClosedWithAnExplicitReason :: expected: "DEBIT_AUTHORITY_REVOKED" but was: "ACCOUNT_NOT_FOUND"
+pass suspendedOrganizationCannotStartPayrollExecution
+pass unclassifiedTransferFailureLeavesTheItemPendingAndStopsExecution

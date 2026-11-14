@@ -23,6 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class TransferService {
 
+	/**
+	 * Prefix of the system-derived payroll operation identity {@code payroll-{batchId}-{itemId}}. Payroll keys share
+	 * the batch creator's idempotency scope, so customer-supplied keys must never use this namespace (R2-06).
+	 */
+	public static final String PAYROLL_IDEMPOTENCY_KEY_PREFIX = "payroll-";
+
 	private static final String OPERATION = "TRANSFER";
 	private static final Pattern VALID_IDEMPOTENCY_KEY = Pattern.compile("[!-~]{1,128}");
 
@@ -46,6 +52,10 @@ public class TransferService {
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public TransferReceipt transfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
 			Money amount, String idempotencyKey) {
+		if (idempotencyKey != null && idempotencyKey.startsWith(PAYROLL_IDEMPOTENCY_KEY_PREFIX)) {
+			throw error(TransferErrorCode.INVALID_REQUEST,
+					"Idempotency-Key values starting with 'payroll-' are reserved for payroll execution.");
+		}
 		return executeTransfer(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey, null);
 	}
 

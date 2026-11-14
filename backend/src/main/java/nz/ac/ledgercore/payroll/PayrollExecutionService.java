@@ -54,7 +54,7 @@ public class PayrollExecutionService {
                 processed++;
             }
             catch (PayrollItemTransferFailure failure) {
-                payrollService.markItemFailed(failure.itemId(), failure.transferCode().name(), failure.getMessage());
+                payrollService.markItemFailed(failure.itemId(), failure.failureCode(), failure.getMessage());
                 processed++;
             }
         }

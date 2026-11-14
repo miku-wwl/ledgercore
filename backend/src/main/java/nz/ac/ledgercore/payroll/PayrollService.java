@@ -21,6 +21,7 @@ import nz.ac.ledgercore.api.ApiNotFoundException;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationException;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
+import nz.ac.ledgercore.organizations.OrganizationRole;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -157,6 +158,8 @@ public class PayrollService {
     @Transactional
     public BatchView approve(UUID actorCustomerId, UUID batchId) {
         BatchRow batch = lockBatch(batchId);
+        // Authorize before revealing batch state: non-members always see 404, members without the role see 403.
+        authorizationService.requireRole(actorCustomerId, batch.organizationId(), OrganizationRole.PAYROLL_APPROVER);
         if (batch.submittedByCustomerId() == null) {
             throw conflict("BATCH_NOT_SUBMITTED", "Only a submitted payroll batch can be approved.");
         }
@@ -188,6 +191,7 @@ public class PayrollService {
     @Transactional
     public BatchView reject(UUID actorCustomerId, UUID batchId, String reason) {
         BatchRow batch = lockBatch(batchId);
+        authorizationService.requireRole(actorCustomerId, batch.organizationId(), OrganizationRole.PAYROLL_APPROVER);
         if (batch.submittedByCustomerId() == null) {
             throw conflict("BATCH_NOT_SUBMITTED", "Only a submitted payroll batch can be rejected.");
         }
@@ -245,7 +249,7 @@ public class PayrollService {
                        i.amount_minor, r.status, r.attempt_count, r.transfer_id, r.error_code, r.error_message,
                        r.completed_at
                 FROM payroll_items i
-                JOIN payroll_item_results r ON r.item_id = i.id
+                JOIN payroll_item_results r ON r.item_id = i.id AND r.batch_id = i.batch_id
                 WHERE i.batch_id = ? ORDER BY i.sequence_no
                 """, this::itemView, batchId);
     }
@@ -287,6 +291,11 @@ public class PayrollService {
             return viewFor(batchId);
         }
         Counts counts = countsFor(batchId);
+        if (counts.resultCount() != counts.itemCount()) {
+            // A missing durable result is never evidence of finished work; refuse to complete (R2-02).
+            throw conflict("PAYROLL_RESULTS_INCOMPLETE",
+                    "Payroll batch results are incomplete, so the batch cannot be completed.");
+        }
         if (counts.pendingCount() > 0) {
             return viewFor(batchId);
         }
@@ -385,35 +394,52 @@ public class PayrollService {
         }
     }
 
+    /**
+     * Batch-bounded progress counts. Results are read through their own batch_id (V7), so other organizations' and
+     * other batches' rows are never scanned; the item count is read separately so a missing result is detectable.
+     */
     private Counts countsFor(UUID batchId) {
         return jdbcTemplate.queryForObject("""
-                SELECT count(*) FILTER (WHERE r.status = 'PENDING') AS pending_count,
-                       count(*) FILTER (WHERE r.status = 'SUCCEEDED') AS succeeded_count,
-                       count(*) FILTER (WHERE r.status = 'FAILED') AS failed_count
-                FROM payroll_items i JOIN payroll_item_results r ON r.item_id = i.id
-                WHERE i.batch_id = ?
-                """, (rs, row) -> new Counts(rs.getInt("pending_count"), rs.getInt("succeeded_count"),
-                rs.getInt("failed_count")), batchId);
+                SELECT (SELECT count(*) FROM payroll_items WHERE batch_id = ?) AS item_count,
+                       count(*) AS result_count,
+                       count(*) FILTER (WHERE status = 'PENDING') AS pending_count,
+                       count(*) FILTER (WHERE status = 'SUCCEEDED') AS succeeded_count,
+                       count(*) FILTER (WHERE status = 'FAILED') AS failed_count
+                FROM payroll_item_results
+                WHERE batch_id = ?
+                """, (rs, row) -> new Counts(rs.getInt("item_count"), rs.getInt("result_count"),
+                rs.getInt("pending_count"), rs.getInt("succeeded_count"), rs.getInt("failed_count")),
+                batchId, batchId);
     }
 
     private BatchView viewFor(UUID batchId) {
         return jdbcTemplate.query("""
+                WITH item_totals AS (
+                    SELECT count(*) AS item_count, COALESCE(sum(amount_minor), 0) AS total_minor
+                    FROM payroll_items
+                    WHERE batch_id = ?
+                ), result_totals AS (
+                    SELECT count(*) FILTER (WHERE r.status = 'PENDING') AS pending_count,
+                           count(*) FILTER (WHERE r.status = 'SUCCEEDED') AS succeeded_count,
+                           count(*) FILTER (WHERE r.status = 'FAILED') AS failed_count,
+                           COALESCE(sum(i.amount_minor) FILTER (WHERE r.status = 'SUCCEEDED'), 0) AS succeeded_minor
+                    FROM payroll_item_results r
+                    JOIN payroll_items i ON i.id = r.item_id AND i.batch_id = r.batch_id
+                    WHERE r.batch_id = ?
+                )
                 SELECT b.id, b.organization_id, b.name, b.payer_account_id, b.status,
-                       count(i.id) AS item_count, COALESCE(sum(i.amount_minor), 0) AS total_minor,
-                       count(*) FILTER (WHERE r.status = 'PENDING') AS pending_count,
-                       count(*) FILTER (WHERE r.status = 'SUCCEEDED') AS succeeded_count,
-                       count(*) FILTER (WHERE r.status = 'FAILED') AS failed_count,
-                       COALESCE(sum(i.amount_minor) FILTER (WHERE r.status = 'SUCCEEDED'), 0) AS succeeded_minor,
+                       item_totals.item_count, item_totals.total_minor,
+                       result_totals.pending_count, result_totals.succeeded_count, result_totals.failed_count,
+                       result_totals.succeeded_minor,
                        b.created_by_customer_id, b.submitted_by_customer_id, b.approved_by_customer_id,
                        b.rejected_by_customer_id, b.rejection_reason, b.content_digest,
                        b.approved_content_digest, b.created_at, b.submitted_at, b.approved_at,
                        b.rejected_at, b.started_at, b.completed_at
                 FROM payroll_batches b
-                LEFT JOIN payroll_items i ON i.batch_id = b.id
-                LEFT JOIN payroll_item_results r ON r.item_id = i.id
+                CROSS JOIN item_totals
+                CROSS JOIN result_totals
                 WHERE b.id = ?
-                GROUP BY b.id
-                """, (rs, row) -> batchView(rs), batchId).stream().findFirst()
+                """, (rs, row) -> batchView(rs), batchId, batchId, batchId).stream().findFirst()
                 .orElseThrow(() -> new ApiNotFoundException("Payroll batch was not found."));
     }
 
@@ -461,6 +487,6 @@ public class PayrollService {
             UUID payeeAccountId, UUID payeeOwnerCustomerId, long amountMinor) {
     }
 
-    private record Counts(int pendingCount, int succeededCount, int failedCount) {
+    private record Counts(int itemCount, int resultCount, int pendingCount, int succeededCount, int failedCount) {
     }
 }

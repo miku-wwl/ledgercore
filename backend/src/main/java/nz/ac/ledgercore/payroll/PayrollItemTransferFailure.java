@@ -2,20 +2,21 @@ package nz.ac.ledgercore.payroll;
 
 import java.util.UUID;
 
-import nz.ac.ledgercore.transfers.TransferErrorCode;
-
+/**
+ * A classified, permanent payroll item failure. The item's transfer transaction has rolled back; the orchestrator
+ * records the failure code as the item's terminal result in a separate transaction.
+ */
 public final class PayrollItemTransferFailure extends RuntimeException {
 
     private final UUID batchId;
     private final UUID itemId;
-    private final TransferErrorCode transferCode;
+    private final String failureCode;
 
-    public PayrollItemTransferFailure(UUID batchId, UUID itemId, TransferErrorCode transferCode, String message,
-            Throwable cause) {
+    public PayrollItemTransferFailure(UUID batchId, UUID itemId, String failureCode, String message, Throwable cause) {
         super(message, cause);
         this.batchId = batchId;
         this.itemId = itemId;
-        this.transferCode = transferCode;
+        this.failureCode = failureCode;
     }
 
     public UUID batchId() {
@@ -26,7 +27,7 @@ public final class PayrollItemTransferFailure extends RuntimeException {
         return itemId;
     }
 
-    public TransferErrorCode transferCode() {
-        return transferCode;
+    public String failureCode() {
+        return failureCode;
     }
 }
