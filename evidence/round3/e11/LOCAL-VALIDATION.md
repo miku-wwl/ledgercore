@@ -2,7 +2,9 @@
 
 ## Verdict
 
-**Local E11 acceptance: PASS; the implementation/evidence commit still needs its exact `main` CI result.** All identities and funds were synthetic. Playwright drove the React application against the real local Spring Boot APIs, a separate clearing simulator, and isolated PostgreSQL databases. No V1–V7 migration was edited; E11 adds no database migration.
+**Local E11 acceptance: PASS.** All identities and funds were synthetic. Playwright drove the React application against the real local Spring Boot APIs, a separate clearing simulator, and isolated PostgreSQL databases. No V1–V7 migration was edited; E11 adds no database migration.
+
+**Final E11 acceptance: VALIDATED.** Feature/evidence commit `fdd4e0d7ef7aef7f944b24db5463efe9c34141b4` and CI-fix commit `de0624c34cbd11f7d847e5dc5c48ee5efc20a475` passed exact GitHub Actions run [43626858589](https://github.com/miku-wwl/ledgercore/actions/runs/43626858589), including both verification/OSV jobs and all 8 browser tests. The preceding run [43625867646](https://github.com/miku-wwl/ledgercore/actions/runs/43625867646) found that CI had not started the independent clearing simulator; commit `de0624c` adds simulator startup with an isolated database and the shared callback/signature configuration. This was a CI environment gap, not a skipped browser requirement.
 
 ## Implementation
 

@@ -7,16 +7,19 @@
 **Accepted Round 2 baseline:** `0db728171f7a28119ed4c4f19437896878f03fc6`
 **Next owner:** Claude Opus 5.5 — Round 4
 
-> This handoff is being finalized after E11's implementation commit and exact CI result. At the current draft revision, E10 is VALIDATED; E11's local acceptance passed, but its direct-main commit and CI are still pending. Replace this note with the final `main` SHA and exact E11 run before handing off.
+**E11 feature/evidence SHA:** `fdd4e0d7ef7aef7f944b24db5463efe9c34141b4`.
+**E11 CI-fix and validated source SHA:** `de0624c34cbd11f7d847e5dc5c48ee5efc20a475`.
+**Exact E11 CI:** [run 43626858589](https://github.com/miku-wwl/ledgercore/actions/runs/43626858589), both jobs passed.
+**Round 3 result:** handoff ready. E4, E10, and E11 are VALIDATED; E5–E9 remain PARTIAL with their limits below.
 
 ## A. Repository state
 
 - Repository URL: https://github.com/miku-wwl/ledgercore
-- Current main revision during handoff drafting: `4052f1bd2c9760ff6d21dc95ca47bfce7839cb91`.
-- Final accepted `main` SHA: pending the E11 implementation and handoff commits.
+- E11 feature/evidence commit: `fdd4e0d7ef7aef7f944b24db5463efe9c34141b4`. CI-fix and validated source SHA: `de0624c34cbd11f7d847e5dc5c48ee5efc20a475`; this exact `main` commit passed [43626858589](https://github.com/miku-wwl/ledgercore/actions/runs/43626858589).
+- The acceptance and handoff records are a documentation-only follow-up committed directly on `main` after the validated source SHA; the final repository SHA and clean/synchronized state are reported after this commit's CI verification.
 - E10 evidence commit `8f2dbee863d85978ed31aa0cc9b21e0ef0c5db05` passed exact GitHub Actions run [43624499785](https://github.com/miku-wwl/ledgercore/actions/runs/43624499785). E10 status-record commit `4052f1bd2c9760ff6d21dc95ca47bfce7839cb91` passed both jobs in exact run [43625116899](https://github.com/miku-wwl/ledgercore/actions/runs/43625116899).
-- E11 local changes are currently uncommitted; record its direct-main implementation SHA and exact CI URL here after that gate passes.
-- No tag was created. The working tree is not clean while E11 is pending. Verify final `main`, `origin/main`, and clean status after publishing this handoff.
+- E11 implementation and CI setup are committed and pushed directly to `main`; both CI jobs passed, including backend and simulator verification, lint/build/OpenAPI, all 8 Chromium tests, and Maven OSV.
+- No tag was created. The working tree was clean after the E11 commit; verify final `main`, `origin/main`, and clean status after publishing this handoff.
 - Round 1 and Round 2 evidence, V1–V7 migrations, and the separate DevOps Delivery laboratory were not changed.
 
 ## B. Completed stages and evidence
@@ -30,7 +33,7 @@
 | E8 — security and audit | PARTIAL | Policy B roles, immutable approval, role redaction, tenant concealment, suspension/reactivation, CSRF/session rotation, and constrained Operations payroll recovery were exercised. 87 backend tests plus 3 focused live API/SQL probes. | Commit `3a1beed048a878077865d571d50dac0060470e87`; CI [43596797609](https://github.com/miku-wwl/ledgercore/actions/runs/43596797609). Full role × route/callback/logging matrix remains incomplete. `evidence/round3/e8/`. |
 | E9 — observability/performance | PARTIAL / CLOSED | Pool-wait and database-lock observations; structured correlation logs; R2-P2 projection-read supplement; R2-P3 index candidate tested and rejected; five Prometheus rules fired and cleared on synthetic fixtures. V10 adds the candidate index; V11 removes it. | CI [43603381726](https://github.com/miku-wwl/ledgercore/actions/runs/43603381726), [43605692774](https://github.com/miku-wwl/ledgercore/actions/runs/43605692774), and [43606784685](https://github.com/miku-wwl/ledgercore/actions/runs/43606784685). W3C trace propagation and retained spans remain unimplemented. `evidence/round3/e9/`. |
 | E10 — PostgreSQL recovery | VALIDATED | Plain physical backup, SHA-256 manifest, `pg_verifybackup`, base restore/app, post-backup named-target PITR, independent SQL grades, and separate simulator settlement/callback replay. No schema migration added. | Evidence commit `8f2dbee863d85978ed31aa0cc9b21e0ef0c5db05`; CI [43624499785](https://github.com/miku-wwl/ledgercore/actions/runs/43624499785). RPO 118.922s; RTO 670.008s. One local run only. Raw artifacts: `evidence/round3/e10/raw/`. |
-| E11 — full stack | LOCAL PASS; commit/CI pending | Corporate Payments and Operations Console, role-aware responsive navigation and role management, API-backed metrics/search/audit/timeline/retry/inquiry/reconciliation, simulator callback-sequence regression fix. Backend 95/95; simulator 6/6; frontend lint/build/OpenAPI; final real-API Chromium suite 8/8. | Genuine desktop/mobile screenshots and source register: `evidence/round3/e11/`. Local accessibility checks cover semantic labels/roles, Tab focus-visible, and 390px overflow. No screen-reader/axe or broad browser/device matrix. Update status after exact main CI. |
+| E11 — full stack | VALIDATED | Corporate Payments and Operations Console, role-aware responsive navigation and role management, API-backed metrics/search/audit/timeline/retry/inquiry/reconciliation, simulator callback-sequence regression fix. Local backend 95/95; simulator 6/6; frontend lint/build/OpenAPI; real-API Chromium 8/8. | Feature/evidence commit `fdd4e0d7ef7aef7f944b24db5463efe9c34141b4`; CI-fix/validated commit `de0624c34cbd11f7d847e5dc5c48ee5efc20a475`; exact CI [43626858589](https://github.com/miku-wwl/ledgercore/actions/runs/43626858589) passed both jobs. The first CI attempt [43625867646](https://github.com/miku-wwl/ledgercore/actions/runs/43625867646) exposed missing simulator startup in the workflow; the validated commit starts it with its isolated database and callback configuration. Genuine screenshots and source register: `evidence/round3/e11/`. Local accessibility checks cover semantic labels/roles, Tab focus-visible, and 390px overflow. No screen-reader/axe or broad browser/device matrix. |
 
 ## C. Financial accounting design
 
@@ -74,7 +77,7 @@ E10 reproduced the critical cross-system boundary: the bank restored to a point 
 - **E6 fault injection:** three personal-transfer process-kill cases passed with independent SQL grades and replay. Broader registered failure types remain unexecuted.
 - **E9 performance:** three fresh candidate databases completed 19,500 synthetic payroll items without unbalanced journals or projection mismatches. The V10 pending-only index was rejected under its preregistered keep rule and removed in V11. The R2-P2 projection-read supplement completed 12 fixtures with zero projection mismatches; at 100,000 postings authoritative SQL p50/p95 was 39.165/51.389 ms and projection-read p50/p95 was 0.330/0.558 ms. These are local measurements, not capacity claims.
 - **E10 recovery:** 1,379-file/35,161,072-byte physical base backup completed in 3.958s; `pg_verifybackup` passed in 0.797s. The named-target recovery point was LSN `0/2A0000C8`; observed RPO 118.922s and RTO 670.008s follow the frozen definitions. Final grade: 0 unbalanced journals, 0 projection mismatches, 10/10 bank outbox events and 2/2 simulator callbacks delivered, post-target transfer absent, one settlement.
-- **CI:** E10 exact full-stack/security plus Maven OSV run [43624499785](https://github.com/miku-wwl/ledgercore/actions/runs/43624499785) passed. E11 exact CI result is pending and must be recorded before final handoff.
+- **CI:** E10 full-stack/security plus Maven OSV run [43624499785](https://github.com/miku-wwl/ledgercore/actions/runs/43624499785) passed, followed by status-record run [43625116899](https://github.com/miku-wwl/ledgercore/actions/runs/43625116899). E11 initial run [43625867646](https://github.com/miku-wwl/ledgercore/actions/runs/43625867646) failed because the browser-check job did not start the independent clearing simulator; the corrected workflow in `de0624c` starts it against its isolated PostgreSQL database and configures the shared HMAC/callback path. Exact rerun [43626858589](https://github.com/miku-wwl/ledgercore/actions/runs/43626858589) passed both jobs; Playwright reported 8 passed in 1.5 minutes.
 
 ## G. Known problems, limits, and remaining scope
 
@@ -85,7 +88,7 @@ E10 reproduced the critical cross-system boundary: the bank restored to a point 
 - E9 has structured correlation logs and metrics but no W3C trace propagation/retained spans. The candidate index was rejected; do not describe it as an optimization.
 - E10 is one local Windows/PostgreSQL 18.7 recovery. It does not establish production RPO/RTO, off-host backup durability, repeated-run variance, or recovery from arbitrary storage corruption.
 - E11 accessibility review did not include screen reader, axe/WCAG automation, or a broad browser/device matrix. The Operations audit/history view is intentionally long and should be challenged for usability and pagination in Round 4.
-- CI results and exact SHAs must be read from final `main`; the above local measurements are not a substitute.
+- E11 CI proves the checked browser journeys against the independent simulator in CI; it does not close the explicitly listed accessibility, matrix-coverage, performance, or recovery limitations.
 - Round 4 scope remains E12, independent final engineering audit and remediation, and Chinese professional V2 PDF publication. Nothing in Round 3 claims E12 or textbook publication is complete.
 
 ## H. Independent review priorities for Opus 5.5

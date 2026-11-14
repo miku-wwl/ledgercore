@@ -17,7 +17,7 @@ Decision: Luna/Opus collaborative engineering. Repository: https://github.com/mi
 |---|---|---|
 | 1 | FINISHED | `ROUND-1-HANDOFF.md`; final SHA `b584b95` |
 | 2 | ACCEPTED_WITH_NONBLOCKING_RISKS | `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md`, `evidence/round2/` |
-| 3 | IN_PROGRESS — GPT-6 Luna, E4–E11 | E4 and E10 validated; E5–E9 partial; E11 full-stack is locally complete, with direct-main commit/exact CI pending. See `ROUND-3-PLAN.md`, `ROUND-3-ACCEPTANCE.md`, and `ROUND-3-HANDOFF.md` when finalized. |
+| 3 | COMPLETE — GPT-6 Luna, E4–E11 | E4, E10, and E11 validated; E5–E9 partial with documented limitations. E11 feature commit `fdd4e0d7ef7aef7f944b24db5463efe9c34141b4` and CI-fix commit `de0624c34cbd11f7d847e5dc5c48ee5efc20a475` passed exact CI run [43626858589](https://github.com/miku-wwl/ledgercore/actions/runs/43626858589). Round 3 handoff and acceptance are in the main-only documentation follow-up; E12/PDF remain Round 4. |
 | 4 | NOT_STARTED | E12, final audit, V2 PDF |
 
 The original Round 1 authorization statement is kept for the record: only Round 1 was authorized at that time, and E4–E12 and final V2 PDF publication were out of scope for it. The V1 textbook remains unchanged.
