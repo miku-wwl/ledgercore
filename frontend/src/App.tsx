@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AlertCircle, Landmark } from 'lucide-react'
@@ -14,6 +15,13 @@ import { OrganizationPage } from '@/pages/OrganizationPage'
 import { PayrollPage } from '@/pages/PayrollPage'
 import { TransferPage } from '@/pages/TransferPage'
 import './App.css'
+
+const PaymentsPage = lazy(() => import('@/pages/PaymentsPage').then((module) => ({ default: module.PaymentsPage })))
+const OperationsPage = lazy(() => import('@/pages/OperationsPage').then((module) => ({ default: module.OperationsPage })))
+
+function PageLoading() {
+  return <div className="page-stack" role="status"><Skeleton className="hero-skeleton" /><Skeleton className="account-skeleton" /><span className="sr-only">Loading page…</span></div>
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +51,8 @@ function SessionGate() {
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/organizations" element={<OrganizationPage />} />
         <Route path="/payroll" element={<PayrollPage />} />
+        <Route path="/payments" element={<Suspense fallback={<PageLoading />}><PaymentsPage customerId={session.data.id} /></Suspense>} />
+        <Route path="/operations" element={<Suspense fallback={<PageLoading />}><OperationsPage customerId={session.data.id} /></Suspense>} />
         <Route path="/accounts/:accountId" element={<AccountPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

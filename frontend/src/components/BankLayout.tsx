@@ -1,12 +1,19 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Activity, ArrowLeftRight, Building2, LayoutDashboard, Landmark, LogOut, WalletCards, Banknote } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Activity, ArrowLeftRight, Banknote, Building2, CreditCard, LayoutDashboard, Landmark, LogOut, ShieldAlert, WalletCards } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { signOut, type Customer } from '@/api/client'
+import { getOrganizations, signOut, type Customer } from '@/api/client'
 
 export function BankLayout({ customer }: { customer: Customer }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const location = useLocation()
+  const organizationsQuery = useQuery({
+    queryKey: ['organizations'],
+    queryFn: getOrganizations,
+    refetchInterval: 5_000,
+    refetchOnWindowFocus: true,
+  })
   const logout = useMutation({
     mutationFn: signOut,
     onSuccess: () => {
@@ -16,13 +23,21 @@ export function BankLayout({ customer }: { customer: Customer }) {
     },
   })
 
+  const organizationRoles = organizationsQuery.data?.flatMap((organization) => organization.roles ?? []) ?? []
+  const hasPayrollAccess = organizationRoles.some((role) => ['PAYROLL_MAKER', 'PAYROLL_APPROVER', 'OPERATIONS'].includes(role))
+  const hasPaymentAccess = organizationRoles.some((role) => ['PAYMENT_MAKER', 'PAYMENT_APPROVER', 'OPERATIONS'].includes(role))
+  const hasOperationsAccess = organizationRoles.includes('OPERATIONS')
   const links = [
     { to: '/', label: 'Overview', icon: LayoutDashboard, end: true },
     { to: '/transfer', label: 'Transfer', icon: ArrowLeftRight },
     { to: '/history', label: 'History', icon: Activity },
     { to: '/organizations', label: 'Organizations', icon: Building2 },
-    { to: '/payroll', label: 'Payroll', icon: Banknote },
+    ...(hasPayrollAccess ? [{ to: '/payroll', label: 'Payroll', icon: Banknote }] : []),
+    ...(hasPaymentAccess ? [{ to: '/payments', label: 'Payments', icon: CreditCard }] : []),
+    ...(hasOperationsAccess ? [{ to: '/operations', label: 'Operations', icon: ShieldAlert }] : []),
   ]
+  const sectionTitle = links.find((link) => link.to === location.pathname)?.label
+    ?? (location.pathname.startsWith('/accounts/') ? 'Accounts' : 'LedgerCore')
 
   return (
     <div className="app-shell">
@@ -53,7 +68,7 @@ export function BankLayout({ customer }: { customer: Customer }) {
       </aside>
       <div className="main-column">
         <header className="topbar">
-          <span className="topbar-title">Personal banking</span>
+          <span className="topbar-title">{sectionTitle}</span>
           <span className="topbar-user">Signed in as <strong>{customer.displayName}</strong></span>
         </header>
         <main className="main-content"><Outlet /></main>

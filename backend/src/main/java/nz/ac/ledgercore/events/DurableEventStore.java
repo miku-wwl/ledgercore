@@ -136,14 +136,14 @@ public class DurableEventStore {
         int safeLimit = Math.max(1, Math.min(100, limit));
         return jdbcTemplate.query("""
                 SELECT id, event_key, event_type, aggregate_type, aggregate_id, actor_customer_id,
-                       organization_id, status, attempt_count, last_error, created_at, delivered_at
+                       organization_id, status, attempt_count, last_error, created_at, delivered_at, correlation_id
                 FROM outbox_events ORDER BY created_at DESC, id DESC LIMIT ?
                 """, (rs, row) -> new OutboxStatusView(rs.getObject("id", UUID.class), rs.getString("event_key"),
                 rs.getString("event_type"), rs.getString("aggregate_type"), rs.getObject("aggregate_id", UUID.class),
                 rs.getObject("actor_customer_id", UUID.class), rs.getObject("organization_id", UUID.class),
                 rs.getString("status"), rs.getInt("attempt_count"), rs.getString("last_error"),
                 rs.getTimestamp("created_at").toInstant(), rs.getTimestamp("delivered_at") == null ? null
-                        : rs.getTimestamp("delivered_at").toInstant()), safeLimit);
+                        : rs.getTimestamp("delivered_at").toInstant(), rs.getString("correlation_id")), safeLimit);
     }
 
     @Transactional(readOnly = true)
@@ -151,7 +151,7 @@ public class DurableEventStore {
         int safeLimit = Math.max(1, Math.min(100, limit));
         return jdbcTemplate.query("""
                 SELECT id, event_key, event_type, aggregate_type, aggregate_id, actor_customer_id,
-                       organization_id, status, attempt_count, last_error, created_at, delivered_at
+                       organization_id, status, attempt_count, last_error, created_at, delivered_at, correlation_id
                 FROM outbox_events WHERE organization_id = ?
                 ORDER BY created_at DESC, id DESC LIMIT ?
                 """, (rs, row) -> new OutboxStatusView(rs.getObject("id", UUID.class), rs.getString("event_key"),
@@ -159,7 +159,7 @@ public class DurableEventStore {
                 rs.getObject("actor_customer_id", UUID.class), rs.getObject("organization_id", UUID.class),
                 rs.getString("status"), rs.getInt("attempt_count"), rs.getString("last_error"),
                 rs.getTimestamp("created_at").toInstant(), rs.getTimestamp("delivered_at") == null ? null
-                        : rs.getTimestamp("delivered_at").toInstant()), organizationId, safeLimit);
+                        : rs.getTimestamp("delivered_at").toInstant(), rs.getString("correlation_id")), organizationId, safeLimit);
     }
 
     @Transactional
@@ -208,7 +208,7 @@ public class DurableEventStore {
 
     public record OutboxStatusView(UUID id, String eventKey, String eventType, String aggregateType,
             UUID aggregateId, UUID actorCustomerId, UUID organizationId, String status, int attemptCount,
-            String lastError, Instant createdAt, Instant deliveredAt) {
+            String lastError, Instant createdAt, Instant deliveredAt, String correlationId) {
     }
 
     private record OutboxRetryState(int attemptCount, UUID organizationId) {

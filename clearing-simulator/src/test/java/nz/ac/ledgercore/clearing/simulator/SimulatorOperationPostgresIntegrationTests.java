@@ -51,6 +51,29 @@ class SimulatorOperationPostgresIntegrationTests {
         assertThat(resolved.sequenceNo()).isEqualTo(2);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM simulator_callback_outbox WHERE operation_id = ?",
                 Integer.class, request.operationId())).isEqualTo(2);
+        OperationResponse terminalInquiry = operations.inquire(request.operationId());
+        assertThat(terminalInquiry.externalStatus()).isEqualTo("SETTLED");
+        assertThat(terminalInquiry.sequenceNo()).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM simulator_callback_outbox WHERE operation_id = ?",
+                Integer.class, request.operationId())).isEqualTo(2);
+    }
+
+    @Test
+    void repeatedInquiryOfTerminalOperationKeepsPersistedCallbackSequence() {
+        OperationRequest request = request("SIM-SETTLE");
+        OperationResponse initial = operations.submit(request);
+        OperationResponse firstInquiry = operations.inquire(request.operationId());
+        OperationResponse secondInquiry = operations.inquire(request.operationId());
+        OperationResponse replay = operations.submit(request);
+
+        assertThat(initial.sequenceNo()).isEqualTo(1);
+        assertThat(firstInquiry.sequenceNo()).isEqualTo(1);
+        assertThat(secondInquiry.sequenceNo()).isEqualTo(1);
+        assertThat(replay.sequenceNo()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT inquiry_count FROM simulator_operations WHERE operation_id = ?",
+                Integer.class, request.operationId())).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM simulator_callback_outbox WHERE operation_id = ?",
+                Integer.class, request.operationId())).isEqualTo(1);
     }
 
     @Test

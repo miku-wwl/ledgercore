@@ -100,7 +100,7 @@ public class SimulatorOperationService {
                     WHERE operation_id = ?
                     """, next, operationId);
             OperationResponse response = new OperationResponse(current.operationId(), current.paymentId(),
-                    current.digest(), next, current.reference(), current.inquiryCount() + 2L);
+                    current.digest(), next, current.reference(), latestCallbackSequenceNo(operationId) + 1L);
             enqueueCallback(response);
             log.info("Simulator operation inquiry changed status operationId={} status={}", operationId, next);
             return response;
@@ -108,7 +108,7 @@ public class SimulatorOperationService {
         jdbc.update("UPDATE simulator_operations SET inquiry_count = inquiry_count + 1, updated_at = clock_timestamp() WHERE operation_id = ?",
                 operationId);
         return new OperationResponse(current.operationId(), current.paymentId(), current.digest(), current.status(),
-                current.reference(), current.inquiryCount() + 1L);
+                current.reference(), latestCallbackSequenceNo(operationId));
     }
 
     private void enqueueCallback(OperationResponse operation) {
@@ -131,12 +131,20 @@ public class SimulatorOperationService {
     private List<OperationResponse> find(UUID operationId, boolean lock) {
         return jdbc.query("""
                 SELECT operation_id, payment_id, intent_digest, external_status, simulator_reference,
-                       inquiry_count
-                FROM simulator_operations WHERE operation_id = ?
+                       (SELECT COALESCE(MAX(sequence_no), 0) FROM simulator_callback_outbox c
+                        WHERE c.operation_id = o.operation_id) AS sequence_no
+                FROM simulator_operations o WHERE operation_id = ?
                 """ + (lock ? " FOR UPDATE" : ""), (rs, row) -> new OperationResponse(
                     rs.getObject("operation_id", UUID.class), rs.getObject("payment_id", UUID.class),
                     rs.getString("intent_digest").trim(), rs.getString("external_status"),
-                    rs.getString("simulator_reference"), rs.getLong("inquiry_count") + 1), operationId);
+                    rs.getString("simulator_reference"), rs.getLong("sequence_no")), operationId);
+    }
+
+    private long latestCallbackSequenceNo(UUID operationId) {
+        Long sequenceNo = jdbc.queryForObject("""
+                SELECT COALESCE(MAX(sequence_no), 0) FROM simulator_callback_outbox WHERE operation_id = ?
+                """, Long.class, operationId);
+        return sequenceNo == null ? 0 : sequenceNo;
     }
 
     private Route route(String routingCode) {

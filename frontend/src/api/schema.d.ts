@@ -485,6 +485,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/organizations/{organizationId}/operations/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["searchOrganizationOperations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizations/{organizationId}/operations/reconciliation/exceptions": {
         parameters: {
             query?: never;
@@ -509,6 +525,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listOrganizationOutboxEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/operations/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrganizationOperationsMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/operations/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationOperationsAuditHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -957,6 +1005,18 @@ export interface components {
             /** Format: int32 */
             total?: number;
         };
+        OperationSearchResult: {
+            resultType?: string;
+            resultId?: string;
+            status?: string;
+            externalStatus?: string;
+            /** Format: int64 */
+            amountMinor?: number;
+            description?: string;
+            correlationId?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+        };
         OutboxStatusView: {
             /** Format: uuid */
             id?: string;
@@ -977,6 +1037,34 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             deliveredAt?: string;
+            correlationId?: string;
+        };
+        OperationsMetrics: {
+            /** Format: int64 */
+            pendingClearing?: number;
+            /** Format: int64 */
+            unknownClearing?: number;
+            /** Format: int64 */
+            pendingEvents?: number;
+            /** Format: int64 */
+            failedEvents?: number;
+            /** Format: int64 */
+            openExceptions?: number;
+            /** Format: date-time */
+            oldestPendingEventAt?: string;
+        };
+        AuditEventView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            actorCustomerId?: string;
+            action?: string;
+            resourceType?: string;
+            /** Format: uuid */
+            resourceId?: string;
+            correlationId?: string;
+            /** Format: date-time */
+            occurredAt?: string;
         };
         CsrfResponse: {
             token?: string;
@@ -1924,6 +2012,30 @@ export interface operations {
             };
         };
     };
+    searchOrganizationOperations: {
+        parameters: {
+            query: {
+                query: string;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperationSearchResult"][];
+                };
+            };
+        };
+    };
     listOrganizationReconciliationExceptions: {
         parameters: {
             query?: {
@@ -1969,6 +2081,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OutboxStatusView"][];
+                };
+            };
+        };
+    };
+    getOrganizationOperationsMetrics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OperationsMetrics"];
+                };
+            };
+        };
+    };
+    listOrganizationOperationsAuditHistory: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AuditEventView"][];
                 };
             };
         };

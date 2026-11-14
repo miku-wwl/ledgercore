@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, Plus, Users } from 'lucide-react'
+import { Building2, Plus, Users, X } from 'lucide-react'
 import {
   addOrganizationMember,
   createOrganization,
@@ -8,6 +8,7 @@ import {
   getOrganizationAccounts,
   getOrganizationMembers,
   getOrganizations,
+  revokeOrganizationMemberRole,
   type OrganizationRole,
 } from '@/api/client'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -21,6 +22,8 @@ const roleOptions: { value: OrganizationRole; label: string }[] = [
   { value: 'ORG_ADMIN', label: 'Organization admin' },
   { value: 'PAYROLL_MAKER', label: 'Payroll maker' },
   { value: 'PAYROLL_APPROVER', label: 'Payroll approver' },
+  { value: 'PAYMENT_MAKER', label: 'Payment maker' },
+  { value: 'PAYMENT_APPROVER', label: 'Payment approver' },
   { value: 'FINANCE_VIEWER', label: 'Finance viewer' },
   { value: 'OPERATIONS', label: 'Operations' },
 ]
@@ -77,6 +80,16 @@ export function OrganizationPage() {
       setMemberEmail('')
       await queryClient.invalidateQueries({ queryKey: ['organizations', organizationId, 'members'] })
       await queryClient.invalidateQueries({ queryKey: ['organizations'] })
+    },
+  })
+  const revokeRoleMutation = useMutation({
+    mutationFn: ({ customerId, role }: { customerId: string; role: OrganizationRole }) =>
+      revokeOrganizationMemberRole(organizationId as string, customerId, role),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['organizations', organizationId, 'members'] }),
+        queryClient.invalidateQueries({ queryKey: ['organizations'] }),
+      ])
     },
   })
 
@@ -166,7 +179,10 @@ export function OrganizationPage() {
                 {roles.map((role) => <Badge key={role} variant="secondary">{role.replaceAll('_', ' ')}</Badge>)}
               </div>
               {roles.includes('PAYROLL_MAKER') && (
-                <p className="text-sm text-muted-foreground">Payroll Maker access enables authorized corporate transfers. The payroll workflow is delivered in the next engineering stage.</p>
+                <p className="text-sm text-muted-foreground">Payroll Maker access allows you to prepare payroll batches. Independent approval is required before execution.</p>
+              )}
+              {(roles.includes('PAYMENT_MAKER') || roles.includes('PAYMENT_APPROVER')) && (
+                <p className="text-sm text-muted-foreground">Corporate payment creation and approval are available in Payments. Maker and checker roles must be held by different members.</p>
               )}
               {roles.includes('FINANCE_VIEWER') && !roles.includes('PAYROLL_MAKER') && !isAdmin && (
                 <p className="text-sm text-muted-foreground">Finance Viewer access is read-only. Debit and approval actions are not available.</p>
@@ -239,12 +255,25 @@ export function OrganizationPage() {
                   {addMemberMutation.isError && <p className="text-sm text-red-700" role="alert">
                     {errorMessage(addMemberMutation.error, 'Member could not be added.')}
                   </p>}
+                  {revokeRoleMutation.isError && <p className="text-sm text-red-700" role="alert">
+                    {errorMessage(revokeRoleMutation.error, 'Organization role could not be revoked.')}
+                  </p>}
                   <div className="grid gap-3" aria-label="Organization members">
                     {(membersQuery.data ?? []).map((member) => (
                       <div key={member.customerId} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
                         <div><p className="font-medium">{member.displayName}</p><p className="text-xs text-muted-foreground">{member.email}</p></div>
-                        <div className="flex flex-wrap gap-1">{member.roles.map((role) =>
-                          <Badge key={role} variant="outline">{role.replaceAll('_', ' ')}</Badge>)}</div>
+                        <div className="flex flex-wrap gap-2">{member.roles.map((role) => (
+                          <span key={role} className="inline-flex items-center gap-1">
+                            <Badge variant="outline">{role.replaceAll('_', ' ')}</Badge>
+                            {isAdmin && member.customerId && <Button type="button" variant="ghost" size="icon-xs"
+                              aria-label={`Revoke ${role.replaceAll('_', ' ')} from ${member.email}`}
+                              title={`Revoke ${role.replaceAll('_', ' ')} from ${member.email}`}
+                              disabled={revokeRoleMutation.isPending}
+                              onClick={() => revokeRoleMutation.mutate({ customerId: member.customerId as string, role })}>
+                              <X size={13} aria-hidden="true" />
+                            </Button>}
+                          </span>
+                        ))}</div>
                       </div>
                     ))}
                   </div>

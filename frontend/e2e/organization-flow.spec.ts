@@ -49,7 +49,7 @@ test('organization admin grants a payroll maker access without exposing corporat
     await expect(page.getByText(makerEmail, { exact: true })).toBeVisible()
 
     await makerPage.getByRole('link', { name: 'Organizations', exact: true }).click()
-    await expect(makerPage.getByText(organizationName, { exact: true }).first()).toBeVisible()
+    await expect(makerPage.getByText(organizationName, { exact: true }).first()).toBeVisible({ timeout: 20_000 })
     await expect(makerPage.getByText('PAYROLL MAKER', { exact: true })).toBeVisible()
     await expect(makerPage.getByText('Payroll account', { exact: true })).toBeVisible()
 

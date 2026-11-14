@@ -1,0 +1,21 @@
+npm notice run frontend@0.0.0 npx
+npm notice run playwright test
+[WebServer] npm notice run frontend@0.0.0 dev
+[WebServer] npm notice run vite --host 127.0.0.1
+[WebServer] (node:65084) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+(node:1840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [chromium] › e2e\banking-flow.spec.ts:26:1 › registers, transfers, recovers a lost response, pages history, and enforces ownership (12.6s)
+  ok 2 [chromium] › e2e\enterprise-operations.spec.ts:78:1 › maker/checker payment reaches a real settlement and self-approval is rejected (16.8s)
+  ok 3 [chromium] › e2e\enterprise-operations.spec.ts:123:1 › Operations resolves an UNKNOWN clearing result and records a verified reconciliation exception (37.9s)
+  ok 4 [chromium] › e2e\enterprise-operations.spec.ts:207:1 › Operations endpoints conceal a different organization (6.3s)
+  ok 5 [chromium] › e2e\enterprise-operations.spec.ts:241:1 › non-Operations member is denied a reconciliation action by the backend (6.1s)
+  ok 6 [chromium] › e2e\enterprise-operations.spec.ts:262:1 › revoked Operations role cannot inquire during a pending business operation (22.3s)
+  ok 7 [chromium] › e2e\organization-flow.spec.ts:23:1 › organization admin grants a payroll maker access without exposing corporate funds to generic transfers (7.6s)
+  ok 8 [chromium] › e2e\payroll-flow.spec.ts:39:1 › maker imports and submits payroll; independent approver executes once after a lost response (14.8s)
+
+  8 passed (2.1m)

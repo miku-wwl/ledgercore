@@ -162,6 +162,160 @@ export type PayrollBatch = Required<components['schemas']['BatchView']>
 export type PayrollItem = Required<components['schemas']['ItemView']>
 export type PayrollItemInput = components['schemas']['PayrollItemRequest']
 export type TransferAccount = Account & { canDebit: boolean }
+export type CorporatePayment = Required<components['schemas']['PaymentView']>
+export type CorporatePaymentPage = Omit<Required<components['schemas']['PaymentPage']>, 'items'> & {
+  items: CorporatePayment[]
+}
+export type OutboxEvent = Required<components['schemas']['OutboxStatusView']>
+export type ReconciliationException = Required<components['schemas']['ReconciliationExceptionView']>
+export type ReconciliationRun = Required<components['schemas']['ReconciliationRunResult']>
+export type OperationsMetrics = Required<components['schemas']['OperationsMetrics']>
+export type AuditEvent = Required<components['schemas']['AuditEventView']>
+export type OperationSearchResult = Required<components['schemas']['OperationSearchResult']>
+
+export async function getCorporatePayments(organizationId: string, page = 0, size = 10): Promise<CorporatePaymentPage> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/payments', {
+    params: { path: { organizationId }, query: { page, size } },
+  })
+  ensureOk(response, error)
+  return required(data as CorporatePaymentPage | undefined, 'Corporate payment list')
+}
+
+export async function createCorporatePayment(organizationId: string, input: {
+  sourceAccountId: string
+  beneficiaryName: string
+  beneficiaryAccountReference: string
+  beneficiaryRoutingCode: string
+  amount: string
+}): Promise<CorporatePayment> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations/{organizationId}/payments', {
+    params: { path: { organizationId } }, body: input, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as CorporatePayment | undefined, 'Corporate payment creation')
+}
+
+export async function submitCorporatePayment(paymentId: string): Promise<CorporatePayment> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payments/{paymentId}/submit', {
+    params: { path: { paymentId } }, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as CorporatePayment | undefined, 'Corporate payment submission')
+}
+
+export async function approveCorporatePayment(paymentId: string): Promise<CorporatePayment> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payments/{paymentId}/approve', {
+    params: { path: { paymentId } }, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as CorporatePayment | undefined, 'Corporate payment approval')
+}
+
+export async function rejectCorporatePayment(paymentId: string, reason: string): Promise<CorporatePayment> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payments/{paymentId}/reject', {
+    params: { path: { paymentId } }, body: { reason }, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as CorporatePayment | undefined, 'Corporate payment rejection')
+}
+
+export async function getOrganizationOperationsMetrics(organizationId: string): Promise<OperationsMetrics> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/operations/metrics', {
+    params: { path: { organizationId } },
+  })
+  ensureOk(response, error)
+  return required(data as OperationsMetrics | undefined, 'Operations metrics')
+}
+
+export async function getOrganizationOutbox(organizationId: string): Promise<OutboxEvent[]> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/operations/outbox', {
+    params: { path: { organizationId }, query: { limit: 100 } },
+  })
+  ensureOk(response, error)
+  return (data as OutboxEvent[] | undefined) ?? []
+}
+
+export async function retryOrganizationOutboxEvent(organizationId: string, eventId: string): Promise<void> {
+  const token = await csrfToken()
+  const { error, response } = await client.POST('/api/organizations/{organizationId}/operations/outbox/{eventId}/retry', {
+    params: { path: { organizationId, eventId } }, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+}
+
+export async function runOrganizationReconciliation(organizationId: string): Promise<ReconciliationRun> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations/{organizationId}/operations/reconciliation/runs', {
+    params: { path: { organizationId }, query: { limit: 500 } }, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as ReconciliationRun | undefined, 'Organization reconciliation')
+}
+
+export async function getOrganizationReconciliationExceptions(organizationId: string): Promise<ReconciliationException[]> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/operations/reconciliation/exceptions', {
+    params: { path: { organizationId }, query: { limit: 100 } },
+  })
+  ensureOk(response, error)
+  return (data as ReconciliationException[] | undefined) ?? []
+}
+
+export async function assignOrganizationReconciliationException(
+  organizationId: string,
+  exceptionId: string,
+  assignedToCustomerId: string,
+): Promise<ReconciliationException> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations/{organizationId}/operations/reconciliation/exceptions/{exceptionId}/assign', {
+    params: { path: { organizationId, exceptionId } }, body: { assignedToCustomerId },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as ReconciliationException | undefined, 'Assign reconciliation exception')
+}
+
+export async function resolveOrganizationReconciliationException(
+  organizationId: string,
+  exceptionId: string,
+  resolution: string,
+): Promise<ReconciliationException> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations/{organizationId}/operations/reconciliation/exceptions/{exceptionId}/resolve', {
+    params: { path: { organizationId, exceptionId } }, body: { resolution },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as ReconciliationException | undefined, 'Resolve reconciliation exception')
+}
+
+export async function inquireClearingOperation(operationId: string): Promise<components['schemas']['OperationResponse']> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/operations/clearing/{operationId}/inquiry', {
+    params: { path: { operationId } }, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data, 'Clearing inquiry')
+}
+
+export async function getOrganizationAuditHistory(organizationId: string): Promise<AuditEvent[]> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/operations/audit', {
+    params: { path: { organizationId }, query: { limit: 100 } },
+  })
+  ensureOk(response, error)
+  return (data as AuditEvent[] | undefined) ?? []
+}
+
+export async function searchOrganizationOperations(organizationId: string, query: string): Promise<OperationSearchResult[]> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/operations/search', {
+    params: { path: { organizationId }, query: { query } },
+  })
+  ensureOk(response, error)
+  return (data as OperationSearchResult[] | undefined) ?? []
+}
 
 export async function getOrganizations(): Promise<Organization[]> {
   const { data, error, response } = await client.GET('/api/organizations')
@@ -218,6 +372,19 @@ export async function addOrganizationMember(
   })
   ensureOk(response, error)
   return required(data as OrganizationMember | undefined, 'Add organization member')
+}
+
+export async function revokeOrganizationMemberRole(
+  organizationId: string,
+  memberCustomerId: string,
+  role: OrganizationRole,
+): Promise<OrganizationMember> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.DELETE('/api/organizations/{organizationId}/members/{memberCustomerId}/roles/{role}', {
+    params: { path: { organizationId, memberCustomerId, role } }, headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as OrganizationMember | undefined, 'Revoke organization role')
 }
 
 export async function getPayrollBatches(organizationId: string): Promise<PayrollBatch[]> {

@@ -3,6 +3,8 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
+const backendTarget = process.env.VITE_API_TARGET ?? 'http://127.0.0.1:8080'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -13,8 +15,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://127.0.0.1:8080',
-      '/v3': 'http://127.0.0.1:8080',
+      '/api': backendTarget,
+      '/v3': backendTarget,
     },
   },
 })
