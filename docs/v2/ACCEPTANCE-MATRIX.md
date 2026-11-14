@@ -11,7 +11,7 @@
 | Source/schema audit | Ownership, authorization, transactions, locks, projections, migrations | PASS; risks recorded in ARCHITECTURE.md and ADR | PASS locally; V5 constraints, actor/source-owner split, and authorization reviewed | PASS; V6 constraints, immutable intent, approval digest, transaction boundary, and PostgreSQL locks exercised locally and in CI | NOT_RUN |
 | Real corporate authorization | PostgreSQL-backed corporate ownership, roles, isolation, Maker/Checker, personal compatibility | NOT_RUN | LOCAL PASS: ownership XOR, role access, cross-organization 404, Maker/Checker policy, corporate transfer and V1 personal account path | n/a | NOT_RUN |
 | Payroll correctness | 500 synthetic items, actual postings, no duplicates, approval immutability, recoverable partial completion | NOT_RUN | n/a | PASS locally: 500-item reconciliation plus actual kill/restart from 3 committed / 497 pending; full-stack CI run 43543154101 passed; see `evidence/e2/VALIDATION.md` | NOT_RUN |
-| Performance evidence | Hypotheses, repeated actual measurements, query plans, financial invariants | NOT_RUN | n/a | NOT_RUN | NOT_RUN |
+| Performance evidence | Hypotheses, repeated actual measurements, query plans, financial invariants | NOT_RUN | n/a | NOT_RUN | HYPOTHESES PREPARED; measurement and query-plan collection not started |
 | Final handoff | Complete evidence-linked Round 1 handoff; no E4–E12 or V2 PDF | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN |
 
 A NOT_RUN or blocked mandatory gate cannot be represented as PASS. Stage status also requires a direct-main commit and verification of its relevant GitHub Actions run.

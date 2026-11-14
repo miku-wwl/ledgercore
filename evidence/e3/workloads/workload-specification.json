@@ -1,0 +1,66 @@
+{
+  "round": 1,
+  "stage": "E3",
+  "sourceBaseline": "4ab093cc",
+  "database": {
+    "engine": "PostgreSQL",
+    "version": "18.7",
+    "host": "127.0.0.1",
+    "port": 55434,
+    "name": "ledgercore_e3_perf",
+    "separateFromIntegrationDatabase": true
+  },
+  "accountHistory": {
+    "exactPostingCounts": [100, 1000, 10000, 100000],
+    "warmupBalanceReads": 10,
+    "timedBalanceReadsPerRepeat": 100,
+    "serviceTransfersPerRepeat": 30,
+    "repeats": 3,
+    "largestSizeRequiresResourcePreflight": true
+  },
+  "financialConcurrency": {
+    "levels": [1, 10, 30, 50],
+    "operationsPerClient": 100,
+    "repeats": 3,
+    "distributions": [
+      "independent-account-pairs",
+      "one-hot-payer",
+      "opposing-direction-pairs",
+      "80-percent-funded-20-percent-insufficient"
+    ],
+    "fundedAmount": "0.01",
+    "insufficientAmount": "2000.00",
+    "fundedAccountOpeningBalance": "1000.00"
+  },
+  "payrollConcurrency": {
+    "itemsPerBatch": [500, 5000],
+    "concurrencyLevels": [1, 10, 30, 50],
+    "repeats": 3,
+    "itemAmount": "1.00",
+    "largestBatchRequiresResourcePreflight": true
+  },
+  "queryPlans": [
+    "ledger-balance-aggregation",
+    "transaction-history-first-page",
+    "transaction-history-keyset-page",
+    "payroll-pending-item-claim",
+    "payroll-batch-progress",
+    "organization-membership-role-authorization"
+  ],
+  "measurement": {
+    "queryPlan": "EXPLAIN (ANALYZE, BUFFERS, SETTINGS)",
+    "serviceLatencyClock": "System.nanoTime around Spring service proxy call including DB transaction commit, excluding HTTP",
+    "warmupAndSamples": "exact values in each pre-registered hypothesis",
+    "preserveAllRepeats": true,
+    "reportRunToRunVariation": true,
+    "noProductionCapacityClaims": true
+  },
+  "financialGates": [
+    "every committed journal entry balances",
+    "no account ledger balance becomes negative",
+    "one effective transfer per idempotency key",
+    "transfer receipt and ledger postings agree",
+    "balance projections independently reconcile to postings",
+    "no opposing-direction deadlocks"
+  ]
+}

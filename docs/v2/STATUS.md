@@ -17,7 +17,7 @@
 | E0 | VALIDATED | Commit a7fe0de280b61b66e87cf14c95aa4cf30d0982b8; local gates passed; CI run 43531591907 succeeded |
 | E1 | VALIDATED | Commit eab8175501e77dfc57b1d9ea404a73ed86c8ae26 pushed to main; GitHub Actions run 43536790093 succeeded |
 | E2 | VALIDATED | Commit `500089581ac38741f475030ca706cd034a1a9c92` is on `main`; GitHub Actions run `43543154101` passed full-stack acceptance, OpenAPI/browser checks, and OSV scan; local evidence is in `evidence/e2/VALIDATION.md` |
-| E3 | NOT_RUN | No performance hypothesis or measurement started |
+| E3 | PRE-REGISTRATION WRITTEN — measurement not started | Three hypotheses and workload specification are prepared in `evidence/e3/`; commit them to `main` before running any timing, load test, or execution plan |
 
 ## Verified starting point
 
