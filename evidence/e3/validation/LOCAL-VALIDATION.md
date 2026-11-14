@@ -22,5 +22,6 @@ Raw Maven output: `../measurements/full-regression-verification-20261114.log`.
 
 - Commit `230e5873ba7f0d1c7df546eb1e81622fa12a8cc0`: GitHub Actions run [43546776607](https://github.com/miku-wwl/ledgercore/actions/runs/43546776607) succeeded for full-stack acceptance and OSV dependency scan.
 - H04 preregistration commit `81a903876ea3ac3214113dbf7bacb86f40307454`: run [43550956746](https://github.com/miku-wwl/ledgercore/actions/runs/43550956746) succeeded.
+- Complete E3 evidence/handoff commit `9e7a4421c5ee7f4bdc69cce3cfbb3c1503e8078a`: run [43552848920](https://github.com/miku-wwl/ledgercore/actions/runs/43552848920) passed full-stack acceptance and OSV dependency scan.
 
 The E3 runner is opt-in and its `Harness` class is not executed by ordinary Surefire naming. Each explicit H01–H03 method was run successfully and its outputs are preserved under `measurements/`. The standard `clean verify` confirms the E3 harness compiles with the full test source set.

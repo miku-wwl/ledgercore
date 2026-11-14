@@ -24,6 +24,7 @@ Key E3 commits:
 | `137fa983751943c89873b1df33c299a8d6c2507d` | Opt-in E3 Spring performance harness and main-only runner | Its first CI run was canceled after the follow-up fix was pushed |
 | `230e5873ba7f0d1c7df546eb1e81622fa12a8cc0` | Correct environment capture; application source measured by H01–H04 | Run [43546776607](https://github.com/miku-wwl/ledgercore/actions/runs/43546776607) passed full-stack acceptance and OSV scan |
 | `81a903876ea3ac3214113dbf7bacb86f40307454` | Supplemental H04 pre-registration and guarded SQL/runner | Run [43550956746](https://github.com/miku-wwl/ledgercore/actions/runs/43550956746) passed |
+| `9e7a4421c5ee7f4bdc69cce3cfbb3c1503e8078a` | Complete E3 evidence, verdicts, figures, final status, and Round 1 handoff | Run [43552848920](https://github.com/miku-wwl/ledgercore/actions/runs/43552848920) passed full-stack acceptance and OSV scan |
 
 H04's runner metadata and output-directory corrections were made only after its one-time measurement. They do not change the measured application source baseline (`230e5873...`) or its raw results. The environment correction note is in [`measurements/h04-cross-org-progress-followup/corrections.md`](../../evidence/e3/measurements/h04-cross-org-progress-followup/corrections.md).
 

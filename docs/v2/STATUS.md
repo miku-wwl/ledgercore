@@ -31,7 +31,7 @@ The E0 local test database was a separate disposable PostgreSQL 18.7 cluster on 
 
 ## E3 acceptance
 
-- E3 harness source was added on `main` at `137fa983751943c89873b1df33c299a8d6c2507d`; the environment metadata fix is `230e5873ba7f0d1c7df546eb1e81622fa12a8cc0`. CI run `43546776607` passed full-stack acceptance and OSV scan.
+- E3 harness source was added on `main` at `137fa983751943c89873b1df33c299a8d6c2507d`; the environment metadata fix is `230e5873ba7f0d1c7df546eb1e81622fa12a8cc0`. CI run `43546776607` passed full-stack acceptance and OSV scan. Final evidence/handoff commit `9e7a4421c5ee7f4bdc69cce3cfbb3c1503e8078a` also passed both jobs in run `43552848920`.
 - H01–H03 ran against separate database `ledgercore_e3_perf`; environment capture and detailed per-run evidence are preserved in `evidence/e3/measurements/`. H04 was preregistered at `81a903876ea3ac3214113dbf7bacb86f40307454`; CI run `43550956746` passed.
 - H02 completed 48 concurrency scenarios with zero unexpected failures, transfer invariant violations, projection mismatches, overdrafts, or opposing-direction deadlocks.
 - H03 completed 24 payroll scenarios (500 and 5,000 items × concurrency 1/10/30/50 × three repeats); all 66,000 measured items completed with zero recorded financial invariant violations. Its 5,000-item progress plan scanned all 71,500 result rows.
