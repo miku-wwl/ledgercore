@@ -196,6 +196,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/organizations/{organizationId}/operations/reconciliation/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["runOrganizationFinancialReconciliation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/operations/reconciliation/exceptions/{exceptionId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resolveOrganizationReconciliationException"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/operations/reconciliation/exceptions/{exceptionId}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["assignOrganizationReconciliationException"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizations/{organizationId}/operations/outbox/{eventId}/retry": {
         parameters: {
             query?: never;
@@ -429,6 +477,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/operations/reconciliation/exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationReconciliationExceptions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -713,6 +777,72 @@ export interface components {
             beneficiaryAccountReference: string;
             beneficiaryRoutingCode: string;
             amount: string;
+        };
+        ReconciliationFinding: {
+            category?: string;
+            severity?: string;
+            resourceType?: string;
+            /** Format: uuid */
+            resourceId?: string;
+            /** Format: uuid */
+            operationId?: string;
+            expectedFacts?: {
+                [key: string]: unknown;
+            };
+            observedFacts?: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            exceptionId?: string;
+        };
+        ReconciliationRunResult: {
+            /** Format: uuid */
+            runId?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            checkedDomains?: string[];
+            skippedDomains?: string[];
+            /** Format: int32 */
+            findingCount?: number;
+            findingCounts?: {
+                [key: string]: number;
+            };
+            findings?: components["schemas"]["ReconciliationFinding"][];
+        };
+        ResolveExceptionRequest: {
+            resolution: string;
+            /** Format: uuid */
+            correctionJournalEntryId?: string;
+        };
+        ReconciliationExceptionView: {
+            /** Format: uuid */
+            id?: string;
+            category?: string;
+            severity?: string;
+            /** Format: uuid */
+            operationId?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            expectedFactsJson?: string;
+            observedFactsJson?: string;
+            status?: string;
+            /** Format: uuid */
+            assignedToCustomerId?: string;
+            /** Format: uuid */
+            resolvedByCustomerId?: string;
+            resolution?: string;
+            /** Format: uuid */
+            correctionJournalEntryId?: string;
+            /** Format: date-time */
+            detectedAt?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+        };
+        AssignExceptionRequest: {
+            /** Format: uuid */
+            assignedToCustomerId: string;
         };
         RetryResult: {
             /** Format: uuid */
@@ -1281,6 +1411,84 @@ export interface operations {
             };
         };
     };
+    runOrganizationFinancialReconciliation: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReconciliationRunResult"];
+                };
+            };
+        };
+    };
+    resolveOrganizationReconciliationException: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                exceptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveExceptionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReconciliationExceptionView"];
+                };
+            };
+        };
+    };
+    assignOrganizationReconciliationException: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                exceptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignExceptionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReconciliationExceptionView"];
+                };
+            };
+        };
+    };
     retryOrganizationDeadLetterEvent: {
         parameters: {
             query?: never;
@@ -1712,6 +1920,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PaymentView"];
+                };
+            };
+        };
+    };
+    listOrganizationReconciliationExceptions: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReconciliationExceptionView"][];
                 };
             };
         };
