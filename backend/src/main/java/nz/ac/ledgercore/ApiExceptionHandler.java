@@ -54,7 +54,6 @@ public class ApiExceptionHandler {
 	ResponseEntity<ProblemDetail> handleUnexpected(Exception exception, HttpServletRequest request) {
 		logger.atError()
 			.addKeyValue("event.name", "http.unhandled_failure")
-			.addKeyValue("correlationId", correlationId(request))
 			.addKeyValue("exception.type", exception.getClass().getName())
 			.log("Unhandled request failure");
 		return problem(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",

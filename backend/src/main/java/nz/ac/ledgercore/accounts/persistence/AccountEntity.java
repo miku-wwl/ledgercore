@@ -13,6 +13,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import nz.ac.ledgercore.accounts.AccountOwner;
 import nz.ac.ledgercore.accounts.AccountStatus;
 import nz.ac.ledgercore.accounts.domain.Account;
 
@@ -20,54 +21,63 @@ import nz.ac.ledgercore.accounts.domain.Account;
 @Table(name = "accounts")
 public class AccountEntity {
 
-	@Id
-	@Column(name = "id", nullable = false)
-	private UUID id;
+    @Id
+    @Column(name = "id", nullable = false)
+    private UUID id;
 
-	@Column(name = "owner_customer_id", nullable = false)
-	private UUID ownerCustomerId;
+    @Column(name = "owner_customer_id")
+    private UUID ownerCustomerId;
 
-	@Column(name = "display_name", nullable = false, length = 80)
-	private String displayName;
+    @Column(name = "owner_organization_id")
+    private UUID ownerOrganizationId;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "status", nullable = false, length = 16)
-	private AccountStatus status;
+    @Column(name = "display_name", nullable = false, length = 80)
+    private String displayName;
 
-	@JdbcTypeCode(SqlTypes.CHAR)
-	@Column(name = "currency", nullable = false, length = 3, insertable = false, updatable = false)
-	private String currency;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 16)
+    private AccountStatus status;
 
-	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
-	private Instant createdAt;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "currency", nullable = false, length = 3, insertable = false, updatable = false)
+    private String currency;
 
-	@Column(name = "closed_at")
-	private Instant closedAt;
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    private Instant createdAt;
 
-	@Version
-	@Column(name = "version", nullable = false)
-	private long version;
+    @Column(name = "closed_at")
+    private Instant closedAt;
 
-	protected AccountEntity() {
-	}
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
 
-	public AccountEntity(Account account) {
-		this.id = account.id();
-		this.ownerCustomerId = account.ownerCustomerId();
-		this.displayName = account.displayName();
-		this.status = account.status();
-		this.version = account.version();
-	}
+    protected AccountEntity() {
+    }
 
-	public Account toDomain() {
-		return new Account(id, ownerCustomerId, displayName, status, version);
-	}
+    public AccountEntity(Account account) {
+        this.id = account.id();
+        this.ownerCustomerId = account.ownerCustomerId();
+        this.ownerOrganizationId = account.ownerOrganizationId();
+        this.displayName = account.displayName();
+        this.status = account.status();
+        this.version = account.version();
+    }
 
-	public void transitionTo(Account account) {
-		if (!id.equals(account.id()) || !ownerCustomerId.equals(account.ownerCustomerId())) {
-			throw new IllegalArgumentException("Account identity cannot change during a status transition.");
-		}
-		this.status = account.status();
-		this.closedAt = account.status() == AccountStatus.CLOSED ? Instant.now() : null;
-	}
+    public Account toDomain() {
+        return new Account(id, ownerCustomerId, ownerOrganizationId, displayName, status, version);
+    }
+
+    public AccountOwner ownership() {
+        return new AccountOwner(ownerCustomerId, ownerOrganizationId);
+    }
+
+    public void transitionTo(Account account) {
+        if (!id.equals(account.id()) || !java.util.Objects.equals(ownerCustomerId, account.ownerCustomerId())
+                || !java.util.Objects.equals(ownerOrganizationId, account.ownerOrganizationId())) {
+            throw new IllegalArgumentException("Account identity cannot change during a status transition.");
+        }
+        this.status = account.status();
+        this.closedAt = account.status() == AccountStatus.CLOSED ? Instant.now() : null;
+    }
 }

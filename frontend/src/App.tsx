@@ -10,6 +10,7 @@ import { AccountPage } from '@/pages/AccountPage'
 import { AuthPage } from '@/pages/AuthPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { HistoryPage } from '@/pages/HistoryPage'
+import { OrganizationPage } from '@/pages/OrganizationPage'
 import { TransferPage } from '@/pages/TransferPage'
 import './App.css'
 
@@ -39,6 +40,7 @@ function SessionGate() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/transfer" element={<TransferPage />} />
         <Route path="/history" element={<HistoryPage />} />
+        <Route path="/organizations" element={<OrganizationPage />} />
         <Route path="/accounts/:accountId" element={<AccountPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

@@ -10,7 +10,7 @@
 | INV-06 | Each payroll item is atomic | Not implemented. Item postings, progress state, and receipt must share one clearly defined transaction boundary |
 | INV-07 | Approval is valid and independent | Not implemented. Submitted maker and approver identities must differ; only authorized approvers may decide |
 | INV-08 | Approved payroll intent cannot be silently changed | Not implemented. Bind approval to immutable snapshot, version, or canonical digest |
-| INV-09 | Organization resources are isolated | Not implemented. Every corporate object query and command must check active membership and role |
+| INV-09 | Organization resources are isolated | E1 local validation: membership-gated organization/account queries; `ORG_ADMIN` manages, `PAYROLL_MAKER` debits; nonmember resource access is 404. Direct-main CI pending |
 | INV-10 | Partial execution is recoverable | Not implemented. Durable item states and safe claiming/retry must prevent duplicate committed posting after restart |
 | INV-11 | Projections reconcile independently to the ledger | V1 projection is rebuilt from authoritative postings; retain independent reconciliation and test it after payroll |
 | INV-12 | V1 personal behavior remains correct | Run the existing regression, PostgreSQL, API, and browser tests after each migration |

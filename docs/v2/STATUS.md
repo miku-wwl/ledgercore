@@ -15,7 +15,7 @@
 | Stage | Status | Evidence / next action |
 |---|---|---|
 | E0 | VALIDATED | Commit a7fe0de280b61b66e87cf14c95aa4cf30d0982b8; local gates passed; CI run 43531591907 succeeded |
-| E1 | NOT_RUN | No corporate domain or authorization changes started |
+| E1 | PENDING_CI | Implementation and local gates pass; direct-main commit and GitHub Actions verification pending |
 | E2 | NOT_RUN | No payroll implementation or scenario started |
 | E3 | NOT_RUN | No performance hypothesis or measurement started |
 
@@ -34,3 +34,12 @@ The E0 local test database was a separate disposable PostgreSQL 18.7 cluster on 
 - Commit: a7fe0de280b61b66e87cf14c95aa4cf30d0982b8.
 - Direct push to origin/main succeeded; the run checked out the same SHA.
 - GitHub Actions: https://github.com/miku-wwl/ledgercore/actions/runs/43531591907 — verify and OSV dependency-scan jobs succeeded.
+
+## E1 local acceptance
+
+- Scope: organization membership and roles, corporate account ownership, source-owner audit columns, authorization, and minimal organization/transfer UI.
+- Backend: `mvnw.cmd --batch-mode --no-transfer-progress -f backend/pom.xml clean verify` — 44 tests, 0 failures/errors/skips; V5 validated against disposable PostgreSQL 18.7 database `ledgercore_e1_test`.
+- Frontend: `npm run lint` and `npm run build` passed; OpenAPI TypeScript definitions generated from the running application.
+- Browser: `npm run test:e2e` — 2 Chromium tests passed, including the organization admin → PAYROLL_MAKER grant → corporate transfer path.
+- Reproduction details: `evidence/e1/VALIDATION.md`.
+- E1 is not yet `VALIDATED`: its coherent commit must be pushed directly to `main` and the corresponding GitHub Actions run must succeed.

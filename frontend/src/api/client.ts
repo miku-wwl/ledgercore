@@ -154,3 +154,79 @@ export async function submitTransfer(intent: TransferIntent, idempotencyKey: str
   ensureOk(response, error)
   return required(data as TransferReceipt | undefined, 'Transfer')
 }
+
+export type OrganizationRole = components['schemas']['AddMemberRequest']['roles'][number]
+export type Organization = Required<components['schemas']['OrganizationView']>
+export type OrganizationMember = Required<components['schemas']['MemberView']>
+export type TransferAccount = Account & { canDebit: boolean }
+
+export async function getOrganizations(): Promise<Organization[]> {
+  const { data, error, response } = await client.GET('/api/organizations')
+  ensureOk(response, error)
+  return (data as Organization[] | undefined) ?? []
+}
+
+export async function createOrganization(displayName: string): Promise<Organization> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations', {
+    body: { displayName },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as Organization | undefined, 'Create organization')
+}
+
+export async function getOrganizationAccounts(organizationId: string): Promise<Account[]> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/accounts', {
+    params: { path: { organizationId } },
+  })
+  ensureOk(response, error)
+  return (data as Account[] | undefined) ?? []
+}
+
+export async function createOrganizationAccount(organizationId: string, displayName: string): Promise<Account> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations/{organizationId}/accounts', {
+    params: { path: { organizationId } },
+    body: { displayName },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as Account | undefined, 'Create corporate account')
+}
+
+export async function getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/members', {
+    params: { path: { organizationId } },
+  })
+  ensureOk(response, error)
+  return (data as OrganizationMember[] | undefined) ?? []
+}
+
+export async function addOrganizationMember(
+  organizationId: string,
+  input: { email: string; roles: OrganizationRole[] },
+): Promise<OrganizationMember> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations/{organizationId}/members', {
+    params: { path: { organizationId } },
+    body: input,
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as OrganizationMember | undefined, 'Add organization member')
+}
+
+export async function getTransferAccounts(): Promise<TransferAccount[]> {
+  const personal = (await getAccounts()).map((account) => ({ ...account, canDebit: true }))
+  const organizations = await getOrganizations()
+  const corporate = await Promise.all(organizations.map(async (organization) => {
+    const accounts = await getOrganizationAccounts(organization.id)
+    return accounts.map((account) => ({
+      ...account,
+      displayName: organization.displayName + ' · ' + account.displayName,
+      canDebit: organization.roles.includes('PAYROLL_MAKER'),
+    }))
+  }))
+  return [...personal, ...corporate.flat()]
+}

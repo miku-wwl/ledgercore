@@ -32,4 +32,17 @@ class AccountDomainTests {
 		assertThatThrownBy(() -> account.close(100_000)).isInstanceOf(IllegalStateException.class);
 		assertThatThrownBy(() -> account.close(0).reactivate()).isInstanceOf(IllegalStateException.class);
 	}
+
+    @Test
+    void corporateAccountsHaveAnExclusiveOrganizationOwner() {
+        UUID organizationId = UUID.randomUUID();
+        Account account = Account.openForOrganization(UUID.randomUUID(), organizationId, "Payroll");
+
+        assertThat(account.ownerCustomerId()).isNull();
+        assertThat(account.ownerOrganizationId()).isEqualTo(organizationId);
+        assertThatThrownBy(() -> new Account(UUID.randomUUID(), null, null, "Missing owner",
+                AccountStatus.OPEN, 0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Account(UUID.randomUUID(), UUID.randomUUID(), organizationId,
+                "Ambiguous owner", AccountStatus.OPEN, 0)).isInstanceOf(IllegalArgumentException.class);
+    }
 }

@@ -20,6 +20,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizations"];
+        put?: never;
+        post: operations["createOrganization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationMembers"];
+        put?: never;
+        post: operations["addOrganizationMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationAccounts"];
+        put?: never;
+        post: operations["openOrganizationAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/register": {
         parameters: {
             query?: never;
@@ -204,6 +252,40 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        CreateOrganizationRequest: {
+            displayName: string;
+        };
+        OrganizationView: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            roles?: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+        };
+        AddMemberRequest: {
+            /** Format: email */
+            email: string;
+            roles: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+        };
+        MemberView: {
+            /** Format: uuid */
+            customerId?: string;
+            displayName?: string;
+            email?: string;
+            roles?: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+        };
+        CreateAccountRequest: {
+            displayName: string;
+        };
+        AccountView: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            status?: string;
+            currency?: string;
+            balance?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         RegisterRequest: {
             /** Format: email */
             email: string;
@@ -220,19 +302,6 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
-        };
-        CreateAccountRequest: {
-            displayName: string;
-        };
-        AccountView: {
-            /** Format: uuid */
-            id?: string;
-            displayName?: string;
-            status?: string;
-            currency?: string;
-            balance?: string;
-            /** Format: date-time */
-            createdAt?: string;
         };
         CsrfResponse: {
             token?: string;
@@ -308,6 +377,146 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TransferReceipt"];
+                };
+            };
+        };
+    };
+    listOrganizations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrganizationView"][];
+                };
+            };
+        };
+    };
+    createOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrganizationRequest"];
+            };
+        };
+        responses: {
+            /** @description Organization created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrganizationView"];
+                };
+            };
+        };
+    };
+    listOrganizationMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberView"][];
+                };
+            };
+        };
+    };
+    addOrganizationMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description Organization member granted roles */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberView"];
+                };
+            };
+        };
+    };
+    listOrganizationAccounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountView"][];
+                };
+            };
+        };
+    };
+    openOrganizationAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Corporate account created with simulated opening funds */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountView"];
                 };
             };
         };

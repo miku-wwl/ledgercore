@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { getAccounts, submitTransfer, ApiError, type TransferIntent, type TransferReceipt } from '@/api/client'
+import { getTransferAccounts, submitTransfer, ApiError, type TransferIntent, type TransferReceipt } from '@/api/client'
 import { formatNzd, parseNzdToMinorUnits } from '@/lib/money'
 
 const PENDING_KEY = 'ledgercore.pending-transfer.v1'
@@ -30,8 +30,9 @@ function readPendingIntent(): StoredIntent | null {
 
 export function TransferPage() {
   const queryClient = useQueryClient()
-  const accountsQuery = useQuery({ queryKey: ['accounts'], queryFn: getAccounts })
+  const accountsQuery = useQuery({ queryKey: ['transfer-accounts'], queryFn: getTransferAccounts })
   const accounts = accountsQuery.data ?? []
+  const sourceAccounts = accounts.filter((account) => account.canDebit)
   const [pending, setPending] = useState<StoredIntent | null>(readPendingIntent)
   const [sourceId, setSourceId] = useState(() => pending?.intent.sourceAccountId ?? '')
   const [targetId, setTargetId] = useState(() => pending?.intent.targetAccountId ?? '')
@@ -42,7 +43,7 @@ export function TransferPage() {
   const [outcome, setOutcome] = useState<Outcome>(() => pending ? 'unknown' : 'idle')
   const [receipt, setReceipt] = useState<TransferReceipt | null>(null)
 
-  const source = accounts.find((account) => account.id === sourceId)
+  const source = sourceAccounts.find((account) => account.id === sourceId)
   const target = accounts.find((account) => account.id === targetId)
 
   function prepareTransfer(event: FormEvent<HTMLFormElement>) {
@@ -80,6 +81,7 @@ export function TransferPage() {
       setOutcome('success')
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+        queryClient.invalidateQueries({ queryKey: ['transfer-accounts'] }),
         queryClient.invalidateQueries({ queryKey: ['transactions'] }),
         queryClient.invalidateQueries({ queryKey: ['reconciliation'] }),
       ])
@@ -117,7 +119,7 @@ export function TransferPage() {
     setAmount('')
   }
 
-  const canStart = accounts.filter((account) => account.status === 'OPEN').length >= 2
+  const canStart = sourceAccounts.some((account) => account.status === 'OPEN') && accounts.filter((account) => account.status === 'OPEN').length >= 2
 
   return (
     <div className="page-stack transfer-page">
@@ -133,14 +135,14 @@ export function TransferPage() {
 
       {accountsQuery.isError && <Alert variant="destructive" role="alert"><AlertTitle>Accounts could not load</AlertTitle><AlertDescription>Refresh this page or sign in again to continue.</AlertDescription></Alert>}
 
-      {!canStart && !accountsQuery.isLoading && <Card className="empty-card"><CardContent><div className="empty-illustration"><ArrowRight size={25} /></div><h3>Two open accounts are needed</h3><p>Open another simulated account from your overview to create a transfer. Every new account starts with balanced opening funds.</p></CardContent></Card>}
+      {!canStart && !accountsQuery.isLoading && <Card className="empty-card"><CardContent><div className="empty-illustration"><ArrowRight size={25} /></div><h3>An authorized source and an open destination are needed</h3><p>Open another simulated account from your overview or ask an organization administrator to grant your member role. Every new account starts with balanced opening funds.</p></CardContent></Card>}
 
       {canStart && outcome !== 'success' && <div className="transfer-layout">
         <Card className={`transfer-form-card${pending ? ' transfer-form-disabled' : ''}`}>
           <CardHeader><div className="form-step"><span>01</span><span>Transfer details</span></div><CardTitle>Where should the money go?</CardTitle><CardDescription>The source account must have enough available funds.</CardDescription></CardHeader>
           <CardContent>
             <form className="transfer-form" onSubmit={prepareTransfer}>
-              <div className="form-field"><Label htmlFor="source-account">From account</Label><select id="source-account" aria-label="From account" value={sourceId} disabled={Boolean(pending)} onChange={(event) => { setSourceId(event.target.value); if (event.target.value === targetId) setTargetId('') }}><option value="">Choose an account</option>{accounts.filter((account) => account.status === 'OPEN').map((account) => <option key={account.id} value={account.id}>{account.displayName} · {formatNzd(account.balance)}</option>)}</select></div>
+              <div className="form-field"><Label htmlFor="source-account">From account</Label><select id="source-account" aria-label="From account" value={sourceId} disabled={Boolean(pending)} onChange={(event) => { setSourceId(event.target.value); if (event.target.value === targetId) setTargetId('') }}><option value="">Choose an account</option>{sourceAccounts.filter((account) => account.status === 'OPEN').map((account) => <option key={account.id} value={account.id}>{account.displayName} · {formatNzd(account.balance)}</option>)}</select></div>
               <div className="transfer-direction-mark" aria-hidden="true"><ArrowDown size={16} /></div>
               <div className="form-field"><Label htmlFor="target-account">To account</Label><select id="target-account" aria-label="To account" value={targetId} disabled={Boolean(pending)} onChange={(event) => setTargetId(event.target.value)}><option value="">Choose an account</option>{accounts.filter((account) => account.status === 'OPEN').map((account) => <option key={account.id} value={account.id}>{account.displayName}</option>)}</select></div>
               <div className="form-field amount-field"><div className="label-row"><Label htmlFor="transfer-amount">Amount</Label><span className="field-hint">NZD only</span></div><div className="amount-input-wrap"><span>NZ$</span><Input id="transfer-amount" inputMode="decimal" autoComplete="off" placeholder="0.00" value={amount} disabled={Boolean(pending)} onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, '').slice(0, 18))} aria-describedby="amount-hint" /></div><span className="field-hint" id="amount-hint">Use two decimal places, for example 12.50.</span></div>

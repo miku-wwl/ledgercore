@@ -14,6 +14,7 @@ import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.ledger.InsufficientLedgerBalanceException;
 import nz.ac.ledgercore.ledger.LedgerWriter;
 import nz.ac.ledgercore.ledger.Money;
+import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -28,11 +29,14 @@ public class TransferService {
 	private final JdbcTemplate jdbcTemplate;
 	private final AccountService accountService;
 	private final LedgerWriter ledgerWriter;
+    private final OrganizationAuthorizationService organizationAuthorizationService;
 
-	public TransferService(JdbcTemplate jdbcTemplate, AccountService accountService, LedgerWriter ledgerWriter) {
+	public TransferService(JdbcTemplate jdbcTemplate, AccountService accountService, LedgerWriter ledgerWriter,
+            OrganizationAuthorizationService organizationAuthorizationService) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.accountService = accountService;
 		this.ledgerWriter = ledgerWriter;
+        this.organizationAuthorizationService = organizationAuthorizationService;
 	}
 
 	/**
@@ -43,7 +47,8 @@ public class TransferService {
 	public TransferReceipt transfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
 			Money amount, String idempotencyKey) {
 		validateRequest(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey);
-		if (!accountService.belongsTo(authenticatedCustomerId, sourceAccountId)) {
+		if (!accountService.belongsTo(authenticatedCustomerId, sourceAccountId)
+                && !organizationAuthorizationService.canDebitAccount(authenticatedCustomerId, sourceAccountId)) {
 			throw error(TransferErrorCode.ACCOUNT_NOT_FOUND, "The source account was not found.");
 		}
 		if (sourceAccountId.equals(targetAccountId)) {
@@ -62,6 +67,8 @@ public class TransferService {
 		}
 
 		lockAndValidateAccounts(sourceAccountId, targetAccountId);
+        var sourceOwner = accountService.ownerOf(sourceAccountId)
+                .orElseThrow(() -> error(TransferErrorCode.ACCOUNT_NOT_FOUND, "The source account was not found."));
 		UUID transferId = UUID.randomUUID();
 		UUID journalEntryId;
 		try {
@@ -78,10 +85,11 @@ public class TransferService {
 
 		jdbcTemplate.update("""
 				INSERT INTO transfers
-					(id, owner_customer_id, source_account_id, target_account_id, amount_minor, currency, journal_entry_id)
-				VALUES (?, ?, ?, ?, ?, 'NZD', ?)
-				""", transferId, authenticatedCustomerId, sourceAccountId, targetAccountId, amount.minorUnits(),
-				journalEntryId);
+                    (id, owner_customer_id, source_owner_customer_id, source_organization_id, source_account_id,
+                    target_account_id, amount_minor, currency, journal_entry_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'NZD', ?)
+                """, transferId, authenticatedCustomerId, sourceOwner.customerId(), sourceOwner.organizationId(),
+                sourceAccountId, targetAccountId, amount.minorUnits(), journalEntryId);
 		Timestamp createdAt = jdbcTemplate.queryForObject("SELECT created_at FROM transfers WHERE id = ?",
 				Timestamp.class, transferId);
 		TransferReceipt receipt = new TransferReceipt(transferId, sourceAccountId, targetAccountId, "POSTED",

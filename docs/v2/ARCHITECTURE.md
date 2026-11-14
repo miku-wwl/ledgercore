@@ -16,13 +16,16 @@ TransferService.transfer is a READ_COMMITTED transaction. It checks the authenti
 
 LedgerWriter uses sorted ledger-account row locks. It derives balance from authoritative postings and rebuilds account_balance_projection within the same transaction. PostgreSQL constraints/triggers enforce balanced entries, transfer-to-journal agreement, append-only financial history, and the idempotency success lifecycle.
 
-## V2 design direction to validate during E1
+## E1 corporate identity and authorization implementation
 
-- Keep accounts and the ledger unified. Add organizations and memberships as first-class entities.
-- Extend account ownership with mutually exclusive personal-customer and corporate-organization owners, enforced by foreign keys and a database XOR constraint. Preserve existing personal rows and APIs through a forward-only Flyway migration.
-- Continue to identify the authenticated human as a customer principal. Resolve corporate access from active organization membership and specific roles in the backend; never accept a caller-supplied owner ID as authorization.
-- Preserve the current transfer path while replacing its personal-only source authorization with an explicit account-authorization service. Record the human actor separately from the account owner.
-- Allow multiple membership roles as additive grants, but never let an operations role override financial approval. Enforce Maker/Checker by comparing the submitting actor with the approving actor, even if a person holds both roles.
-- Payroll items should use stable batch/item identity and durable database state. Each approved item posts in its own transaction through shared ledger machinery. Batch orchestration must not hold one transaction across the whole payroll.
+V5 adds organizations, active memberships, and additive membership-role grants. Accounts remain in the existing account and ledger tables; `ck_accounts_exactly_one_owner` plus the owner foreign keys enforce exactly one personal or organization owner. The migration is forward-only and leaves the V1–V4 migration files unchanged.
+
+The authenticated human remains `CustomerPrincipal`. Organization administration requires `ORG_ADMIN`; viewing accounts requires active membership; corporate debit requires `PAYROLL_MAKER`. `ORG_ADMIN` alone does not grant debit authority. A nonmember receives the same not-found response for organization resources, while a member lacking an administrative role receives a forbidden response for member/account-management actions. The UI follows the same debit rule.
+
+`transfers.owner_customer_id` remains the authenticated actor and continues to scope idempotency. V5 adds an XOR pair `source_owner_customer_id` / `source_organization_id`; composite foreign keys require the recorded source owner to match the actual source account. Transfers still use the existing transaction and ledger writer. Personal account transfers and opening-fund posting remain on the V1 path.
+
+Maker/Checker identity comparison is implemented as an authorization policy and tested. The payroll batch workflow, approval snapshot, durable item identity, restart recovery, and transaction-per-item boundary remain E2 work and are not yet implemented.
+
+See `docs/v2/ADR/0002-corporate-account-ownership-and-actor-audit.md` for the schema and identity decision. These facts describe the E1 implementation; E2/E3 invariants are not claims of completion.
 
 These are design constraints, not claims that V2 implementation is complete. Record final schema and transaction choices in ADRs after implementation and tests.
