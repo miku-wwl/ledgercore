@@ -95,11 +95,31 @@ jobs:
       - name: Verify independent clearing simulator and PostgreSQL tests
         run: ./backend/mvnw --batch-mode --no-transfer-progress -f clearing-simulator/pom.xml clean verify
 
+      - name: Start clearing simulator for browser acceptance
+        env:
+          CLEARING_SIMULATOR_DB_URL: jdbc:postgresql://127.0.0.1:5432/ledgercore_simulator_test
+          CLEARING_SIMULATOR_DB_USERNAME: ledgercore_ci
+          CLEARING_SIMULATOR_DB_PASSWORD: ledgercore_ci_password
+          LEDGERCORE_CLEARING_HMAC_SECRET: ci-contract-only-secret-with-32-bytes
+          LEDGERCORE_BANK_CALLBACK_URL: http://127.0.0.1:8080/api/clearing/callbacks
+        run: |
+          java -jar clearing-simulator/target/clearing-simulator-0.0.1-SNAPSHOT.jar > "$RUNNER_TEMP/clearing-simulator.log" 2>&1 &
+          for attempt in {1..60}; do
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8091/ || true)
+            if [ "$status" = "404" ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/clearing-simulator.log"
+          exit 1
+
       - name: Start application for API contract and browser checks
         shell: bash
         env:
           LEDGERCORE_CLEARING_ENABLED: "true"
           LEDGERCORE_CLEARING_HMAC_SECRET: ci-contract-only-secret-with-32-bytes
+          LEDGERCORE_CLEARING_SIMULATOR_URL: http://127.0.0.1:8091
         run: |
           java -jar backend/target/ledgercore-0.0.1-SNAPSHOT.jar --server.port=8080 > "$RUNNER_TEMP/ledgercore.log" 2>&1 &
           for attempt in {1..60}; do
