@@ -59,7 +59,7 @@ The exact HTTP status may be 401, 403, 404, or a documented conflict for the rel
 | E8-09 | CSRF and session fixation | Omit/change CSRF token on cookie-authenticated writes; compare pre-login and post-login session identifiers using HTTP response cookies | CSRF write rejected; login rotates or invalidates pre-auth session according to configured Spring protection |
 | E8-10 | Forged/duplicate callbacks | Invalid HMAC, wrong operation/payment/digest, callback replay, altered duplicate sequence | Invalid callback cannot alter financial state; exact duplicates are idempotent; conflicts create a scoped exception without second settlement/refund |
 | E8-11 | Operations authority | Finance Viewer and Operations actor attempt reconciliation/assignment/resolution and any available financial retry path; submit a correction reference that is not a new balanced reversal | Role scope enforced; no operator can approve or debit; invalid correction rejected; audit records actor and operation |
-| E8-12 | Audit, report minimization, logging | Query role-change/payment/payroll/callback/exception audit rows and logs for a synthetic flow; compare organization-scoped reports | Stable actor and operation IDs recorded; unrelated tenant data absent; no password/token/HMAC value or unnecessary credential data in logs |
+| E8-12 | Audit, report minimization, logging | Query role-change/payment/payroll/callback/exception audit rows and logs for a synthetic flow; compare organization-scoped reports and inspect payment list/get/recent responses by role | Stable actor and operation IDs recorded; unrelated tenant data absent; no password/token/HMAC value in logs; full beneficiary account/routing instructions are visible only to PAYMENT_MAKER/PAYMENT_APPROVER and are redacted for other member roles |
 | E8-13 | Dependency risk | Exact pushed commit runs existing npm audit and OSV thresholds | Required CI dependency gates succeed; findings, if any, are recorded without suppression |
 | E8-14 | Constrained operational payroll recovery | Operations actor resumes an already-approved batch; also attempt an unapproved batch, a payment approval, and any direct corporate debit | Only the approved batch may execute/resume; actor and operation are audited; Operations cannot create or approve the intent and cannot directly debit |
 
@@ -79,6 +79,10 @@ The exact HTTP status may be 401, 403, 404, or a documented conflict for the rel
 - No real bank, money, personal data, paid cloud, or secrets in tracked evidence.
 - Do not change authorization solely to make an existing test pass; preserve a concrete negative test for each fixed bypass.
 - Do not start E9–E11 until E8 results, limitations, direct-main commit, and exact CI are recorded.
+
+## Pre-execution correction 2 — 2026-11-15
+
+Further source inspection found `PaymentView` includes the complete beneficiary account reference and routing code, while list/get/recent authorization currently accepts any active organization member. The E8 privacy probe therefore fixes the policy for this simulation before testing: retain the existing organization-scoped status/amount visibility, but return `[REDACTED]` for those two bank-instruction fields to roles other than `PAYMENT_MAKER` and `PAYMENT_APPROVER`. The role-specific response must be checked on list, get, and recent payment APIs. This is a pre-execution design correction; no test result has been observed.
 
 ## Pre-execution correction — 2026-11-15
 
