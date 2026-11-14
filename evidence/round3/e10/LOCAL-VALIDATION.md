@@ -2,7 +2,7 @@
 
 ## Verdict
 
-**Local E10 acceptance: PASS; exact-main CI is pending for the evidence commit.** No production code or schema changed for this experiment. The experiment used only synthetic people, synthetic funds, and isolated local PostgreSQL 18.7 clusters on loopback. The bank and simulator databases were separate.
+**E10: VALIDATED.** Evidence commit `8f2dbee863d85978ed31aa0cc9b21e0ef0c5db05` was pushed directly to `main`; exact GitHub Actions run [43624499785](https://github.com/miku-wwl/ledgercore/actions/runs/43624499785) passed both Build/security/full-stack acceptance and Maven OSV scan. No production code or schema changed for this experiment. The experiment used only synthetic people, synthetic funds, and isolated local PostgreSQL 18.7 clusters on loopback. The bank and simulator databases were separate.
 
 ## Frozen procedure and source
 
