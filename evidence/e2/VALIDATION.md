@@ -3,6 +3,7 @@
 ## Scope and environment
 
 - Round 1, E2, executed on `main` only. E1 starting revision: `f717753401cce8e9934a63758e340bae6d79a7f2`.
+- E2 implementation commit: `500089581ac38741f475030ca706cd034a1a9c92`; GitHub Actions run `43543154101` passed both the full-stack acceptance job and OSV dependency scan.
 - Disposable PostgreSQL 18.7 cluster on `127.0.0.1:55434`, database `ledgercore_e1_test`; persistent port 55432 was not used.
 - Temurin Java 21.0.13+9, Node 26.5.0, npm 12.0.1, Playwright 1.65.0 with Chromium.
 - Every monetary assertion uses NZD minor units and existing ledger operations. The payroll module does not write account balances directly.
