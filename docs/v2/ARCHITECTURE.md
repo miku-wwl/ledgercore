@@ -29,3 +29,17 @@ Maker/Checker identity comparison is implemented as an authorization policy and 
 See `docs/v2/ADR/0002-corporate-account-ownership-and-actor-audit.md` for the schema and identity decision. These facts describe the E1 implementation; E2/E3 invariants are not claims of completion.
 
 These are design constraints, not claims that V2 implementation is complete. Record final schema and transaction choices in ADRs after implementation and tests.
+
+## Round 2 independent audit changes
+
+- V7 (`V7__harden_payroll_intent_and_result_integrity.sql`) makes PostgreSQL enforce payroll intent and result integrity
+  independently of Java: item identity and batch membership are immutable; results are created PENDING in a DRAFT
+  batch, retained while their item exists, change only while the batch is PROCESSING, and a SUCCEEDED result must
+  reference the transfer and receipt that pay its own item; terminal batch states require a complete, consistent
+  result set. `payroll_item_results.batch_id` makes progress queries batch-bounded.
+- `LegacyTransferOwnerBackfillCallback` lets the unmodified V5 upgrade V4 databases that hold transfers.
+- Payroll execution evaluates the batch creator's debit authority per item and records its loss as
+  `DEBIT_AUTHORITY_REVOKED`; customer-supplied idempotency keys cannot use the `payroll-` namespace.
+- The corporate payment policy is still Policy A (ADR 0002); owner decision OD-1 is open (`ROUND-2-AUDIT.md` §8).
+- Decisions and the owner recovery procedure: `ADR/0004-payroll-integrity-hardening.md`.
+

@@ -1,0 +1,122 @@
+ stage_label 
+-------------
+ S2
+
+         database         | stage | is_v7_requested | has_v7_result_batch_column | global_results 
+--------------------------+-------+-----------------+----------------------------+----------------
+ ledgercore_r2_perf_p1_v6 | S2    | false           | f                          |          55000
+
+CREATE TABLE
+PREPARE
+PREPARE
+== R1_COUNTS warm-up result (expected 3000 pending / 0 succeeded / 2000 failed)
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+          3000 |               0 |         2000
+
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+          3000 |               0 |         2000
+
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+          3000 |               0 |         2000
+
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+          3000 |               0 |         2000
+
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+          3000 |               0 |         2000
+
+                  id                  |           organization_id            |       name        |           payer_account_id           |   status   | item_count | total_minor | pending_count | succeeded_count | failed_count | succeeded_minor |        created_by_customer_id        |       submitted_by_customer_id       |       approved_by_customer_id        | rejected_by_customer_id | rejection_reason |                          content_digest                          |                     approved_content_digest                      |          created_at           |         submitted_at          |          approved_at          | rejected_at |          started_at           | completed_at 
+--------------------------------------+--------------------------------------+-------------------+--------------------------------------+------------+------------+-------------+---------------+-----------------+--------------+-----------------+--------------------------------------+--------------------------------------+--------------------------------------+-------------------------+------------------+------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------+-------------------------------+--------------
+ 759aaa5c-cc79-40e8-7b32-a690ae259eb9 | 891b31de-c2c6-9175-46b4-18411c2be05b | R2P1 target batch | d97d7417-2ddb-3789-9f41-1b972ea33b3a | PROCESSING |       5000 |     2648000 |          3000 |               0 |         2000 |               0 | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 1bbd893e-6518-ef04-e3b9-85f5580a3a44 |                         |                  | abababababababababababababababababababababababababababababababab | abababababababababababababababababababababababababababababababab | 2026-11-14 05:27:42.942151+00 | 2026-11-14 05:27:43.390739+00 | 2026-11-14 05:27:43.393036+00 |             | 2026-11-14 05:27:43.394231+00 | 
+
+                  id                  |           organization_id            |       name        |           payer_account_id           |   status   | item_count | total_minor | pending_count | succeeded_count | failed_count | succeeded_minor |        created_by_customer_id        |       submitted_by_customer_id       |       approved_by_customer_id        | rejected_by_customer_id | rejection_reason |                          content_digest                          |                     approved_content_digest                      |          created_at           |         submitted_at          |          approved_at          | rejected_at |          started_at           | completed_at 
+--------------------------------------+--------------------------------------+-------------------+--------------------------------------+------------+------------+-------------+---------------+-----------------+--------------+-----------------+--------------------------------------+--------------------------------------+--------------------------------------+-------------------------+------------------+------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------+-------------------------------+--------------
+ 759aaa5c-cc79-40e8-7b32-a690ae259eb9 | 891b31de-c2c6-9175-46b4-18411c2be05b | R2P1 target batch | d97d7417-2ddb-3789-9f41-1b972ea33b3a | PROCESSING |       5000 |     2648000 |          3000 |               0 |         2000 |               0 | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 1bbd893e-6518-ef04-e3b9-85f5580a3a44 |                         |                  | abababababababababababababababababababababababababababababababab | abababababababababababababababababababababababababababababababab | 2026-11-14 05:27:42.942151+00 | 2026-11-14 05:27:43.390739+00 | 2026-11-14 05:27:43.393036+00 |             | 2026-11-14 05:27:43.394231+00 | 
+
+                  id                  |           organization_id            |       name        |           payer_account_id           |   status   | item_count | total_minor | pending_count | succeeded_count | failed_count | succeeded_minor |        created_by_customer_id        |       submitted_by_customer_id       |       approved_by_customer_id        | rejected_by_customer_id | rejection_reason |                          content_digest                          |                     approved_content_digest                      |          created_at           |         submitted_at          |          approved_at          | rejected_at |          started_at           | completed_at 
+--------------------------------------+--------------------------------------+-------------------+--------------------------------------+------------+------------+-------------+---------------+-----------------+--------------+-----------------+--------------------------------------+--------------------------------------+--------------------------------------+-------------------------+------------------+------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------+-------------------------------+--------------
+ 759aaa5c-cc79-40e8-7b32-a690ae259eb9 | 891b31de-c2c6-9175-46b4-18411c2be05b | R2P1 target batch | d97d7417-2ddb-3789-9f41-1b972ea33b3a | PROCESSING |       5000 |     2648000 |          3000 |               0 |         2000 |               0 | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 1bbd893e-6518-ef04-e3b9-85f5580a3a44 |                         |                  | abababababababababababababababababababababababababababababababab | abababababababababababababababababababababababababababababababab | 2026-11-14 05:27:42.942151+00 | 2026-11-14 05:27:43.390739+00 | 2026-11-14 05:27:43.393036+00 |             | 2026-11-14 05:27:43.394231+00 | 
+
+                  id                  |           organization_id            |       name        |           payer_account_id           |   status   | item_count | total_minor | pending_count | succeeded_count | failed_count | succeeded_minor |        created_by_customer_id        |       submitted_by_customer_id       |       approved_by_customer_id        | rejected_by_customer_id | rejection_reason |                          content_digest                          |                     approved_content_digest                      |          created_at           |         submitted_at          |          approved_at          | rejected_at |          started_at           | completed_at 
+--------------------------------------+--------------------------------------+-------------------+--------------------------------------+------------+------------+-------------+---------------+-----------------+--------------+-----------------+--------------------------------------+--------------------------------------+--------------------------------------+-------------------------+------------------+------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------+-------------------------------+--------------
+ 759aaa5c-cc79-40e8-7b32-a690ae259eb9 | 891b31de-c2c6-9175-46b4-18411c2be05b | R2P1 target batch | d97d7417-2ddb-3789-9f41-1b972ea33b3a | PROCESSING |       5000 |     2648000 |          3000 |               0 |         2000 |               0 | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 1bbd893e-6518-ef04-e3b9-85f5580a3a44 |                         |                  | abababababababababababababababababababababababababababababababab | abababababababababababababababababababababababababababababababab | 2026-11-14 05:27:42.942151+00 | 2026-11-14 05:27:43.390739+00 | 2026-11-14 05:27:43.393036+00 |             | 2026-11-14 05:27:43.394231+00 | 
+
+                  id                  |           organization_id            |       name        |           payer_account_id           |   status   | item_count | total_minor | pending_count | succeeded_count | failed_count | succeeded_minor |        created_by_customer_id        |       submitted_by_customer_id       |       approved_by_customer_id        | rejected_by_customer_id | rejection_reason |                          content_digest                          |                     approved_content_digest                      |          created_at           |         submitted_at          |          approved_at          | rejected_at |          started_at           | completed_at 
+--------------------------------------+--------------------------------------+-------------------+--------------------------------------+------------+------------+-------------+---------------+-----------------+--------------+-----------------+--------------------------------------+--------------------------------------+--------------------------------------+-------------------------+------------------+------------------------------------------------------------------+------------------------------------------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------+-------------------------------+--------------
+ 759aaa5c-cc79-40e8-7b32-a690ae259eb9 | 891b31de-c2c6-9175-46b4-18411c2be05b | R2P1 target batch | d97d7417-2ddb-3789-9f41-1b972ea33b3a | PROCESSING |       5000 |     2648000 |          3000 |               0 |         2000 |               0 | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 29cb039c-4f9b-5054-8d11-af15cf00cecc | 1bbd893e-6518-ef04-e3b9-85f5580a3a44 |                         |                  | abababababababababababababababababababababababababababababababab | abababababababababababababababababababababababababababababababab | 2026-11-14 05:27:42.942151+00 | 2026-11-14 05:27:43.390739+00 | 2026-11-14 05:27:43.393036+00 |             | 2026-11-14 05:27:43.394231+00 | 
+
+== PLAN R1_COUNTS
+                                                                           QUERY PLAN                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=2492.43..2492.44 rows=1 width=24) (actual time=10.361..10.364 rows=1.00 loops=1)
+   Buffers: shared hit=577
+   ->  Hash Join  (cost=1250.04..2417.43 rows=5000 width=7) (actual time=1.722..9.817 rows=5000.00 loops=1)
+         Hash Cond: (r.item_id = i.id)
+         Buffers: shared hit=577
+         ->  Seq Scan on payroll_item_results r  (cost=0.00..1023.00 rows=55000 width=23) (actual time=0.014..2.911 rows=55000.00 loops=1)
+               Buffers: shared hit=473
+         ->  Hash  (cost=1187.54..1187.54 rows=5000 width=16) (actual time=1.379..1.380 rows=5000.00 loops=1)
+               Buckets: 8192  Batches: 1  Memory Usage: 299kB
+               Buffers: shared hit=104
+               ->  Bitmap Heap Scan on payroll_items i  (cost=67.04..1187.54 rows=5000 width=16) (actual time=0.150..0.755 rows=5000.00 loops=1)
+                     Recheck Cond: (batch_id = $1)
+                     Heap Blocks: exact=97
+                     Buffers: shared hit=104
+                     ->  Bitmap Index Scan on ix_payroll_items_batch_payee  (cost=0.00..65.79 rows=5000 width=0) (actual time=0.127..0.128 rows=5000.00 loops=1)
+                           Index Cond: (batch_id = $1)
+                           Index Searches: 1
+                           Buffers: shared hit=7
+ Planning:
+   Buffers: shared hit=12
+ Planning Time: 0.370 ms
+ Execution Time: 10.498 ms
+
+== PLAN R1_VIEW
+                                                                              QUERY PLAN                                                                               
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=1250.04..2593.58 rows=1 width=930) (actual time=12.762..12.767 rows=1.00 loops=1)
+   Buffers: shared hit=578
+   ->  Nested Loop Left Join  (cost=1250.04..2468.56 rows=5000 width=865) (actual time=1.983..11.698 rows=5000.00 loops=1)
+         Buffers: shared hit=578
+         ->  Seq Scan on payroll_batches b  (cost=0.00..1.14 rows=1 width=834) (actual time=0.013..0.017 rows=1.00 loops=1)
+               Filter: (id = $1)
+               Rows Removed by Filter: 10
+               Buffers: shared hit=1
+         ->  Hash Right Join  (cost=1250.04..2417.43 rows=5000 width=47) (actual time=1.967..10.730 rows=5000.00 loops=1)
+               Hash Cond: (r.item_id = i.id)
+               Buffers: shared hit=577
+               ->  Seq Scan on payroll_item_results r  (cost=0.00..1023.00 rows=55000 width=23) (actual time=0.011..2.953 rows=55000.00 loops=1)
+                     Buffers: shared hit=473
+               ->  Hash  (cost=1187.54..1187.54 rows=5000 width=40) (actual time=1.610..1.612 rows=5000.00 loops=1)
+                     Buckets: 8192  Batches: 1  Memory Usage: 416kB
+                     Buffers: shared hit=104
+                     ->  Bitmap Heap Scan on payroll_items i  (cost=67.04..1187.54 rows=5000 width=40) (actual time=0.140..0.911 rows=5000.00 loops=1)
+                           Recheck Cond: (batch_id = $1)
+                           Heap Blocks: exact=97
+                           Buffers: shared hit=104
+                           ->  Bitmap Index Scan on ix_payroll_items_batch_payee  (cost=0.00..65.79 rows=5000 width=0) (actual time=0.120..0.121 rows=5000.00 loops=1)
+                                 Index Cond: (batch_id = $1)
+                                 Index Searches: 1
+                                 Buffers: shared hit=7
+ Planning:
+   Buffers: shared hit=18
+ Planning Time: 0.471 ms
+ Execution Time: 12.945 ms
+
+DO
+== Server-side timings (ms) for 30 measured executions after 5 warm-ups
+ stage |   query   | samples | p50_ms | p95_ms | min_ms | max_ms 
+-------+-----------+---------+--------+--------+--------+--------
+ S2    | R1_COUNTS |      30 |  7.749 | 10.540 |  6.529 | 16.272
+ S2    | R1_VIEW   |      30 | 10.675 | 19.888 |  8.102 | 22.172
+
+== Financial isolation: the fixture created no journal entries, postings, or transfers
+ journal_entries | postings | transfers 
+-----------------+----------+-----------
+               0 |        0 |         0
+

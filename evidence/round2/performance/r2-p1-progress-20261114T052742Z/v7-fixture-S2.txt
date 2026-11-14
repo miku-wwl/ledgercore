@@ -1,0 +1,16 @@
+DO
+BEGIN
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 50000
+INSERT 0 50000
+COMMIT
+VACUUM
+ stage | items | results | organizations 
+-------+-------+---------+---------------
+ S2    | 55000 |   55000 |            11
+(1 row)
+

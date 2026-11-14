@@ -1,0 +1,23 @@
+SQL:
+SELECT COALESCE(sum(CASE WHEN p.side = la.normal_side
+        THEN p.amount_minor ELSE -p.amount_minor END), 0)
+FROM ledger_accounts la LEFT JOIN postings p ON p.ledger_account_id = la.id
+WHERE la.id = ? GROUP BY la.id, la.normal_side
+
+PARAMETERS (synthetic): fe601598-e88d-4606-9a67-2292632c2f8b
+
+PLAN:
+GroupAggregate  (cost=0.57..16.63 rows=1 width=54) (actual time=0.907..0.908 rows=1.00 loops=1)
+  Buffers: shared hit=1227
+  ->  Nested Loop Left Join  (cost=0.57..16.61 rows=1 width=36) (actual time=0.035..0.722 rows=1252.00 loops=1)
+        Buffers: shared hit=1227
+        ->  Index Scan using uq_ledger_accounts_id_currency on ledger_accounts la  (cost=0.28..8.30 rows=1 width=22) (actual time=0.020..0.020 rows=1.00 loops=1)
+              Index Cond: (id = 'fe601598-e88d-4606-9a67-2292632c2f8b'::uuid)
+              Index Searches: 1
+              Buffers: shared hit=3
+        ->  Index Scan using ix_postings_ledger_account on postings p  (cost=0.29..8.30 rows=1 width=30) (actual time=0.012..0.535 rows=1252.00 loops=1)
+              Index Cond: (ledger_account_id = 'fe601598-e88d-4606-9a67-2292632c2f8b'::uuid)
+              Index Searches: 1
+              Buffers: shared hit=1224
+Planning Time: 0.294 ms
+Execution Time: 0.940 ms

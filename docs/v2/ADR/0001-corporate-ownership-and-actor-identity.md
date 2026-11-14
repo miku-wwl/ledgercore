@@ -1,6 +1,6 @@
 # ADR 0001: Corporate ownership and actor identity
 
-- Status: Proposed for E1 validation.
+- Status: Proposed for E1 validation; realized by ADR 0002 and ADR 0003. Round 2: the open question on membership changes after approval is answered by ADR 0004 (creator authority is evaluated per item; loss is `DEBIT_AUTHORITY_REVOKED`).
 - Context: V1 accounts require owner_customer_id. Transfers authorize the source against the authenticated customer, and transfer/idempotency records also retain the initiating customer identity. Corporate accounts must be owned by organizations while human actors remain authenticated customers.
 - Decision direction: Reuse accounts and the existing customer-deposit ledger. Add a corporate organization owner alongside the personal owner with a database-enforced exclusive-owner constraint and separate foreign keys. Keep the authenticated human as the actor and resolve organization authorization from active membership and role records. Preserve personal semantics and forward-only Flyway history.
 - Authorization: Backend services derive the actor from CustomerPrincipal. Organization ID in a route or request is only a selector; it never proves membership. Membership roles are additive, while Maker/Checker is a separate actor-identity rule. Operations permissions do not bypass approval.

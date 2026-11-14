@@ -1,6 +1,6 @@
 # ADR 0003: Durable payroll intent and item execution
 
-- Status: Accepted for Round 1 implementation; independent review is the next step.
+- Status: Accepted for Round 1 implementation. Round 2 audit: decisions 3 and 5 were enforced only partly in PostgreSQL (R2-01, R2-02); completed by V7 and refined by ADR 0004.
 - Date: 2026-11-14.
 - Scope: E2 corporate payroll.
 

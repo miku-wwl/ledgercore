@@ -1,0 +1,39 @@
+SQL:
+SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+       b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
+       i.amount_minor, r.status AS item_status, r.transfer_id
+FROM payroll_batches b
+JOIN payroll_items i ON i.batch_id = b.id
+JOIN payroll_item_results r ON r.item_id = i.id
+WHERE b.id = ? AND r.status = 'PENDING'
+ORDER BY i.sequence_no
+LIMIT 1 FOR UPDATE OF r SKIP LOCKED
+
+PARAMETERS (synthetic): 9103bce6-543d-4718-9bcd-3b25f70ac6e5
+
+PLAN:
+Limit  (cost=0.56..17.46 rows=1 width=201) (actual time=0.061..0.062 rows=1.00 loops=1)
+  Buffers: shared hit=8
+  ->  LockRows  (cost=0.56..17.46 rows=1 width=201) (actual time=0.060..0.060 rows=1.00 loops=1)
+        Buffers: shared hit=8
+        ->  Nested Loop  (cost=0.56..17.45 rows=1 width=201) (actual time=0.049..0.050 rows=1.00 loops=1)
+              Buffers: shared hit=7
+              ->  Nested Loop  (cost=0.28..9.13 rows=1 width=170) (actual time=0.037..0.037 rows=1.00 loops=1)
+                    Buffers: shared hit=4
+                    ->  Index Scan using uq_payroll_items_batch_sequence on payroll_items i  (cost=0.28..8.05 rows=1 width=66) (actual time=0.015..0.015 rows=1.00 loops=1)
+                          Index Cond: (batch_id = '9103bce6-543d-4718-9bcd-3b25f70ac6e5'::uuid)
+                          Index Searches: 1
+                          Buffers: shared hit=3
+                    ->  Seq Scan on payroll_batches b  (cost=0.00..1.07 rows=1 width=120) (actual time=0.020..0.020 rows=1.00 loops=1)
+                          Filter: (id = '9103bce6-543d-4718-9bcd-3b25f70ac6e5'::uuid)
+                          Rows Removed by Filter: 3
+                          Buffers: shared hit=1
+              ->  Index Scan using ix_payroll_item_results_pending on payroll_item_results r  (cost=0.28..8.29 rows=1 width=47) (actual time=0.011..0.011 rows=1.00 loops=1)
+                    Index Cond: (item_id = i.id)
+                    Filter: ((status)::text = 'PENDING'::text)
+                    Index Searches: 1
+                    Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=16
+Planning Time: 0.529 ms
+Execution Time: 0.110 ms

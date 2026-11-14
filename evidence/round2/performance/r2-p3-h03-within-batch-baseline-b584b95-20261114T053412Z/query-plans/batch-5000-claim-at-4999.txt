@@ -1,0 +1,42 @@
+SQL:
+SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+       b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
+       i.amount_minor, r.status AS item_status, r.transfer_id
+FROM payroll_batches b
+JOIN payroll_items i ON i.batch_id = b.id
+JOIN payroll_item_results r ON r.item_id = i.id
+WHERE b.id = ? AND r.status = 'PENDING'
+ORDER BY i.sequence_no
+LIMIT 1 FOR UPDATE OF r SKIP LOCKED
+
+PARAMETERS (synthetic): 9103bce6-543d-4718-9bcd-3b25f70ac6e5
+
+PLAN:
+Limit  (cost=0.56..3.64 rows=1 width=201) (actual time=6.859..6.862 rows=1.00 loops=1)
+  Buffers: shared hit=10148
+  ->  LockRows  (cost=0.56..2677.00 rows=868 width=201) (actual time=6.859..6.860 rows=1.00 loops=1)
+        Buffers: shared hit=10148
+        ->  Nested Loop  (cost=0.56..2668.32 rows=868 width=201) (actual time=6.849..6.851 rows=1.00 loops=1)
+              Buffers: shared hit=10147
+              ->  Nested Loop  (cost=0.56..2656.39 rows=868 width=97) (actual time=6.802..6.803 rows=1.00 loops=1)
+                    Buffers: shared hit=10146
+                    ->  Index Scan using uq_payroll_items_batch_sequence on payroll_items i  (cost=0.28..753.00 rows=5000 width=66) (actual time=0.010..1.474 rows=5000.00 loops=1)
+                          Index Cond: (batch_id = '9103bce6-543d-4718-9bcd-3b25f70ac6e5'::uuid)
+                          Index Searches: 1
+                          Buffers: shared hit=143
+                    ->  Index Scan using ix_payroll_item_results_pending on payroll_item_results r  (cost=0.28..0.38 rows=1 width=47) (actual time=0.001..0.001 rows=0.00 loops=5000)
+                          Index Cond: (item_id = i.id)
+                          Filter: ((status)::text = 'PENDING'::text)
+                          Index Searches: 5000
+                          Buffers: shared hit=10003
+              ->  Materialize  (cost=0.00..1.08 rows=1 width=120) (actual time=0.045..0.046 rows=1.00 loops=1)
+                    Storage: Memory  Maximum Storage: 17kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on payroll_batches b  (cost=0.00..1.07 rows=1 width=120) (actual time=0.034..0.034 rows=1.00 loops=1)
+                          Filter: (id = '9103bce6-543d-4718-9bcd-3b25f70ac6e5'::uuid)
+                          Rows Removed by Filter: 3
+                          Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=27
+Planning Time: 0.537 ms
+Execution Time: 6.902 ms

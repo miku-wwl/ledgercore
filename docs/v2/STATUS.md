@@ -2,13 +2,34 @@
 
 ## Current execution
 
-- Owner: GPT-6 Luna.
-- Round: 1.
-- Authorized stages: E0–E3 only.
-- Next owner: Claude Opus 5.5.
-- Next activity after this round: independent audit and remediation of E0–E3.
+| Round | Owner | Scope | Status |
+|---|---|---|---|
+| 1 | GPT-6 Luna | E0–E3 | **FINISHED** (`b584b95`, CI run 43553101864) |
+| 2 | Claude Opus 5.5 | Independent audit and remediation of E0–E3 | **ACCEPTED_WITH_NONBLOCKING_RISKS** — `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md` |
+| 3 | GPT-6 Luna | E4–E11 | **NOT_STARTED** — may begin under `ROUND-2-HANDOFF.md`; owner decision OD-1 required before E8 acceptance |
+| 4 | Claude Opus 5.5 | E12, final audit, V2 PDF | **NOT_STARTED** |
+
+- Next owner: GPT-6 Luna (Round 3).
 - Branch policy: direct work on main only; no branch, worktree, or PR.
 - Final V2 PDF: reserved for Round 4; not started.
+
+## Round 2 outcome (independent audit of E0–E3)
+
+- Baseline `b584b95` independently reproduced: 49 tests, 0 failures, on a fresh disposable database.
+- Confirmed and fixed P1 defects: R2-01 (payroll items could leave non-draft batches), R2-02 (payroll results could be
+  deleted or forged and incomplete batches completed), R2-08 (V5 could not upgrade a V4 database holding transfers).
+  Fixed P2/P3: R2-05, R2-06, R2-07, R2-09 (H04 progress scan), R2-13, R2-16. No P0 found.
+- New forward-only migration V7; V1–V6 byte-identical with pinned checksums; V5 upgrade callback (ADR 0004).
+- R2-03 (direct corporate debit by `PAYROLL_MAKER`) is the established Policy A; recorded as owner decision OD-1.
+- Tests: 75 (49 + 19 payroll integrity + 7 migration compatibility), 0 failures locally and in CI run 43560923022;
+  3 Chromium E2E pass; OpenAPI unchanged.
+- Performance: R2-P1 SUPPORTED (batch-bounded progress); R2-P2 INCONCLUSIVE by rule but history-dependent ledger cost
+  established; R2-P3 attributes within-batch payroll slowdown; Round 1 E3 interpretations annotated, not rewritten.
+- Evidence: `evidence/round2/`; findings: `evidence/round2/findings/FINDINGS-REGISTER.md`.
+
+## Round 1 record
+
+The sections below are the Round 1 record and are kept as written.
 
 ## Stage status
 

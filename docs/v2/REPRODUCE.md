@@ -74,3 +74,47 @@ Generate the figures from the preserved result files with:
     python evidence\e3\scripts\plot-e3-results.py
 
 The figures use Matplotlib; the version present when this Round 1 set was generated was 3.10.6. The exact per-run samples, plans, SQL output, and environment metadata remain authoritative. These synthetic local results are not production capacity estimates.
+
+## Round 2 additions (independent audit)
+
+### Use a separate disposable cluster and always set the test datasource
+
+Round 2 used its own cluster so the preserved Round 1 databases on 55434 stayed untouched:
+
+    work\postgresql-binaries\pgsql\bin\initdb.exe -D work\pg-round2-audit -U postgres -A trust -E UTF8 --locale=C
+    # add to work\pg-round2-audit\postgresql.conf: listen_addresses = '127.0.0.1', port = 55436
+    work\postgresql-binaries\pgsql\bin\pg_ctl.exe -D work\pg-round2-audit -l work\pg-round2-audit.log -w start
+    psql -h 127.0.0.1 -p 55436 -U postgres -c "CREATE ROLE ledgercore_r2 LOGIN"
+    psql -h 127.0.0.1 -p 55436 -U postgres -c "CREATE DATABASE ledgercore_r2_<purpose> OWNER ledgercore_r2"
+
+`application-test.properties` no longer has a default URL (finding R2-13). Set `LEDGERCORE_TEST_DB_URL`,
+`LEDGERCORE_TEST_DB_USERNAME`, and `LEDGERCORE_TEST_DB_PASSWORD` for every Maven run; an unset URL fails fast instead
+of reaching the persistent service on 55432. Round 2 result: `clean verify` on a fresh database runs 75 tests
+(49 Round 1 + 19 payroll integrity + 7 migration compatibility) with 0 failures.
+
+### Run local browser tests from the `D:\` path
+
+On this Windows host, starting Vite from a lower-case `d:\workshop\...` working directory made the Vite 8 dependency
+optimizer bundle a second copy of React into the `@base-ui` chunks, and every E2E test failed with
+"Invalid hook call". Run the dev server and Playwright from `D:\workshop\nov\ledgercore\frontend` (upper-case drive
+letter). Do not delete `node_modules\.vite` while a shell's working directory is inside it (Windows `EBUSY`). CI on
+Linux is unaffected.
+
+### Migration compatibility and the stale Round 1 database
+
+`MigrationCompatibilityPostgresIntegrationTests` migrates isolated schemas inside the test database: fresh to latest,
+populated V4 → latest, populated V5 → latest, populated V6 → V7, and a corrupted V6 that V7 must refuse. It also pins
+the V1–V6 Flyway checksums. The Round 1 database `ledgercore_test` on 55434 contains a pre-commit draft of V5
+(finding R2-04): discard it; never run `flyway repair` against it.
+
+A populated V4 database can only be upgraded by an application build that contains
+`LegacyTransferOwnerBackfillCallback` (finding R2-08; ADR 0004).
+
+### Reproductions and performance follow-ups
+
+- SQL reproductions: run each script in `evidence/round2/reproductions/` with `psql -X -v ON_ERROR_STOP=0 -f <script>`
+  against a fresh database migrated to V6 (R2-01, R2-02) or an empty database (R2-08).
+- Performance follow-ups R2-P1–R2-P3: commands and decision rules are in
+  `evidence/round2/performance/PRE-REGISTRATION.md`. The harness `Round2PerformanceFollowUpHarness` refuses any database
+  not named `ledgercore_r2_perf_*`; `CHECKPOINT` requires `GRANT pg_checkpoint TO ledgercore_r2`. R2-P3 exports the
+  baseline with `git archive b584b95 backend` into a scratch directory; it never checks out another commit.

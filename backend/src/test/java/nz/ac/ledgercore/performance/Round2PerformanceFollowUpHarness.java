@@ -436,7 +436,7 @@ class Round2PerformanceFollowUpHarness {
         HikariDataSource hikari = dataSource.unwrap(HikariDataSource.class);
         OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         List<String> settings = jdbc.query("""
-                SELECT name || '=' || setting || COALESCE(unit, '') FROM pg_settings
+                SELECT name || '=' || current_setting(name) FROM pg_settings
                 WHERE name IN ('server_version', 'port', 'shared_buffers', 'work_mem', 'effective_cache_size',
                                'synchronous_commit', 'fsync', 'max_connections', 'random_page_cost', 'jit')
                 ORDER BY name

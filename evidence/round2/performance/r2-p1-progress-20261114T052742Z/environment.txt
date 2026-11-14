@@ -1,0 +1,6 @@
+R2-P1 environment (captured after the measurement from the same cluster; settings unchanged during the run)
+Run directory: evidence/round2/performance/r2-p1-progress-20261114T052742Z
+Databases: ledgercore_r2_perf_p1_v6 (V1-V6 applied by psql from the committed files), ledgercore_r2_perf_p1_v7 (same plus V7 from commit 0a885c8)
+Round 1 SQL: PayrollService.countsFor/viewFor at b584b95; Round 2 SQL: PayrollService at 0a885c8; scripts at 1b6ed68
+effective_cache_size=4GB; fsync=on; jit=on; max_connections=80; port=55436; random_page_cost=4; server_version=18.7; shared_buffers=128MB; synchronous_commit=on; work_mem=4MB
+Client: psql 18.7, LC_ALL=C; host: Windows 11, 16 logical processors

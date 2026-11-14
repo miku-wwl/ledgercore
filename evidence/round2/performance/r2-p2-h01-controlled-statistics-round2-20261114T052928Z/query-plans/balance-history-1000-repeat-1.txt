@@ -1,0 +1,25 @@
+SQL:
+SELECT COALESCE(sum(CASE WHEN p.side = la.normal_side
+        THEN p.amount_minor ELSE -p.amount_minor END), 0)
+FROM ledger_accounts la LEFT JOIN postings p ON p.ledger_account_id = la.id
+WHERE la.id = ? GROUP BY la.id, la.normal_side
+
+PARAMETERS (synthetic): 573f66f1-36f5-4871-8efe-ff48dc66b4b6
+
+PLAN:
+GroupAggregate  (cost=0.00..88.38 rows=1 width=54) (actual time=0.519..0.520 rows=1.00 loops=1)
+  Buffers: shared hit=36
+  ->  Nested Loop Left Join  (cost=0.00..80.86 rows=1000 width=36) (actual time=0.081..0.389 rows=1000.00 loops=1)
+        Buffers: shared hit=36
+        ->  Seq Scan on ledger_accounts la  (cost=0.00..1.11 rows=1 width=22) (actual time=0.014..0.014 rows=1.00 loops=1)
+              Filter: (id = '573f66f1-36f5-4871-8efe-ff48dc66b4b6'::uuid)
+              Rows Removed by Filter: 8
+              Buffers: shared hit=1
+        ->  Seq Scan on postings p  (cost=0.00..69.75 rows=1000 width=30) (actual time=0.066..0.256 rows=1000.00 loops=1)
+              Filter: (ledger_account_id = '573f66f1-36f5-4871-8efe-ff48dc66b4b6'::uuid)
+              Rows Removed by Filter: 1780
+              Buffers: shared hit=35
+Planning:
+  Buffers: shared hit=86 dirtied=2
+Planning Time: 0.709 ms
+Execution Time: 0.546 ms

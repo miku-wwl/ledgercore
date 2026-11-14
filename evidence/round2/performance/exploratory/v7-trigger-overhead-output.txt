@@ -1,0 +1,6 @@
+         database         | succeeded_results 
+--------------------------+-------------------
+ ledgercore_r2_perf_p3_r2 |              6500
+
+psql:evidence/round2/performance/exploratory/v7-trigger-overhead.sql:33: NOTICE:  V7 transition-trigger lookups: 2000 results, mean 0.0376 ms per result (pass 2)
+DO

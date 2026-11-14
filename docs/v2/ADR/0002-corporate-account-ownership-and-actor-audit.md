@@ -1,6 +1,6 @@
 # ADR 0002: Corporate Account Ownership and Transfer Actor Audit
 
-- Status: Accepted for E1; independent Round 2 audit pending.
+- Status: Accepted for E1. Round 2 audit: behaviour confirmed exactly as decided; decision 5 (direct corporate debit by `PAYROLL_MAKER`) is the established Policy A and is the subject of owner decision OD-1 (`docs/v2/ROUND-2-AUDIT.md` §8). The V5 backfill defect R2-08 is fixed by ADR 0004.
 - Date: 2026-11-14.
 
 ## Context

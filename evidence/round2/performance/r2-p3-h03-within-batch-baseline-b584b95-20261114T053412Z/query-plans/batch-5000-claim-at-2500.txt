@@ -1,0 +1,39 @@
+SQL:
+SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+       b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
+       i.amount_minor, r.status AS item_status, r.transfer_id
+FROM payroll_batches b
+JOIN payroll_items i ON i.batch_id = b.id
+JOIN payroll_item_results r ON r.item_id = i.id
+WHERE b.id = ? AND r.status = 'PENDING'
+ORDER BY i.sequence_no
+LIMIT 1 FOR UPDATE OF r SKIP LOCKED
+
+PARAMETERS (synthetic): 9103bce6-543d-4718-9bcd-3b25f70ac6e5
+
+PLAN:
+Limit  (cost=0.56..17.46 rows=1 width=201) (actual time=16.146..16.149 rows=1.00 loops=1)
+  Buffers: shared hit=7580
+  ->  LockRows  (cost=0.56..17.46 rows=1 width=201) (actual time=16.145..16.146 rows=1.00 loops=1)
+        Buffers: shared hit=7580
+        ->  Nested Loop  (cost=0.56..17.45 rows=1 width=201) (actual time=16.128..16.130 rows=1.00 loops=1)
+              Buffers: shared hit=7579
+              ->  Nested Loop  (cost=0.28..9.13 rows=1 width=170) (actual time=0.032..11.940 rows=2501.00 loops=1)
+                    Buffers: shared hit=2574
+                    ->  Index Scan using uq_payroll_items_batch_sequence on payroll_items i  (cost=0.28..8.05 rows=1 width=66) (actual time=0.016..1.787 rows=2501.00 loops=1)
+                          Index Cond: (batch_id = '9103bce6-543d-4718-9bcd-3b25f70ac6e5'::uuid)
+                          Index Searches: 1
+                          Buffers: shared hit=73
+                    ->  Seq Scan on payroll_batches b  (cost=0.00..1.07 rows=1 width=120) (actual time=0.001..0.001 rows=1.00 loops=2501)
+                          Filter: (id = '9103bce6-543d-4718-9bcd-3b25f70ac6e5'::uuid)
+                          Rows Removed by Filter: 3
+                          Buffers: shared hit=2501
+              ->  Index Scan using ix_payroll_item_results_pending on payroll_item_results r  (cost=0.28..8.29 rows=1 width=47) (actual time=0.001..0.001 rows=0.00 loops=2501)
+                    Index Cond: (item_id = i.id)
+                    Filter: ((status)::text = 'PENDING'::text)
+                    Index Searches: 2501
+                    Buffers: shared hit=5005
+Planning:
+  Buffers: shared hit=16
+Planning Time: 0.588 ms
+Execution Time: 16.212 ms

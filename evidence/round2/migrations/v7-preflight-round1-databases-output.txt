@@ -1,0 +1,24 @@
+      database      | read_only | flyway_version | batches | items | results 
+--------------------+-----------+----------------+---------+-------+---------
+ ledgercore_e1_test | on        | 6              |      19 |  2517 |    2517
+
+ items_without_results | non_draft_batches_without_items | inconsistent_terminal_batches | unlinked_successes 
+-----------------------+---------------------------------+-------------------------------+--------------------
+                     0 |                               0 |                             0 |                  0
+
+           database           | read_only | flyway_version | batches | items | results 
+------------------------------+-----------+----------------+---------+-------+---------
+ ledgercore_round1_final_test | on        | 6              |       4 |   503 |     503
+
+ items_without_results | non_draft_batches_without_items | inconsistent_terminal_batches | unlinked_successes 
+-----------------------+---------------------------------+-------------------------------+--------------------
+                     0 |                               0 |                             0 |                  0
+
+      database      | read_only | flyway_version | batches | items  | results 
+--------------------+-----------+----------------+---------+--------+---------
+ ledgercore_e3_perf | on        | 6              |      36 | 121500 |  121500
+
+ items_without_results | non_draft_batches_without_items | inconsistent_terminal_batches | unlinked_successes 
+-----------------------+---------------------------------+-------------------------------+--------------------
+                     0 |                               0 |                             0 |                  0
+

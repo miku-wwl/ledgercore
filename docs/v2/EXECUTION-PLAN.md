@@ -11,7 +11,16 @@ Decision: Luna/Opus collaborative engineering. Repository: https://github.com/mi
 | 3 | GPT-6 Luna | E4 durable events, E5 clearing simulator, E6 fault injection, E7 reconciliation, E8 security, E9 observability, E10 recovery, E11 operations console | Only after Round 2 disposition |
 | 4 | Claude Opus 5.5 | E12 final assessment, final engineering audit, remediation, and V2 PDF publication | Use accepted implementation and real experiment evidence |
 
-Only Round 1 is authorized now. E4–E12 and final V2 PDF publication are out of scope for this round. The V1 textbook remains unchanged.
+## Round status (updated at the end of Round 2, 2026-11-14)
+
+| Round | Status | Record |
+|---|---|---|
+| 1 | FINISHED | `ROUND-1-HANDOFF.md`; final SHA `b584b95` |
+| 2 | ACCEPTED_WITH_NONBLOCKING_RISKS | `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md`, `evidence/round2/` |
+| 3 | NOT_STARTED — next authorized round (GPT-6 Luna, E4–E11) | Start from `ROUND-2-HANDOFF.md`; owner decision OD-1 must be made before E8 is accepted |
+| 4 | NOT_STARTED | E12, final audit, V2 PDF |
+
+The original Round 1 authorization statement is kept for the record: only Round 1 was authorized at that time, and E4–E12 and final V2 PDF publication were out of scope for it. The V1 textbook remains unchanged.
 
 ## Scope distribution
 

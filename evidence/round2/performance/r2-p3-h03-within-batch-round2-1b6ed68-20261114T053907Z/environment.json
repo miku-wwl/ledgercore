@@ -1,0 +1,12 @@
+{
+  "capturedAtUtc": "2026-11-14T05:39:07.326766500Z",
+  "runLabel": "round2-1b6ed68",
+  "sourceCommit": "1b6ed6881343cc405c33c99475977de289f36e02",
+  "database": "ledgercore_r2_perf_p3_r2",
+  "databaseSettings": "effective_cache_size=4GB; fsync=on; jit=on; max_connections=80; port=55436; random_page_cost=4; server_version=18.7; shared_buffers=128MB; synchronous_commit=on; work_mem=4MB",
+  "java": "21.0.13+9-LTS",
+  "logicalProcessors": 16,
+  "physicalMemoryBytes": 33618251776,
+  "hikariMaximumPoolSize": 10,
+  "measurementBoundary": "Direct Spring service proxy calls in one JVM thread, commit included; HTTP excluded."
+}

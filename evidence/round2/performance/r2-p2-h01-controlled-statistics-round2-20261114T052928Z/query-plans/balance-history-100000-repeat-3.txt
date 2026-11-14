@@ -1,0 +1,29 @@
+SQL:
+SELECT COALESCE(sum(CASE WHEN p.side = la.normal_side
+        THEN p.amount_minor ELSE -p.amount_minor END), 0)
+FROM ledger_accounts la LEFT JOIN postings p ON p.ledger_account_id = la.id
+WHERE la.id = ? GROUP BY la.id, la.normal_side
+
+PARAMETERS (synthetic): c9078e5e-6813-4045-9066-a61245d90912
+
+PLAN:
+GroupAggregate  (cost=4026.91..15264.22 rows=1 width=54) (actual time=72.967..72.969 rows=1.00 loops=1)
+  Buffers: shared hit=3264
+  ->  Nested Loop Left Join  (cost=4026.91..14514.71 rows=99933 width=36) (actual time=11.042..48.035 rows=100000.00 loops=1)
+        Buffers: shared hit=3264
+        ->  Seq Scan on ledger_accounts la  (cost=0.00..1.31 rows=1 width=22) (actual time=0.031..0.035 rows=1.00 loops=1)
+              Filter: (id = 'c9078e5e-6813-4045-9066-a61245d90912'::uuid)
+              Rows Removed by Filter: 24
+              Buffers: shared hit=1
+        ->  Bitmap Heap Scan on postings p  (cost=4026.91..13514.07 rows=99933 width=30) (actual time=11.003..28.481 rows=100000.00 loops=1)
+              Recheck Cond: (ledger_account_id = 'c9078e5e-6813-4045-9066-a61245d90912'::uuid)
+              Heap Blocks: exact=2470
+              Buffers: shared hit=3263
+              ->  Bitmap Index Scan on ix_postings_ledger_account  (cost=0.00..4001.92 rows=99933 width=0) (actual time=10.552..10.553 rows=100000.00 loops=1)
+                    Index Cond: (ledger_account_id = 'c9078e5e-6813-4045-9066-a61245d90912'::uuid)
+                    Index Searches: 1
+                    Buffers: shared hit=793
+Planning:
+  Buffers: shared hit=76 read=10 dirtied=5
+Planning Time: 1.680 ms
+Execution Time: 73.063 ms
