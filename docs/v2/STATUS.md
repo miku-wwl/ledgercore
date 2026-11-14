@@ -15,7 +15,7 @@
 | Stage | Status | Evidence / next action |
 |---|---|---|
 | E0 | VALIDATED | Commit a7fe0de280b61b66e87cf14c95aa4cf30d0982b8; local gates passed; CI run 43531591907 succeeded |
-| E1 | PENDING_CI | Implementation and local gates pass; direct-main commit and GitHub Actions verification pending |
+| E1 | VALIDATED | Commit eab8175501e77dfc57b1d9ea404a73ed86c8ae26 pushed to main; GitHub Actions run 43536790093 succeeded |
 | E2 | NOT_RUN | No payroll implementation or scenario started |
 | E3 | NOT_RUN | No performance hypothesis or measurement started |
 
@@ -42,4 +42,5 @@ The E0 local test database was a separate disposable PostgreSQL 18.7 cluster on 
 - Frontend: `npm run lint` and `npm run build` passed; OpenAPI TypeScript definitions generated from the running application.
 - Browser: `npm run test:e2e` — 2 Chromium tests passed, including the organization admin → PAYROLL_MAKER grant → corporate transfer path.
 - Reproduction details: `evidence/e1/VALIDATION.md`.
-- E1 is not yet `VALIDATED`: its coherent commit must be pushed directly to `main` and the corresponding GitHub Actions run must succeed.
+- E1 implementation commit: eab8175501e77dfc57b1d9ea404a73ed86c8ae26.
+- Direct push to `origin/main` succeeded; GitHub Actions: https://github.com/miku-wwl/ledgercore/actions/runs/43536790093 — full-stack acceptance and OSV dependency scan succeeded.

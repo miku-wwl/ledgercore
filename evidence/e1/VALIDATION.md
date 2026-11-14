@@ -13,7 +13,8 @@ E1 adds organization membership and role authorization, corporate account owners
 | Frontend lint | `npm run lint` — passed |
 | Frontend production build | `npm run build` — TypeScript and Vite build passed |
 | OpenAPI | Generated `frontend/src/api/schema.d.ts` from the running V5 application; organization operations and request/response schemas are present |
-| Browser | `npm run test:e2e` — 2 Chromium tests passed (17.7 s); the new test creates an organization, adds a `PAYROLL_MAKER`, and posts a corporate-source transfer |
+| Browser | `npm run test:e2e` — 2 Chromium tests passed (17.7 s); the new test creates an organization, adds a `PAYROLL_MAKER`, and posts a corporate-source transfer; CI browser acceptance passed |
+| GitHub Actions | [Run 43536790093](https://github.com/miku-wwl/ledgercore/actions/runs/43536790093) — full-stack acceptance and OSV dependency scan succeeded for commit `eab8175501e77dfc57b1d9ea404a73ed86c8ae26` |
 | Diff hygiene | `git diff --check` — passed |
 
 The PostgreSQL integration test verifies owner XOR enforcement, personal and corporate owner persistence, active-member account visibility, cross-organization 404 behavior, viewer/admin debit denial, Maker/Checker identity policy, corporate debit/credit balances, and use of the existing ledger path. The browser test covers the administrator-to-maker UI path. Existing backend and browser regression suites also passed.
@@ -35,4 +36,4 @@ For OpenAPI generation and browser tests, run the application on port 8080 with 
 
 - The first Maven attempt set the runtime `LEDGERCORE_DB_*` variables only. The test profile uses `LEDGERCORE_TEST_DB_*`, so that invocation failed during Spring context setup before integration methods ran. Re-running with the profile-specific variables above passed all 44 tests.
 - The first run of the new browser test exposed an ambiguous accessible-name locator for the role select. The locator was narrowed to the exact label and the new test then passed on rerun; the final full browser suite passed both tests.
-- Local validation is complete; direct-main push and the corresponding GitHub Actions run remain pending. E1 will not be marked `VALIDATED` until CI is verified.
+- The validated implementation was pushed directly to `main` as `eab8175501e77dfc57b1d9ea404a73ed86c8ae26`; its full GitHub Actions run succeeded.
