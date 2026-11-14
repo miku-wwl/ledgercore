@@ -2,7 +2,7 @@
 
 - Date: 2026-11-14 (NZDT).
 - Branch: `main`; implementation was performed directly on `main` from `69d40320065814596505650ee20350d282d7468c`. No branch, worktree, PR, or history rewrite was used.
-- Status: **PARTIAL; CI pending**. Local code, isolated database, and process evidence are recorded here. E5 is not marked validated while the CI run is outstanding and the live reserve-depletion case remains unexercised.
+- Status: **PARTIAL; CI passed**. Local code, isolated database, and process evidence are recorded here. E5 remains partial because the live reserve-depletion case remains unexercised.
 - The E5 pre-registration in `PRE-REGISTRATION.md` was left unchanged.
 
 ## Isolated processes and databases
@@ -50,6 +50,6 @@ The simulator was stopped and restarted while one operation was still pending. T
 | Wrong intent digest, out-of-order sequence, conflicting sequence, and altered callback ID reuse | PASS; exceptions recorded and no second financial effect |
 | Rejection after settlement | PASS; illegal transition recorded, no refund posted |
 | Reserve-insufficient handling | **PARTIAL**; a test injects `InsufficientLedgerBalanceException` at the financial-effect boundary, verifies the obligation stays booked, the reserve projection and journals do not change, an open CRITICAL exception is recorded, and the exact callback can retry. A naturally underfunded reserve was not produced: the current ledger funding/settlement model has no separate business operation that drains simulation liquidity while leaving the payable funded. No projection edit or ad hoc journal row was used to manufacture that state. |
-| GitHub Actions | **PENDING** for the E5 commit |
+| GitHub Actions | **PASS** — [run 43580338058](https://github.com/miku-wwl/ledgercore/actions/runs/43580338058), exact head `40ab1343cd4e107b7d2bfb5a57931e97efeb5758`; verify and OSV jobs succeeded, including backend/simulator tests, OpenAPI contract, and browser acceptance |
 
 E6–E11 have not been started in this E5 evidence record. No E12, textbook, or final PDF work is included.
