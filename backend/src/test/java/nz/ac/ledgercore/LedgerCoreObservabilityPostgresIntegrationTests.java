@@ -80,7 +80,11 @@ class LedgerCoreObservabilityPostgresIntegrationTests {
         assertThat(tagKeys).doesNotContain("customerId", "accountId", "organizationId", "paymentId",
                 "payrollBatchId", "correlationId", "idempotencyKey", "beneficiary");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM pg_indexes WHERE indexname = ?", Integer.class,
-                "ix_payroll_item_results_pending_batch_item")).isEqualTo(1);
+                "ix_payroll_item_results_pending_batch_item")).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM pg_indexes WHERE indexname = ?", Integer.class,
+                "ix_payroll_item_results_pending")).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM flyway_schema_history WHERE version = '11' AND success",
+                Integer.class)).isEqualTo(1);
     }
 
     @Test

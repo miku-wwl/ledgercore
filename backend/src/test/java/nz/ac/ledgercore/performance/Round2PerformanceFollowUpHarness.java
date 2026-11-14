@@ -65,15 +65,16 @@ class Round2PerformanceFollowUpHarness {
             FROM ledger_accounts la LEFT JOIN postings p ON p.ledger_account_id = la.id
             WHERE la.id = ? GROUP BY la.id, la.normal_side
             """;
-    /** Verbatim claim query of PayrollItemExecutor.executeNext in both the baseline and Round 2 builds. */
+    private static final String PROJECTION_SQL = "SELECT balance_minor FROM account_balance_projection WHERE ledger_account_id = ?";
+    /** Verbatim claim query of PayrollItemExecutor.executeNext before the rejected V10 index candidate. */
     private static final String CLAIM_SQL = """
-            SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+            SELECT b.id AS batch_id, b.organization_id, b.status AS batch_status, b.payer_account_id,
                    b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
                    i.amount_minor, r.status AS item_status, r.transfer_id
-            FROM payroll_item_results r
-            JOIN payroll_items i ON i.id = r.item_id AND i.batch_id = r.batch_id
-            JOIN payroll_batches b ON b.id = r.batch_id
-            WHERE r.batch_id = ? AND r.status = 'PENDING'
+            FROM payroll_batches b
+            JOIN payroll_items i ON i.batch_id = b.id
+            JOIN payroll_item_results r ON r.item_id = i.id
+            WHERE b.id = ? AND r.status = 'PENDING'
             ORDER BY i.sequence_no
             LIMIT 1 FOR UPDATE OF r SKIP LOCKED
             """;
@@ -100,7 +101,8 @@ class Round2PerformanceFollowUpHarness {
         Path run = runDirectory("r2-p2-h01-controlled-statistics");
         String summaryHeader = "history_postings,repeat,sql_p50_ms,sql_p95_ms,sql_p99_ms,service_p50_ms,service_p95_ms,"
                 + "service_p99_ms,service_ops_per_second,plan_postings_node,plan_estimated_rows,plan_actual_rows,"
-                + "plan_shared_hit,plan_shared_read,source_balance_minor,source_projection_matches";
+                + "plan_shared_hit,plan_shared_read,source_balance_minor,source_projection_matches,"
+                + "projection_p50_ms,projection_p95_ms,projection_p99_ms";
         for (int historySize : new int[] { 100, 1_000, 10_000, 100_000 }) {
             for (int repeat = 1; repeat <= 3; repeat++) {
                 UUID actor = newCustomer("r2-p2-h" + historySize + "-r" + repeat);
@@ -119,6 +121,8 @@ class Round2PerformanceFollowUpHarness {
 
                 List<String> plan = capturePlan(run, "balance-history-" + historySize + "-repeat-" + repeat,
                         BALANCE_SQL, source.ledgerId());
+                capturePlan(run, "projection-history-" + historySize + "-repeat-" + repeat,
+                        PROJECTION_SQL, source.ledgerId());
                 PlanFacts facts = postingsNodeFacts(plan);
                 for (int index = 0; index < 10; index++) {
                     balanceReader.ledgerBalanceForLedgerAccount(source.ledgerId());
@@ -144,18 +148,33 @@ class Round2PerformanceFollowUpHarness {
                 assertThat(balance).isEqualTo(historySize - 30L);
                 assertThat(matches).isTrue();
                 assertThat(balanceReader.projectionMatchesLedger(target.accountId())).isTrue();
+                // Measure the existing read-only projection only after the transfer workload so it cannot warm
+                // the projection path before the authoritative-ledger transfer measurements above.
+                for (int index = 0; index < 10; index++) {
+                    balanceReader.projectionBalanceForLedgerAccount(source.ledgerId());
+                }
+                List<Long> projectionReadSamples = new ArrayList<>(100);
+                for (int index = 0; index < 100; index++) {
+                    long started = System.nanoTime();
+                    balanceReader.projectionBalanceForLedgerAccount(source.ledgerId());
+                    projectionReadSamples.add(System.nanoTime() - started);
+                }
                 appendCsv(run.resolve("summary.csv"), summaryHeader, List.of(List.of(Integer.toString(historySize),
                         Integer.toString(repeat), ms(percentile(readSamples, .50)), ms(percentile(readSamples, .95)),
                         ms(percentile(readSamples, .99)), ms(percentile(transferSamples, .50)),
                         ms(percentile(transferSamples, .95)), ms(percentile(transferSamples, .99)),
                         decimal(30.0 / (elapsed / 1e9)), facts.node(), Long.toString(facts.estimatedRows()),
                         Long.toString(facts.actualRows()), Long.toString(facts.sharedHit()),
-                        Long.toString(facts.sharedRead()), Long.toString(balance), Boolean.toString(matches))));
-                List<List<String>> samples = new ArrayList<>(130);
+                        Long.toString(facts.sharedRead()), Long.toString(balance), Boolean.toString(matches),
+                        ms(percentile(projectionReadSamples, .50)), ms(percentile(projectionReadSamples, .95)),
+                        ms(percentile(projectionReadSamples, .99)))));
+                List<List<String>> samples = new ArrayList<>(230);
                 String historyLabel = Integer.toString(historySize);
                 String repeatLabel = Integer.toString(repeat);
                 readSamples.forEach(value -> samples.add(List.of(historyLabel, repeatLabel, "balance-reader",
                         Long.toString(value))));
+                projectionReadSamples.forEach(value -> samples.add(List.of(historyLabel, repeatLabel,
+                        "projection-reader", Long.toString(value))));
                 transferSamples.forEach(value -> samples.add(List.of(historyLabel, repeatLabel, "transfer-service",
                         Long.toString(value))));
                 appendCsv(run.resolve("samples.csv"), "history_postings,repeat,sample_kind,latency_ns", samples);
