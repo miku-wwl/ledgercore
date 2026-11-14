@@ -128,7 +128,8 @@ class E3PerformanceExperimentHarness {
                 git("status", "--porcelain").trim().isEmpty() ? "clean before evidence capture" : "evidence capture pending",
                 Runtime.getRuntime().availableProcessors(), os.getTotalMemorySize(), os.getFreeMemorySize(), diskFree,
                 System.getProperty("java.runtime.version"), hikari.getMaximumPoolSize(), hikari.getMinimumIdle(),
-                hikari.getConnectionTimeout(), db[0], db[2], db[1], db[3], db[4], db[5], db[7], db[8], db[9], db[10]);
+                hikari.getConnectionTimeout(), db[0], db[2], db[1], db[3], db[4], db[5], db[6], db[7], db[8], db[9],
+                db[10]);
         Files.writeString(output, json);
         System.out.println("E3_ENVIRONMENT=" + output.toAbsolutePath());
         System.out.println("E3_SOURCE_COMMIT=" + sourceCommit);
