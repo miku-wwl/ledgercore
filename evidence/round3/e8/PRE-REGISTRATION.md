@@ -37,7 +37,7 @@
 | Payroll maker | No payment approval or direct corporate transfer | Prepare/submit; no self-approval | Member reads only | Existing approved execution path remains valid |
 | Payroll approver | No implied payment authority | Approve/execute a valid distinct-maker batch | Member reads only | Cannot approve own batch |
 | Finance viewer | No financial mutation | No batch mutation | Authorized read scope only | Write requests denied without side effects |
-| Operations analyst | No direct debit/payment approval | No payroll execution authority | Reconciliation and scoped exception work only | No unrestricted financial superuser path |
+| Operations analyst | No direct debit/payment approval | May execute or resume only a previously approved payroll batch; cannot prepare, approve, or alter the approved intent | Reconciliation and scoped exception work only | Recovery is limited to persisted approval and must be actor-attributed |
 | Suspended member | No retained sensitive authority | No execution authority | Hidden or denied member/org objects | Add-member cannot silently reactivate |
 | Suspended organization | No payment, transfer, payroll, clearing, or mutation | No execution | No data leak through active endpoints | Fail closed |
 | Cross-organization outsider | No payment or debit | No batch access | 404/object concealment where applicable | No cross-tenant data disclosure |
@@ -61,6 +61,7 @@ The exact HTTP status may be 401, 403, 404, or a documented conflict for the rel
 | E8-11 | Operations authority | Finance Viewer and Operations actor attempt reconciliation/assignment/resolution and any available financial retry path; submit a correction reference that is not a new balanced reversal | Role scope enforced; no operator can approve or debit; invalid correction rejected; audit records actor and operation |
 | E8-12 | Audit, report minimization, logging | Query role-change/payment/payroll/callback/exception audit rows and logs for a synthetic flow; compare organization-scoped reports | Stable actor and operation IDs recorded; unrelated tenant data absent; no password/token/HMAC value or unnecessary credential data in logs |
 | E8-13 | Dependency risk | Exact pushed commit runs existing npm audit and OSV thresholds | Required CI dependency gates succeed; findings, if any, are recorded without suppression |
+| E8-14 | Constrained operational payroll recovery | Operations actor resumes an already-approved batch; also attempt an unapproved batch, a payment approval, and any direct corporate debit | Only the approved batch may execute/resume; actor and operation are audited; Operations cannot create or approve the intent and cannot directly debit |
 
 ## Acceptance and reporting rules
 
@@ -78,3 +79,7 @@ The exact HTTP status may be 401, 403, 404, or a documented conflict for the rel
 - No real bank, money, personal data, paid cloud, or secrets in tracked evidence.
 - Do not change authorization solely to make an existing test pass; preserve a concrete negative test for each fixed bypass.
 - Do not start E9–E11 until E8 results, limitations, direct-main commit, and exact CI are recorded.
+
+## Pre-execution correction — 2026-11-15
+
+Before any E8 test or threat probe ran, source inspection of `OrganizationAuthorizationService.requireCanExecutePayroll` showed that `OPERATIONS` may execute a batch that has already passed independent payroll approval. This is the existing constrained recovery path required for actor attribution when payroll resumes. The table above and E8-14 replace the initial overly broad interpretation in the first E8 pre-registration commit. E8 will verify that Operations cannot prepare, approve, alter, or directly debit, while a valid previously approved batch remains resumable and actor-attributed. The amendment is recorded before execution; no result has been observed.
