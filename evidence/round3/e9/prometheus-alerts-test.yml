@@ -1,0 +1,70 @@
+rule_files:
+  - prometheus-alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: LedgerCore operational alerts fire and clear
+    interval: 1m
+    input_series:
+      - series: 'ledgercore_outbox_oldest_pending_age_seconds'
+        values: '0 31 0'
+      - series: 'ledgercore_clearing_unknown_operations'
+        values: '0 1 0'
+      - series: 'ledgercore_reconciliation_open_exceptions'
+        values: '0 1 0'
+      - series: 'ledgercore_hikari_pending_acquisitions'
+        values: '0 1 0'
+      - series: 'ledgercore_postgresql_lock_wait_sessions'
+        values: '0 1 0'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: LedgerCoreOutboxPendingTooLong
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: A committed outbox event has waited more than 30 seconds.
+      - eval_time: 1m
+        alertname: LedgerCoreClearingOutcomeUnknown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: A clearing operation has an unresolved UNKNOWN outcome.
+      - eval_time: 1m
+        alertname: LedgerCoreReconciliationExceptionOpen
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: A reconciliation exception remains open or assigned.
+      - eval_time: 1m
+        alertname: LedgerCoreHikariConnectionWait
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: An application thread is waiting to acquire a Hikari connection.
+      - eval_time: 1m
+        alertname: LedgerCorePostgreSqlLockWait
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: PostgreSQL reports one or more sessions waiting on a lock.
+      - eval_time: 2m
+        alertname: LedgerCoreOutboxPendingTooLong
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: LedgerCoreClearingOutcomeUnknown
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: LedgerCoreReconciliationExceptionOpen
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: LedgerCoreHikariConnectionWait
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: LedgerCorePostgreSqlLockWait
+        exp_alerts: []
