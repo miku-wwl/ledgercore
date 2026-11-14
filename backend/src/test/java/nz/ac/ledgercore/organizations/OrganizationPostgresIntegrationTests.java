@@ -9,7 +9,18 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -100,6 +112,13 @@ class OrganizationPostgresIntegrationTests {
                 "{\"email\":\"" + viewer.email + "\",\"roles\":[\"FINANCE_VIEWER\"]}", true);
         assertThat(viewerGrant.statusCode()).isEqualTo(201);
 
+        Session operations = new Session();
+        String operationsId = operations.register("Operations Recovery Actor");
+        HttpResponse<String> operationsGrant = admin.call("POST",
+                "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + operations.email + "\",\"roles\":[\"OPERATIONS\"]}", true);
+        assertThat(operationsGrant.statusCode()).isEqualTo(201);
+
         Session outsider = new Session();
         outsider.register("External Customer");
         assertThat(outsider.call("GET", "/api/organizations/" + organizationId + "/accounts", null, false)
@@ -114,46 +133,124 @@ class OrganizationPostgresIntegrationTests {
 
         String transfer = "{\"sourceAccountId\":\"" + corporateAccountId + "\",\"targetAccountId\":\""
                 + personalTargetId + "\",\"amount\":\"10.00\"}";
+        String makerTransferKey = "maker-corporate-transfer";
+        recordE8SqlSnapshot("before-denied-corporate-debit", corporateId, UUID.fromString(makerId),
+                makerTransferKey, null);
         assertThat(viewer.call("POST", "/api/transfers", transfer, true, "viewer-corporate-transfer")
                 .statusCode()).isEqualTo(404);
         assertThat(admin.call("POST", "/api/transfers", transfer, true, "admin-corporate-transfer")
                 .statusCode()).isEqualTo(404);
-        HttpResponse<String> posted = maker.call("POST", "/api/transfers", transfer, true, "maker-corporate-transfer");
+        HttpResponse<String> posted = maker.call("POST", "/api/transfers", transfer, true, makerTransferKey);
+        recordE8HttpResponse("payment-maker-general-transfer-denied", "POST", "/api/transfers", posted);
         assertThat(posted.statusCode()).isEqualTo(409);
         assertThat(posted.body()).contains("CORPORATE_APPROVAL_REQUIRED");
+        HttpResponse<String> operationsDebit = operations.call("POST", "/api/transfers", transfer, true,
+                "ops-corporate-transfer");
+        recordE8HttpResponse("operations-general-transfer-denied", "POST", "/api/transfers", operationsDebit);
+        assertThat(operationsDebit.statusCode()).isEqualTo(404);
         assertThatThrownBy(() -> transferService.transfer(UUID.fromString(makerId), corporateId,
                 UUID.fromString(personalTargetId), new Money(1_000L), "maker-corporate-direct"))
                 .isInstanceOf(TransferException.class)
                 .satisfies(exception -> assertThat(((TransferException) exception).code())
                         .isEqualTo(TransferErrorCode.CORPORATE_APPROVAL_REQUIRED));
+        assertThatThrownBy(() -> transferService.transfer(UUID.fromString(operationsId),
+                corporateId, UUID.fromString(personalTargetId), new Money(1_000L), "ops-corporate-direct"))
+                .isInstanceOf(TransferException.class)
+                .satisfies(exception -> assertThat(((TransferException) exception).code())
+                        .isEqualTo(TransferErrorCode.ACCOUNT_NOT_FOUND));
+        recordE8SqlSnapshot("after-denied-corporate-debit", corporateId, UUID.fromString(makerId),
+                makerTransferKey, null);
 
+        long clearingPayableBeforePayment = jdbcTemplate.queryForObject("""
+                SELECT balance_minor FROM account_balance_projection
+                WHERE ledger_account_id = '00000000-0000-5000-8000-000000000002'
+                """, Long.class);
         String paymentRequest = "{\"sourceAccountId\":\"" + corporateAccountId
                 + "\",\"beneficiaryName\":\"External Supplier\",\"beneficiaryAccountReference\":\"NZ-12345\","
                 + "\"beneficiaryRoutingCode\":\"BANK-01\",\"amount\":\"10.00\"}";
+        assertThat(operations.call("POST", "/api/organizations/" + organizationId + "/payments", paymentRequest, true)
+                .statusCode()).isEqualTo(403);
         HttpResponse<String> createdPayment = maker.call("POST", "/api/organizations/" + organizationId + "/payments",
                 paymentRequest, true);
+        recordE8HttpResponse("payment-draft-created", "POST",
+                "/api/organizations/" + organizationId + "/payments", createdPayment);
         assertThat(createdPayment.statusCode()).isEqualTo(201);
         String paymentId = capture(ID, createdPayment.body());
-        assertThat(createdPayment.body()).contains("\"status\":\"DRAFT\"");
+        assertThat(createdPayment.body()).contains("\"status\":\"DRAFT\"",
+                "\"beneficiaryAccountReference\":\"NZ-12345\"", "\"beneficiaryRoutingCode\":\"BANK-01\"");
+        assertThat(viewer.call("POST", "/api/organizations/" + organizationId + "/payments", paymentRequest, true)
+                .statusCode()).isEqualTo(403);
         HttpResponse<String> submittedPayment = maker.call("POST", "/api/payments/" + paymentId + "/submit", null, true);
+        recordE8HttpResponse("payment-submitted", "POST", "/api/payments/" + paymentId + "/submit", submittedPayment);
         assertThat(submittedPayment.statusCode()).isEqualTo(200);
-        assertThat(submittedPayment.body()).contains("\"status\":\"SUBMITTED\"");
+        assertThat(submittedPayment.body()).contains("\"status\":\"SUBMITTED\"",
+                "\"beneficiaryAccountReference\":\"NZ-12345\"", "\"beneficiaryRoutingCode\":\"BANK-01\"");
         assertThat(maker.call("POST", "/api/payments/" + paymentId + "/submit", null, true).statusCode())
                 .isEqualTo(200);
+        assertThatThrownBy(() -> jdbcTemplate.update("UPDATE corporate_payment_intents "
+                + "SET beneficiary_account_reference = ? WHERE id = ?", "NZ-TAMPERED", UUID.fromString(paymentId)))
+                .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> jdbcTemplate.update("UPDATE corporate_payment_intents "
+                + "SET amount_minor = amount_minor + 1 WHERE id = ?", UUID.fromString(paymentId)))
+                .isInstanceOf(DataAccessException.class);
+        assertThat(jdbcTemplate.queryForObject("SELECT beneficiary_account_reference "
+                + "FROM corporate_payment_intents WHERE id = ?", String.class, UUID.fromString(paymentId)))
+                .isEqualTo("NZ-12345");
+        UUID paymentUuid = UUID.fromString(paymentId);
+        recordE8SqlSnapshot("after-submission-before-approval", corporateId, UUID.fromString(makerId),
+                makerTransferKey, paymentUuid);
+        assertPaymentInstructionVisibility(maker, "payment-maker", organizationId, paymentId, true);
+        assertPaymentInstructionVisibility(approver, "payment-approver", organizationId, paymentId, true);
+        assertPaymentInstructionVisibility(admin, "organization-admin", organizationId, paymentId, false);
+        assertPaymentInstructionVisibility(viewer, "finance-viewer", organizationId, paymentId, false);
+        assertPaymentInstructionVisibility(operations, "operations", organizationId, paymentId, false);
+        HttpResponse<String> outsiderGet = outsider.call("GET", "/api/payments/" + paymentId, null, false);
+        recordE8HttpResponse("cross-tenant-payment-get", "GET", "/api/payments/" + paymentId, outsiderGet);
+        assertThat(outsiderGet.statusCode()).isEqualTo(404);
+        HttpResponse<String> outsiderList = outsider.call("GET",
+                "/api/organizations/" + organizationId + "/payments", null, false);
+        recordE8HttpResponse("cross-tenant-payment-list", "GET",
+                "/api/organizations/" + organizationId + "/payments", outsiderList);
+        assertThat(outsiderList.statusCode()).isEqualTo(404);
+        HttpResponse<String> outsiderRecent = outsider.call("GET", "/api/payments", null, false);
+        recordE8HttpResponse("cross-tenant-recent-payments", "GET", "/api/payments", outsiderRecent);
+        assertThat(outsiderRecent.body()).isEqualTo("[]");
         assertThat(admin.call("GET", "/api/organizations/" + organizationId + "/accounts", null, false).body())
                 .contains("\"balance\":\"1000.00\"");
         HttpResponse<String> makerApproval = maker.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+        recordE8HttpResponse("maker-self-approval-denied", "POST", "/api/payments/" + paymentId + "/approve",
+                makerApproval);
         assertThat(makerApproval.statusCode()).isEqualTo(403);
+        HttpResponse<String> adminApproval = admin.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+        recordE8HttpResponse("organization-admin-approval-denied", "POST",
+                "/api/payments/" + paymentId + "/approve", adminApproval);
+        assertThat(adminApproval.statusCode()).isEqualTo(403);
+        HttpResponse<String> viewerApproval = viewer.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+        recordE8HttpResponse("finance-viewer-approval-denied", "POST",
+                "/api/payments/" + paymentId + "/approve", viewerApproval);
+        assertThat(viewerApproval.statusCode()).isEqualTo(403);
+        HttpResponse<String> operationsApproval = operations.call("POST", "/api/payments/" + paymentId + "/approve",
+                null, true);
+        recordE8HttpResponse("operations-approval-denied", "POST",
+                "/api/payments/" + paymentId + "/approve", operationsApproval);
+        assertThat(operationsApproval.statusCode()).isEqualTo(403);
+        recordE8SqlSnapshot("before-independent-approval", corporateId, UUID.fromString(makerId),
+                makerTransferKey, paymentUuid);
         HttpResponse<String> approvedPayment = approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+        recordE8HttpResponse("independent-approval", "POST", "/api/payments/" + paymentId + "/approve",
+                approvedPayment);
         assertThat(approvedPayment.statusCode()).isEqualTo(200);
         assertThat(approvedPayment.body()).contains("\"status\":\"PENDING_CLEARING\"", "\"externalStatus\":null");
+        assertThat(approvedPayment.body()).contains("\"beneficiaryAccountReference\":\"NZ-12345\"",
+                "\"beneficiaryRoutingCode\":\"BANK-01\"");
         assertThat(approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true).statusCode())
                 .isEqualTo(200);
         assertThat(admin.call("GET", "/api/organizations/" + organizationId + "/accounts", null, false).body())
                 .contains("\"balance\":\"990.00\"");
         assertThat(admin.call("GET", "/api/accounts/" + personalTargetId, null, false).body())
                 .contains("\"balance\":\"1000.00\"");
-        UUID paymentUuid = UUID.fromString(paymentId);
+        recordE8SqlSnapshot("after-independent-approval", corporateId, UUID.fromString(makerId),
+                makerTransferKey, paymentUuid);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT count(*) FROM transfers WHERE source_account_id = ?
                 """, Integer.class, corporateId)).isZero();
@@ -172,7 +269,7 @@ class OrganizationPostgresIntegrationTests {
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT balance_minor FROM account_balance_projection WHERE ledger_account_id =
                     '00000000-0000-5000-8000-000000000002'
-                """, Long.class)).isEqualTo(1_000L);
+                """, Long.class)).isEqualTo(clearingPayableBeforePayment + 1_000L);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT count(*) FROM clearing_instructions WHERE payment_intent_id = ? AND operation_id = ?
                 """, Integer.class, paymentUuid, paymentUuid)).isEqualTo(1);
@@ -191,6 +288,16 @@ class OrganizationPostgresIntegrationTests {
                 WHERE aggregate_id = ? AND organization_id = ? AND actor_customer_id = ?
                   AND event_type IN ('corporate.payment.approved', 'clearing.instruction.ready')
                 """, Integer.class, paymentUuid, orgId, UUID.fromString(approverId))).isEqualTo(2);
+        String paymentAuditFacts = jdbcTemplate.queryForObject("""
+                SELECT coalesce(string_agg(details::text, ' '), '')
+                FROM audit_events WHERE organization_id = ? AND resource_id = ?
+                """, String.class, orgId, paymentUuid);
+        String paymentEventFacts = jdbcTemplate.queryForObject("""
+                SELECT coalesce(string_agg(payload::text, ' '), '')
+                FROM outbox_events WHERE organization_id = ? AND aggregate_id = ?
+                """, String.class, orgId, paymentUuid);
+        assertThat(paymentAuditFacts).doesNotContain("NZ-12345", "BANK-01");
+        assertThat(paymentEventFacts).doesNotContain("NZ-12345", "BANK-01");
 
         Callback settled = callback(paymentUuid, 1, "SETTLED");
         assertThat(deliver(settled)).isEqualTo("ACCEPTED");
@@ -249,6 +356,9 @@ class OrganizationPostgresIntegrationTests {
                 "/api/organizations/" + organizationId + "/members/" + adminId + "/roles",
                 "{\"role\":\"PAYMENT_APPROVER\"}", true);
         assertThat(adminSelfGrant.statusCode()).isEqualTo(403);
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + admin.email + "\",\"roles\":[\"PAYMENT_APPROVER\"]}", true)
+                .statusCode()).isEqualTo(403);
 
         UUID makerUuid = UUID.fromString(makerId);
         assertThatThrownBy(() -> authorizationService.requireCanApprovePayroll(makerUuid, orgId, makerUuid))
@@ -280,6 +390,168 @@ class OrganizationPostgresIntegrationTests {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    @Test
+    void suspendedPaymentApproverRequiresExplicitAuditedReactivation() throws Exception {
+        Session admin = new Session();
+        String adminId = admin.register("E8 Governance Admin");
+        HttpResponse<String> organization = admin.call("POST", "/api/organizations",
+                "{\"displayName\":\"E8 Governance " + UUID.randomUUID() + "\"}", true);
+        assertThat(organization.statusCode()).isEqualTo(201);
+        String organizationId = capture(ID, organization.body());
+        UUID orgId = UUID.fromString(organizationId);
+
+        HttpResponse<String> account = admin.call("POST", "/api/organizations/" + organizationId + "/accounts",
+                "{\"displayName\":\"Governance operating account\"}", true);
+        assertThat(account.statusCode()).isEqualTo(201);
+        String accountId = capture(ID, account.body());
+
+        Session maker = new Session();
+        maker.register("E8 Governance Maker");
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + maker.email + "\",\"roles\":[\"PAYMENT_MAKER\"]}", true)
+                .statusCode()).isEqualTo(201);
+
+        Session approver = new Session();
+        String approverId = approver.register("E8 Governance Approver");
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + approver.email + "\",\"roles\":[\"PAYMENT_APPROVER\"]}", true)
+                .statusCode()).isEqualTo(201);
+
+        String request = "{\"sourceAccountId\":\"" + accountId
+                + "\",\"beneficiaryName\":\"Synthetic Supplier\",\"beneficiaryAccountReference\":\"NZ-E8-1\","
+                + "\"beneficiaryRoutingCode\":\"BANK-E8\",\"amount\":\"1.00\"}";
+        HttpResponse<String> draft = maker.call("POST", "/api/organizations/" + organizationId + "/payments",
+                request, true);
+        assertThat(draft.statusCode()).isEqualTo(201);
+        String paymentId = capture(ID, draft.body());
+        assertThat(maker.call("POST", "/api/payments/" + paymentId + "/submit", null, true).statusCode())
+                .isEqualTo(200);
+
+        UUID approverUuid = UUID.fromString(approverId);
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members/" + approverId
+                + "/suspend", null, true).statusCode()).isEqualTo(200);
+        assertThat(approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true).statusCode())
+                .isEqualTo(404);
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + approver.email + "\",\"roles\":[\"PAYMENT_APPROVER\"]}", true)
+                .statusCode()).isEqualTo(403);
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM organization_memberships "
+                + "WHERE organization_id = ? AND customer_id = ?", String.class, orgId, approverUuid))
+                .isEqualTo("SUSPENDED");
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members/" + adminId
+                + "/reactivate", null, true).statusCode()).isEqualTo(403);
+
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members/" + approverId
+                + "/reactivate", null, true).statusCode()).isEqualTo(200);
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM organization_memberships "
+                + "WHERE organization_id = ? AND customer_id = ?", String.class, orgId, approverUuid))
+                .isEqualTo("ACTIVE");
+        HttpResponse<String> approved = approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+        assertThat(approved.statusCode()).isEqualTo(200);
+        assertThat(approved.body()).contains("\"approvedByCustomerId\":\"" + approverId + "\"");
+
+        UUID adminUuid = UUID.fromString(adminId);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM audit_events
+                WHERE actor_customer_id = ? AND organization_id = ? AND resource_id = ?
+                  AND action = 'ORGANIZATION_ROLE_GRANTED' AND details->>'role' = 'PAYMENT_APPROVER'
+                """, Integer.class, adminUuid, orgId, approverUuid)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM audit_events
+                WHERE actor_customer_id = ? AND organization_id = ? AND resource_id = ?
+                  AND action = 'ORGANIZATION_MEMBER_SUSPENDED'
+                """, Integer.class, adminUuid, orgId, approverUuid)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM audit_events
+                WHERE actor_customer_id = ? AND organization_id = ? AND resource_id = ?
+                  AND action = 'ORGANIZATION_MEMBER_REACTIVATED'
+                """, Integer.class, adminUuid, orgId, approverUuid)).isEqualTo(1);
+    }
+
+    @Test
+    void concurrentApprovalRetriesCreateOneFinancialBookingAndClearingInstruction() throws Exception {
+        Session admin = new Session();
+        admin.register("E8 Concurrency Admin");
+        HttpResponse<String> organization = admin.call("POST", "/api/organizations",
+                "{\"displayName\":\"E8 Concurrency " + UUID.randomUUID() + "\"}", true);
+        assertThat(organization.statusCode()).isEqualTo(201);
+        String organizationId = capture(ID, organization.body());
+        UUID orgId = UUID.fromString(organizationId);
+        HttpResponse<String> account = admin.call("POST", "/api/organizations/" + organizationId + "/accounts",
+                "{\"displayName\":\"Concurrency payer\"}", true);
+        assertThat(account.statusCode()).isEqualTo(201);
+        String accountId = capture(ID, account.body());
+
+        Session maker = new Session();
+        maker.register("E8 Concurrency Maker");
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + maker.email + "\",\"roles\":[\"PAYMENT_MAKER\"]}", true)
+                .statusCode()).isEqualTo(201);
+        Session approver = new Session();
+        String approverId = approver.register("E8 Concurrency Approver");
+        assertThat(admin.call("POST", "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + approver.email + "\",\"roles\":[\"PAYMENT_APPROVER\"]}", true)
+                .statusCode()).isEqualTo(201);
+
+        String request = "{\"sourceAccountId\":\"" + accountId
+                + "\",\"beneficiaryName\":\"Concurrent Supplier\",\"beneficiaryAccountReference\":\"NZ-E8-RACE\","
+                + "\"beneficiaryRoutingCode\":\"BANK-E8\",\"amount\":\"2.00\"}";
+        HttpResponse<String> draft = maker.call("POST", "/api/organizations/" + organizationId + "/payments",
+                request, true);
+        assertThat(draft.statusCode()).isEqualTo(201);
+        UUID paymentId = UUID.fromString(capture(ID, draft.body()));
+        assertThat(maker.call("POST", "/api/payments/" + paymentId + "/submit", null, true).statusCode())
+                .isEqualTo(200);
+
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<HttpResponse<String>> first = executor.submit(() -> {
+                ready.countDown();
+                if (!start.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("Timed out waiting to race the approval requests.");
+                }
+                return approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+            });
+            Future<HttpResponse<String>> second = executor.submit(() -> {
+                ready.countDown();
+                if (!start.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("Timed out waiting to race the approval requests.");
+                }
+                return approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+            });
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+            HttpResponse<String> firstResponse = first.get(15, TimeUnit.SECONDS);
+            HttpResponse<String> secondResponse = second.get(15, TimeUnit.SECONDS);
+            assertThat(firstResponse.statusCode()).isEqualTo(200);
+            assertThat(secondResponse.statusCode()).isEqualTo(200);
+        }
+        finally {
+            start.countDown();
+            executor.shutdownNow();
+        }
+
+        UUID approverUuid = UUID.fromString(approverId);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM corporate_payment_intents
+                WHERE id = ? AND approved_by_customer_id = ? AND intent_digest = approved_digest
+                  AND status = 'PENDING_CLEARING'
+                """, Integer.class, paymentId, approverUuid)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM journal_entries e JOIN postings p ON p.journal_entry_id = e.id
+                WHERE e.reference = ? AND e.entry_type = 'CORPORATE_PAYMENT_BOOKING'
+                """, Integer.class, "corporate-payment:" + paymentId + ":booking")).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM clearing_instructions "
+                + "WHERE payment_intent_id = ? AND operation_id = ?", Integer.class, paymentId, paymentId))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM audit_events
+                WHERE organization_id = ? AND resource_id = ? AND action = 'CORPORATE_PAYMENT_APPROVED_AND_BOOKED'
+                """, Integer.class, orgId, paymentId)).isEqualTo(1);
+    }
+
     private String createApprovedPayment(Session maker, Session approver, String organizationId,
             String corporateAccountId, String routingCode, String amount, String beneficiaryName) throws Exception {
         String request = "{\"sourceAccountId\":\"" + corporateAccountId + "\",\"beneficiaryName\":\""
@@ -293,6 +565,105 @@ class OrganizationPostgresIntegrationTests {
         assertThat(approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true).statusCode())
                 .isEqualTo(200);
         return paymentId;
+    }
+
+    private void assertPaymentInstructionVisibility(Session session, String role, String organizationId,
+            String paymentId, boolean visible) throws Exception {
+        String[] paths = {
+                "/api/payments/" + paymentId,
+                "/api/organizations/" + organizationId + "/payments?page=0&size=20",
+                "/api/payments?limit=20"
+        };
+        for (int index = 0; index < paths.length; index++) {
+            String path = paths[index];
+            HttpResponse<String> response = session.call("GET", path, null, false);
+            recordE8HttpResponse(role + "-payment-read-" + index, "GET", path, response);
+            assertThat(response.statusCode()).as("GET %s for %s", path, session.email).isEqualTo(200);
+            if (visible) {
+                assertThat(response.body()).contains("\"beneficiaryAccountReference\":\"NZ-12345\"",
+                        "\"beneficiaryRoutingCode\":\"BANK-01\"");
+            }
+            else {
+                assertThat(response.body()).contains("\"beneficiaryAccountReference\":\"[REDACTED]\"",
+                        "\"beneficiaryRoutingCode\":\"[REDACTED]\"")
+                        .doesNotContain("NZ-12345", "BANK-01");
+            }
+        }
+    }
+
+    private void recordE8HttpResponse(String name, String method, String path, HttpResponse<String> response)
+            throws IOException {
+        String configuredDirectory = System.getProperty("ledgercore.e8.evidence-dir");
+        if (configuredDirectory == null || configuredDirectory.isBlank()) {
+            return;
+        }
+        Path directory = Path.of(configuredDirectory);
+        Files.createDirectories(directory);
+        String artifact = "HTTP " + response.statusCode() + "\n" + method + " " + path + "\n\n"
+                + response.body() + "\n";
+        Files.writeString(directory.resolve(name + ".http.txt"), artifact, StandardCharsets.UTF_8);
+    }
+
+    private void recordE8SqlSnapshot(String name, UUID corporateAccountId, UUID makerCustomerId,
+            String idempotencyKey, UUID paymentId) throws Exception {
+        String configuredDirectory = System.getProperty("ledgercore.e8.evidence-dir");
+        if (configuredDirectory == null || configuredDirectory.isBlank()) {
+            return;
+        }
+        Path directory = Path.of(configuredDirectory);
+        Files.createDirectories(directory);
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("snapshot", name);
+        snapshot.put("corporateAccountId", corporateAccountId);
+        snapshot.put("corporateBalanceMinor", jdbcTemplate.queryForObject("""
+                SELECT p.balance_minor FROM ledger_accounts la
+                JOIN account_balance_projection p ON p.ledger_account_id = la.id
+                WHERE la.customer_account_id = ? AND la.kind = 'CUSTOMER_DEPOSIT'
+                """, Long.class, corporateAccountId));
+        snapshot.put("corporateTransferCount", jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM transfers WHERE source_account_id = ?
+                """, Long.class, corporateAccountId));
+        snapshot.put("corporateTransferIdempotencyCount", jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM idempotency_records
+                WHERE owner_customer_id = ? AND operation = 'TRANSFER' AND idempotency_key = ?
+                """, Long.class, makerCustomerId, idempotencyKey));
+        snapshot.put("journalEntryCount", jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM journal_entries", Long.class));
+        snapshot.put("postingCount", jdbcTemplate.queryForObject("SELECT count(*) FROM postings", Long.class));
+        if (paymentId != null) {
+            snapshot.put("payment", jdbcTemplate.queryForMap("""
+                    SELECT status, created_by_customer_id, submitted_by_customer_id, approved_by_customer_id,
+                           intent_digest = approved_digest AS approval_digest_matches, amount_minor, currency
+                    FROM corporate_payment_intents WHERE id = ?
+                    """, paymentId));
+            snapshot.put("bookingEntryCount", jdbcTemplate.queryForObject("""
+                    SELECT count(*) FROM journal_entries
+                    WHERE reference = ? AND entry_type = 'CORPORATE_PAYMENT_BOOKING'
+                    """, Long.class, "corporate-payment:" + paymentId + ":booking"));
+            snapshot.put("bookingPostingCount", jdbcTemplate.queryForObject("""
+                    SELECT count(*) FROM postings p JOIN journal_entries e ON e.id = p.journal_entry_id
+                    WHERE e.reference = ?
+                    """, Long.class, "corporate-payment:" + paymentId + ":booking"));
+            snapshot.put("bookingBalanced", jdbcTemplate.queryForObject("""
+                    SELECT coalesce(sum(amount_minor) FILTER (WHERE side = 'DEBIT'), 0)
+                         = coalesce(sum(amount_minor) FILTER (WHERE side = 'CREDIT'), 0)
+                    FROM postings p JOIN journal_entries e ON e.id = p.journal_entry_id
+                    WHERE e.reference = ?
+                    """, Boolean.class, "corporate-payment:" + paymentId + ":booking"));
+            snapshot.put("clearingInstructionCount", jdbcTemplate.queryForObject("""
+                    SELECT count(*) FROM clearing_instructions WHERE payment_intent_id = ?
+                    """, Long.class, paymentId));
+            snapshot.put("paymentAuditAndOutboxFacts", jdbcTemplate.queryForObject("""
+                    SELECT coalesce(string_agg(fact::text, ' '), '')
+                    FROM (
+                        SELECT details AS fact FROM audit_events WHERE resource_id = ?
+                        UNION ALL
+                        SELECT payload AS fact FROM outbox_events WHERE aggregate_id = ?
+                    ) payment_facts
+                    """, String.class, paymentId, paymentId));
+        }
+        String json = JsonMapper.builder().build().writeValueAsString(snapshot);
+        Files.writeString(directory.resolve(name + ".sql-snapshot.json"), json + "\n", StandardCharsets.UTF_8);
     }
 
     private Callback callback(UUID paymentId, long sequenceNo, String status) {

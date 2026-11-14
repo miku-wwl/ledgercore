@@ -16,6 +16,8 @@ import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.ledger.LedgerBalanceReader;
 import nz.ac.ledgercore.ledger.LedgerWriter;
 import nz.ac.ledgercore.ledger.Money;
+import nz.ac.ledgercore.organizations.OrganizationRole;
+import nz.ac.ledgercore.organizations.OrganizationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +36,9 @@ class TransferPostgresIntegrationTests {
 
 	@Autowired
 	AccountService accountService;
+
+	@Autowired
+	OrganizationService organizationService;
 
 	@Autowired
 	TransferService transferService;
@@ -161,6 +166,36 @@ class TransferPostgresIntegrationTests {
 		assertThat(idempotencyCount(alice)).isZero();
 		assertThat(balanceReader.ledgerBalanceForCustomerAccount(aliceAccount).minorUnits()).isEqualTo(100_000L);
 		assertThat(balanceReader.ledgerBalanceForCustomerAccount(bobAccount).minorUnits()).isEqualTo(100_000L);
+	}
+
+	@Test
+	void receiptRecorderCannotBypassApprovedCorporateOperationBoundary() {
+		UUID admin = createCustomer();
+		var organization = organizationService.create(admin, "E8 transfer boundary " + UUID.randomUUID());
+		UUID maker = createCustomer();
+		String makerEmail = jdbcTemplate.queryForObject("SELECT email_normalized FROM customers WHERE id = ?",
+				String.class, maker);
+		organizationService.addMember(admin, organization.id(), makerEmail,
+				List.of(OrganizationRole.PAYMENT_MAKER));
+		UUID corporateSource = accountService.openOrganizationAccount(organization.id(), "E8 corporate source");
+		UUID personalTarget = createAccount(createCustomer(), "E8 personal target");
+		long sourceBefore = balanceReader.ledgerBalanceForCustomerAccount(corporateSource).minorUnits();
+		long targetBefore = balanceReader.ledgerBalanceForCustomerAccount(personalTarget).minorUnits();
+		int journalsBefore = countRows("journal_entries");
+		int postingsBefore = countRows("postings");
+
+		assertThatThrownBy(() -> transferService.transferAndRecord(maker, corporateSource, personalTarget,
+				Money.parsePositiveNzd("1.00"), "e8-corporate-recorder-bypass",
+				receipt -> { throw new AssertionError("An unauthorized recorder must not run."); }))
+				.isInstanceOfSatisfying(TransferException.class,
+					exception -> assertThat(exception.code()).isEqualTo(TransferErrorCode.CORPORATE_APPROVAL_REQUIRED));
+
+		assertThat(balanceReader.ledgerBalanceForCustomerAccount(corporateSource).minorUnits()).isEqualTo(sourceBefore);
+		assertThat(balanceReader.ledgerBalanceForCustomerAccount(personalTarget).minorUnits()).isEqualTo(targetBefore);
+		assertThat(transferCount(maker)).isZero();
+		assertThat(idempotencyCount(maker)).isZero();
+		assertThat(countRows("journal_entries")).isEqualTo(journalsBefore);
+		assertThat(countRows("postings")).isEqualTo(postingsBefore);
 	}
 
 	@Test

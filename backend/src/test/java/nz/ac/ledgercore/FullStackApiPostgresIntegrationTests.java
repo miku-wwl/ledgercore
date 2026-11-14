@@ -31,10 +31,13 @@ class FullStackApiPostgresIntegrationTests {
 	void sessionsCsrfOwnershipTransfersReceiptsHistoryAndReconciliationUsePostgres() throws Exception {
 		Session alice = new Session();
 		alice.refreshCsrf();
+		String preAuthenticationSessionId = alice.sessionId();
+		assertThat(preAuthenticationSessionId).isNotBlank();
 		String aliceEmail = "p4-alice-" + UUID.randomUUID() + "@example.test";
 		HttpResponse<String> registration = alice.call("POST", "/api/auth/register",
 				"{\"email\":\"" + aliceEmail + "\",\"password\":\"P4IntegrationPassword!\",\"displayName\":\"Alice Test\"}", true);
 		assertThat(registration.statusCode()).isEqualTo(201);
+		assertThat(alice.sessionId()).isNotEqualTo(preAuthenticationSessionId);
 		assertThat(alice.call("GET", "/api/auth/me", null, false).statusCode()).isEqualTo(200);
 
 		String aliceSource = createAccount(alice, "Alice spending");
@@ -105,9 +108,15 @@ class FullStackApiPostgresIntegrationTests {
 	}
 
 	private final class Session {
-		private final HttpClient client = HttpClient.newBuilder()
-			.cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+		private final CookieManager cookies = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+		private final HttpClient client = HttpClient.newBuilder().cookieHandler(cookies).build();
 		private String csrfToken;
+
+		private String sessionId() {
+			return cookies.getCookieStore().getCookies().stream()
+				.filter(cookie -> "JSESSIONID".equalsIgnoreCase(cookie.getName()))
+				.map(java.net.HttpCookie::getValue).findFirst().orElse(null);
+		}
 
 		private void refreshCsrf() throws Exception {
 			HttpResponse<String> response = call("GET", "/api/auth/csrf", null, false);

@@ -419,6 +419,45 @@ class PayrollIntegrityPostgresIntegrationTests {
         assertThat(executed.approvedByCustomerId()).isEqualTo(actors.approverId());
     }
 
+    @Test
+    void operationsCanResumeOnlyAnIndependentlyApprovedPayrollBatch() {
+        Actors actors = createActors();
+        UUID payer = accountService.openOrganizationAccount(actors.organizationId(), "E8 Operations payer");
+        UUID firstPayee = createPersonalAccount("E8 first synthetic employee");
+        UUID secondPayee = createPersonalAccount("E8 second synthetic employee");
+        PayrollViews.BatchView draft = createDraft(actors, payer,
+                item("E8-EMP-1", firstPayee, "1.00"), item("E8-EMP-2", secondPayee, "2.00"));
+
+        assertThatThrownBy(() -> executionService.execute(actors.operationsId(), draft.id(), 10))
+                .isInstanceOfSatisfying(PayrollException.class,
+                        exception -> assertThat(exception.code()).isEqualTo("BATCH_NOT_APPROVED"));
+        assertThat(count("SELECT count(*) FROM transfers WHERE source_account_id = ?", payer)).isZero();
+        assertThat(count("SELECT count(*) FROM audit_events WHERE resource_id = ? "
+                + "AND action IN ('PAYROLL_EXECUTION_STARTED', 'PAYROLL_EXECUTION_RESUMED')", draft.id())).isZero();
+
+        payrollService.submit(actors.makerId(), draft.id());
+        PayrollViews.BatchView approved = payrollService.approve(actors.approverId(), draft.id());
+        assertThat(approved.status()).isEqualTo("APPROVED");
+        assertThat(executionService.execute(actors.approverId(), draft.id(), 1).status()).isEqualTo("PROCESSING");
+        PayrollViews.BatchView resumed = executionService.execute(actors.operationsId(), draft.id(), 10);
+
+        assertThat(resumed.status()).isEqualTo("COMPLETED");
+        assertThat(resumed.approvedByCustomerId()).isEqualTo(actors.approverId());
+        assertThat(count("SELECT count(*) FROM transfers WHERE source_account_id = ?", payer)).isEqualTo(2);
+        assertThat(count("SELECT count(*) FROM payroll_item_results r JOIN payroll_items i ON i.id = r.item_id "
+                + "WHERE i.batch_id = ? AND r.status = 'SUCCEEDED'", draft.id())).isEqualTo(2);
+        assertThat(count("""
+                SELECT count(*) FROM audit_events
+                WHERE organization_id = ? AND resource_id = ? AND actor_customer_id = ?
+                  AND action = 'PAYROLL_EXECUTION_RESUMED'
+                """, actors.organizationId(), draft.id(), actors.operationsId())).isEqualTo(1);
+        assertThat(count("""
+                SELECT count(*) FROM outbox_events
+                WHERE organization_id = ? AND aggregate_id = ? AND actor_customer_id = ?
+                  AND event_type = 'payroll.execution.resumed'
+                """, actors.organizationId(), draft.id(), actors.operationsId())).isEqualTo(1);
+    }
+
     // ----- R2-06: payroll operation identities are reserved for the payroll workflow -----
 
     @Test

@@ -15,6 +15,7 @@ import nz.ac.ledgercore.ledger.InsufficientLedgerBalanceException;
 import nz.ac.ledgercore.ledger.LedgerWriter;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
+import nz.ac.ledgercore.organizations.OrganizationRole;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -65,7 +66,7 @@ public class CorporatePaymentService {
         eventStore.enqueue("corporate.payment.created:" + paymentId, "corporate.payment.created",
                 "CORPORATE_PAYMENT", paymentId, actorCustomerId, organizationId,
                 Map.of("paymentId", paymentId.toString(), "amountMinor", amount.minorUnits(), "currency", "NZD"));
-        return viewFor(paymentId);
+        return viewFor(actorCustomerId, paymentId);
     }
 
     @Transactional
@@ -78,7 +79,7 @@ public class CorporatePaymentService {
         }
         if (!"DRAFT".equals(payment.status())) {
             if ("SUBMITTED".equals(payment.status()) && actorCustomerId.equals(payment.submittedByCustomerId())) {
-                return viewFor(paymentId);
+                return viewFor(actorCustomerId, paymentId);
             }
             throw conflict("PAYMENT_NOT_DRAFT", "Only a draft corporate payment can be submitted.");
         }
@@ -97,7 +98,7 @@ public class CorporatePaymentService {
         eventStore.enqueue("corporate.payment.submitted:" + paymentId, "corporate.payment.submitted",
                 "CORPORATE_PAYMENT", paymentId, actorCustomerId, payment.organizationId(),
                 Map.of("version", payment.version(), "digest", digest));
-        return viewFor(paymentId);
+        return viewFor(actorCustomerId, paymentId);
     }
 
     @Transactional
@@ -110,7 +111,7 @@ public class CorporatePaymentService {
                     HttpStatus.FORBIDDEN);
         }
         if (actorCustomerId.equals(payment.approvedByCustomerId()) && payment.approvedDigest() != null) {
-            return viewFor(paymentId);
+            return viewFor(actorCustomerId, paymentId);
         }
         if (!"SUBMITTED".equals(payment.status())) {
             throw conflict("PAYMENT_NOT_SUBMITTED", "Only a submitted corporate payment can be approved.");
@@ -149,7 +150,7 @@ public class CorporatePaymentService {
             throw new CorporatePaymentException("INSUFFICIENT_FUNDS",
                     "The corporate account does not have enough available funds.", HttpStatus.UNPROCESSABLE_ENTITY);
         }
-        return viewFor(paymentId);
+        return viewFor(actorCustomerId, paymentId);
     }
 
     @Transactional
@@ -164,7 +165,7 @@ public class CorporatePaymentService {
         String normalizedReason = normalized(reason, 300, "Rejection reason");
         if ("REJECTED".equals(payment.status()) && actorCustomerId.equals(payment.rejectedByCustomerId())
                 && normalizedReason.equals(payment.rejectionReason())) {
-            return viewFor(paymentId);
+            return viewFor(actorCustomerId, paymentId);
         }
         if (!"SUBMITTED".equals(payment.status())) {
             throw conflict("PAYMENT_NOT_SUBMITTED", "Only a submitted corporate payment can be rejected.");
@@ -183,7 +184,7 @@ public class CorporatePaymentService {
         eventStore.enqueue("corporate.payment.rejected:" + paymentId, "corporate.payment.rejected",
                 "CORPORATE_PAYMENT", paymentId, actorCustomerId, payment.organizationId(),
                 Map.of("reason", normalizedReason));
-        return viewFor(paymentId);
+        return viewFor(actorCustomerId, paymentId);
     }
 
     @Transactional(readOnly = true)
@@ -198,7 +199,7 @@ public class CorporatePaymentService {
                 SELECT id FROM corporate_payment_intents WHERE organization_id = ?
                 ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?
                 """, (rs, row) -> rs.getObject(1, UUID.class), organizationId, safeSize, safePage * safeSize);
-        return new PaymentPage(ids.stream().map(this::viewFor).toList(), safePage, safeSize,
+        return new PaymentPage(ids.stream().map(id -> viewFor(actorCustomerId, id)).toList(), safePage, safeSize,
                 total == null ? 0 : total);
     }
 
@@ -206,7 +207,7 @@ public class CorporatePaymentService {
     public PaymentView get(UUID actorCustomerId, UUID paymentId) {
         PaymentRow payment = findPayment(paymentId);
         authorizationService.requireMember(actorCustomerId, payment.organizationId());
-        return view(payment);
+        return viewFor(actorCustomerId, payment);
     }
 
     @Transactional(readOnly = true)
@@ -219,7 +220,7 @@ public class CorporatePaymentService {
                 JOIN organizations o ON o.id = p.organization_id AND o.status = 'ACTIVE'
                 ORDER BY p.created_at DESC, p.id DESC LIMIT ?
                 """, (rs, row) -> rs.getObject(1, UUID.class), actorCustomerId, safeLimit);
-        return ids.stream().map(this::viewFor).toList();
+        return ids.stream().map(id -> viewFor(actorCustomerId, id)).toList();
     }
 
     private PaymentRow lockPayment(UUID paymentId) {
@@ -232,15 +233,20 @@ public class CorporatePaymentService {
         return rows.stream().findFirst().orElseThrow(() -> new ApiNotFoundException("Corporate payment was not found."));
     }
 
-    private PaymentView viewFor(UUID paymentId) {
-        return view(findPayment(paymentId));
+    private PaymentView viewFor(UUID actorCustomerId, UUID paymentId) {
+        return viewFor(actorCustomerId, findPayment(paymentId));
     }
 
-    private PaymentView view(PaymentRow payment) {
+    private PaymentView viewFor(UUID actorCustomerId, PaymentRow payment) {
+        List<OrganizationRole> roles = authorizationService.rolesFor(actorCustomerId, payment.organizationId());
+        boolean canViewBeneficiaryBankInstructions = roles.contains(OrganizationRole.PAYMENT_MAKER)
+                || roles.contains(OrganizationRole.PAYMENT_APPROVER);
         return new PaymentView(payment.id(), payment.operationId(), payment.organizationId(), payment.sourceAccountId(),
                 payment.createdByCustomerId(), payment.submittedByCustomerId(), payment.approvedByCustomerId(),
-                payment.rejectedByCustomerId(), payment.beneficiaryName(), payment.beneficiaryAccountReference(),
-                payment.beneficiaryRoutingCode(), new Money(payment.amountMinor()).toNzdString(), payment.currency(),
+                payment.rejectedByCustomerId(), payment.beneficiaryName(),
+                canViewBeneficiaryBankInstructions ? payment.beneficiaryAccountReference() : "[REDACTED]",
+                canViewBeneficiaryBankInstructions ? payment.beneficiaryRoutingCode() : "[REDACTED]",
+                new Money(payment.amountMinor()).toNzdString(), payment.currency(),
                 payment.version(), payment.intentDigest(), payment.approvedDigest(), payment.status(),
                 payment.externalStatus(), payment.bookingJournalEntryId(), payment.settlementJournalEntryId(),
                 payment.reversalJournalEntryId(), payment.rejectionReason(), payment.createdAt(), payment.submittedAt(),
