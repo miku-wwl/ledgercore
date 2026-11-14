@@ -46,6 +46,22 @@ public class TransferService {
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public TransferReceipt transfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
 			Money amount, String idempotencyKey) {
+		return executeTransfer(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey, null);
+	}
+
+	/**
+	 * Executes a transfer and records its durable receipt in the same database transaction. The recorder is intended
+	 * for workflows such as payroll whose per-item completion state must commit atomically with the ledger posting.
+	 */
+	@Transactional(isolation = Isolation.READ_COMMITTED)
+	public TransferReceipt transferAndRecord(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
+			Money amount, String idempotencyKey, TransferReceiptRecorder recorder) {
+		return executeTransfer(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey,
+				Objects.requireNonNull(recorder, "recorder"));
+	}
+
+	private TransferReceipt executeTransfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
+			Money amount, String idempotencyKey, TransferReceiptRecorder recorder) {
 		validateRequest(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey);
 		if (!accountService.belongsTo(authenticatedCustomerId, sourceAccountId)
                 && !organizationAuthorizationService.canDebitAccount(authenticatedCustomerId, sourceAccountId)) {
@@ -63,7 +79,11 @@ public class TransferService {
 				ON CONFLICT (owner_customer_id, operation, idempotency_key) DO NOTHING
 				""", authenticatedCustomerId, OPERATION, idempotencyKey, fingerprint);
 		if (reserved == 0) {
-			return replayReceipt(authenticatedCustomerId, idempotencyKey, fingerprint);
+			TransferReceipt replay = replayReceipt(authenticatedCustomerId, idempotencyKey, fingerprint);
+			if (recorder != null) {
+				recorder.record(replay);
+			}
+			return replay;
 		}
 
 		lockAndValidateAccounts(sourceAccountId, targetAccountId);
@@ -105,6 +125,9 @@ public class TransferService {
 				idempotencyKey);
 		if (completed != 1) {
 			throw new IllegalStateException("The transfer success receipt could not be finalized.");
+		}
+		if (recorder != null) {
+			recorder.record(receipt);
 		}
 		return receipt;
 	}

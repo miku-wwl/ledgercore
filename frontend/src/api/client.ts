@@ -158,6 +158,9 @@ export async function submitTransfer(intent: TransferIntent, idempotencyKey: str
 export type OrganizationRole = components['schemas']['AddMemberRequest']['roles'][number]
 export type Organization = Required<components['schemas']['OrganizationView']>
 export type OrganizationMember = Required<components['schemas']['MemberView']>
+export type PayrollBatch = Required<components['schemas']['BatchView']>
+export type PayrollItem = Required<components['schemas']['ItemView']>
+export type PayrollItemInput = components['schemas']['PayrollItemRequest']
 export type TransferAccount = Account & { canDebit: boolean }
 
 export async function getOrganizations(): Promise<Organization[]> {
@@ -215,6 +218,96 @@ export async function addOrganizationMember(
   })
   ensureOk(response, error)
   return required(data as OrganizationMember | undefined, 'Add organization member')
+}
+
+export async function getPayrollBatches(organizationId: string): Promise<PayrollBatch[]> {
+  const { data, error, response } = await client.GET('/api/organizations/{organizationId}/payroll/batches', {
+    params: { path: { organizationId } },
+  })
+  ensureOk(response, error)
+  return (data as PayrollBatch[] | undefined) ?? []
+}
+
+export async function createPayrollBatch(
+  organizationId: string,
+  input: { name: string; payerAccountId: string },
+): Promise<PayrollBatch> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/organizations/{organizationId}/payroll/batches', {
+    params: { path: { organizationId } },
+    body: input,
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as PayrollBatch | undefined, 'Create payroll batch')
+}
+
+export async function getPayrollBatch(batchId: string): Promise<PayrollBatch> {
+  const { data, error, response } = await client.GET('/api/payroll/batches/{batchId}', {
+    params: { path: { batchId } },
+  })
+  ensureOk(response, error)
+  return required(data as PayrollBatch | undefined, 'Payroll batch')
+}
+
+export async function getPayrollItems(batchId: string): Promise<PayrollItem[]> {
+  const { data, error, response } = await client.GET('/api/payroll/batches/{batchId}/items', {
+    params: { path: { batchId } },
+  })
+  ensureOk(response, error)
+  return (data as PayrollItem[] | undefined) ?? []
+}
+
+export async function addPayrollBatchItems(batchId: string, items: PayrollItemInput[]): Promise<PayrollBatch> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payroll/batches/{batchId}/items', {
+    params: { path: { batchId } },
+    body: { items },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as PayrollBatch | undefined, 'Add payroll items')
+}
+
+export async function submitPayrollBatch(batchId: string): Promise<PayrollBatch> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payroll/batches/{batchId}/submit', {
+    params: { path: { batchId } },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as PayrollBatch | undefined, 'Submit payroll batch')
+}
+
+export async function approvePayrollBatch(batchId: string): Promise<PayrollBatch> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payroll/batches/{batchId}/approve', {
+    params: { path: { batchId } },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as PayrollBatch | undefined, 'Approve payroll batch')
+}
+
+export async function rejectPayrollBatch(batchId: string, reason: string): Promise<PayrollBatch> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payroll/batches/{batchId}/reject', {
+    params: { path: { batchId } },
+    body: { reason },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as PayrollBatch | undefined, 'Reject payroll batch')
+}
+
+export async function executePayrollBatch(batchId: string, limit = 500): Promise<PayrollBatch> {
+  const token = await csrfToken()
+  const { data, error, response } = await client.POST('/api/payroll/batches/{batchId}/execute', {
+    params: { path: { batchId }, query: { limit } },
+    headers: { 'X-CSRF-TOKEN': token },
+  })
+  ensureOk(response, error)
+  return required(data as PayrollBatch | undefined, 'Execute payroll batch')
 }
 
 export async function getTransferAccounts(): Promise<TransferAccount[]> {

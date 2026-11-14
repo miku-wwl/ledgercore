@@ -16,7 +16,7 @@
 |---|---|---|
 | E0 | VALIDATED | Commit a7fe0de280b61b66e87cf14c95aa4cf30d0982b8; local gates passed; CI run 43531591907 succeeded |
 | E1 | VALIDATED | Commit eab8175501e77dfc57b1d9ea404a73ed86c8ae26 pushed to main; GitHub Actions run 43536790093 succeeded |
-| E2 | NOT_RUN | No payroll implementation or scenario started |
+| E2 | LOCAL PASS — commit/CI pending | Payroll API/UI, 500-item PostgreSQL tests, Maker/Checker, failure/rollback cases, browser workflow, and a real Java process-kill/restart recovery experiment passed locally; see `evidence/e2/VALIDATION.md` |
 | E3 | NOT_RUN | No performance hypothesis or measurement started |
 
 ## Verified starting point
@@ -28,6 +28,15 @@
 - V1 application source and V1 textbook are the protected compatibility baseline.
 
 The E0 local test database was a separate disposable PostgreSQL 18.7 cluster on 127.0.0.1:55434, database ledgercore_test. The existing persistent PostgreSQL service on port 55432 was not used. E2E generated synthetic test identities only in the disposable database.
+
+## E2 local acceptance (CI pending)
+
+- Durable payroll batches, immutable intent items, separate result rows, SHA-256 approval binding, Maker/Checker authorization, and bounded per-item transfer execution are implemented in V6 and the `payroll` Modulith module.
+- Local backend: `clean verify`, 49 tests, 0 failures/errors/skips. The payroll PostgreSQL suite covered 500 synthetic employees, duplicate submission/execution, content mutation racing approval, insufficient funds, and transfer/result rollback.
+- Local frontend: lint, production build, and 3 Chromium E2E tests passed. The payroll browser path imports CSV, rejects Maker self-approval, executes as an independent approver, and recovers the UI after a deliberately lost HTTP response.
+- A separate packaged-JAR experiment force-killed the application with 3 of 500 items committed, then restarted it and resumed to 500/500. PostgreSQL evidence verified 500 transfer and idempotency rows, zero unbalanced transfers, zero projection mismatches, and NZ$500.00 final payer balance.
+- Dependency audit: 2 low and 4 moderate npm findings; no high/critical findings. CI OSV scan is pending the E2 direct-main push.
+- Full reproduction and experiment observations: `evidence/e2/VALIDATION.md`; design decision: `docs/v2/ADR/0003-durable-payroll-intent-and-item-execution.md`.
 
 ## E0 stage acceptance
 

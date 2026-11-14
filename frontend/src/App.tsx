@@ -11,6 +11,7 @@ import { AuthPage } from '@/pages/AuthPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { HistoryPage } from '@/pages/HistoryPage'
 import { OrganizationPage } from '@/pages/OrganizationPage'
+import { PayrollPage } from '@/pages/PayrollPage'
 import { TransferPage } from '@/pages/TransferPage'
 import './App.css'
 
@@ -41,6 +42,7 @@ function SessionGate() {
         <Route path="/transfer" element={<TransferPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/organizations" element={<OrganizationPage />} />
+        <Route path="/payroll" element={<PayrollPage />} />
         <Route path="/accounts/:accountId" element={<AccountPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

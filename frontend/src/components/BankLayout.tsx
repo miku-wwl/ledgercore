@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Activity, ArrowLeftRight, Building2, LayoutDashboard, Landmark, LogOut, WalletCards } from 'lucide-react'
+import { Activity, ArrowLeftRight, Building2, LayoutDashboard, Landmark, LogOut, WalletCards, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { signOut, type Customer } from '@/api/client'
 
@@ -21,6 +21,7 @@ export function BankLayout({ customer }: { customer: Customer }) {
     { to: '/transfer', label: 'Transfer', icon: ArrowLeftRight },
     { to: '/history', label: 'History', icon: Activity },
     { to: '/organizations', label: 'Organizations', icon: Building2 },
+    { to: '/payroll', label: 'Payroll', icon: Banknote },
   ]
 
   return (

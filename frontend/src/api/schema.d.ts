@@ -20,6 +20,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/batches/{batchId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitPayrollBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/batches/{batchId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectPayrollBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/batches/{batchId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPayrollBatchItems"];
+        put?: never;
+        post: operations["addPayrollBatchItems"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/batches/{batchId}/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["executePayrollBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/batches/{batchId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approvePayrollBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizations": {
         parameters: {
             query?: never;
@@ -30,6 +110,22 @@ export interface paths {
         get: operations["listOrganizations"];
         put?: never;
         post: operations["createOrganization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/payroll/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationPayrollBatches"];
+        put?: never;
+        post: operations["createPayrollBatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -126,6 +222,22 @@ export interface paths {
         get: operations["list"];
         put?: never;
         post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/batches/{batchId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPayrollBatch"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -252,6 +364,62 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        BatchView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            name?: string;
+            /** Format: uuid */
+            payerAccountId?: string;
+            status?: string;
+            /** Format: int32 */
+            itemCount?: number;
+            totalAmount?: string;
+            /** Format: int32 */
+            pendingCount?: number;
+            /** Format: int32 */
+            succeededCount?: number;
+            /** Format: int32 */
+            failedCount?: number;
+            succeededAmount?: string;
+            /** Format: uuid */
+            createdByCustomerId?: string;
+            /** Format: uuid */
+            submittedByCustomerId?: string;
+            /** Format: uuid */
+            approvedByCustomerId?: string;
+            /** Format: uuid */
+            rejectedByCustomerId?: string;
+            rejectionReason?: string;
+            contentDigest?: string;
+            approvedContentDigest?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: date-time */
+            approvedAt?: string;
+            /** Format: date-time */
+            rejectedAt?: string;
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: date-time */
+            completedAt?: string;
+        };
+        RejectBatchRequest: {
+            reason: string;
+        };
+        AddItemsRequest: {
+            items: components["schemas"]["PayrollItemRequest"][];
+        };
+        PayrollItemRequest: {
+            employeeReference: string;
+            employeeName: string;
+            /** Format: uuid */
+            payeeAccountId: string;
+            amount: string;
+        };
         CreateOrganizationRequest: {
             displayName: string;
         };
@@ -260,6 +428,11 @@ export interface components {
             id?: string;
             displayName?: string;
             roles?: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+        };
+        CreateBatchRequest: {
+            name: string;
+            /** Format: uuid */
+            payerAccountId: string;
         };
         AddMemberRequest: {
             /** Format: email */
@@ -302,6 +475,26 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+        };
+        ItemView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            sequenceNumber?: number;
+            employeeReference?: string;
+            employeeName?: string;
+            /** Format: uuid */
+            payeeAccountId?: string;
+            amount?: string;
+            status?: string;
+            /** Format: int32 */
+            attemptCount?: number;
+            /** Format: uuid */
+            transferId?: string;
+            errorCode?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            completedAt?: string;
         };
         CsrfResponse: {
             token?: string;
@@ -381,6 +574,148 @@ export interface operations {
             };
         };
     };
+    submitPayrollBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"];
+                };
+            };
+        };
+    };
+    rejectPayrollBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"];
+                };
+            };
+        };
+    };
+    listPayrollBatchItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemView"][];
+                };
+            };
+        };
+    };
+    addPayrollBatchItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddItemsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"];
+                };
+            };
+        };
+    };
+    executePayrollBatch: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"];
+                };
+            };
+        };
+    };
+    approvePayrollBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"];
+                };
+            };
+        };
+    };
     listOrganizations: {
         parameters: {
             query?: never;
@@ -421,6 +756,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OrganizationView"];
+                };
+            };
+        };
+    };
+    listOrganizationPayrollBatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"][];
+                };
+            };
+        };
+    };
+    createPayrollBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Draft payroll batch created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"];
                 };
             };
         };
@@ -645,6 +1028,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AccountView"];
+                };
+            };
+        };
+    };
+    getPayrollBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchView"];
                 };
             };
         };

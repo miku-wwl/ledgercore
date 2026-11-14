@@ -73,6 +73,18 @@ public class OrganizationAuthorizationService {
     }
 
     @Transactional(readOnly = true)
+    public void requireCanExecutePayroll(UUID customerId, UUID organizationId) {
+        List<OrganizationRole> roles = rolesFor(customerId, organizationId);
+        if (roles.isEmpty()) {
+            throw new ApiNotFoundException("Organization was not found.");
+        }
+        if (!roles.contains(OrganizationRole.PAYROLL_APPROVER) && !roles.contains(OrganizationRole.OPERATIONS)) {
+            throw new OrganizationAuthorizationException(
+                    "Payroll execution requires the PAYROLL_APPROVER or OPERATIONS role.");
+        }
+    }
+
+    @Transactional(readOnly = true)
     public void requireCanManage(UUID customerId, UUID organizationId) {
         requireRole(customerId, organizationId, OrganizationRole.ORG_ADMIN);
     }
