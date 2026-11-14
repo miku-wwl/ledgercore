@@ -9,7 +9,7 @@
 | E4 durable events | VALIDATED | `evidence/round3/e4/LOCAL-VALIDATION.md`; 78 backend tests; restart recovery and SQL evidence; OpenAPI, frontend lint/build, 3 Playwright journeys, and CI run `43574289360` pass |
 | E5 clearing simulator | PARTIAL; local verification and CI passed | `evidence/round3/e5/LOCAL-VALIDATION.md`; separate process/database, stable operation, authenticated callbacks, restart, settlement/refund/UNKNOWN, balanced SQL; run `43580338058`; naturally underfunded reserve case remains unexercised |
 | E6 fault laboratory | PARTIAL | Three isolated personal-transfer process-kill/replay cases; payroll and broader clearing/database/worker faults remain unrun; CI run `43584590857` passed |
-| E7 independent reconciliation | PARTIAL | Projection drift and missing callback detected exactly; healthy payroll and two-process settled-payment scans clear; Operations exception controls pass; exact-commit CI pending; `evidence/round3/e7/LOCAL-VALIDATION.md` |
+| E7 independent reconciliation | PARTIAL | Projection drift and missing callback detected exactly; healthy payroll and two-process settled-payment scans clear; Operations exception controls pass; commit `19ddf21`, exact CI run `43591228075` passed; `evidence/round3/e7/LOCAL-VALIDATION.md` |
 | E8 security and audit | NOT_RUN | Not started; Policy B acceptance remains pending |
 | E9 observability/performance | NOT_RUN | R2-10/R2-12 pre-registered; no Round 3 measurements yet |
 | E10 recovery | NOT_RUN | No backup/restore or PITR claim |

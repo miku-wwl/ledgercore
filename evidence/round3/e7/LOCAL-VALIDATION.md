@@ -1,6 +1,6 @@
 # E7 local validation — independent reconciliation
 
-**Verdict: PARTIAL.** Implementation, a clean healthy path, one controlled projection anomaly, one cross-process missing-callback anomaly, and the authorized exception workflow were exercised. The remaining pre-registered corruption cases are listed below and were not inferred from the cases that did run. GitHub Actions for the E7 commit is pending until that commit is pushed.
+**Verdict: PARTIAL.** Implementation, a clean healthy path, one controlled projection anomaly, one cross-process missing-callback anomaly, and the authorized exception workflow were exercised. The remaining pre-registered corruption cases are listed below and were not inferred from the cases that did run. Code/evidence commit `19ddf2140ff9efd0d3f761da2680e78ed81afd4e` was pushed directly to `main`; [GitHub Actions run 43591228075](https://github.com/miku-wwl/ledgercore/actions/runs/43591228075) passed full-stack acceptance and OSV.
 
 ## Implementation
 
@@ -33,4 +33,4 @@ An initial scan in that run began before asynchronous dispatch had completed. It
 
 These cases were not run and remain outside the evidence-backed claims: a healthy customer-to-customer transfer fixture in the same reconciliation suite; missing payroll result metadata; an incomplete terminal payroll batch; wrong-beneficiary or altered booking facts; duplicate/missing required outbox event corruption; stale clearing state; out-of-order external results; and a cross-organization database fact mismatch. The test covers unauthorized cross-tenant reads, not corrupted ownership rows. No constraints or migrations were weakened to manufacture impossible states.
 
-The E7 stage remains **PARTIAL** until those declared gaps are dispositioned and the exact pushed commit's CI result is known. This record does not claim comprehensive anomaly coverage.
+The E7 stage remains **PARTIAL** because those declared gaps remain unrun. The exact pushed commit's CI succeeded; this record does not claim comprehensive anomaly coverage.
