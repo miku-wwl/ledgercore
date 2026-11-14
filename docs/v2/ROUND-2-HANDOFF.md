@@ -13,8 +13,8 @@
 | Round 1 final (audited baseline) | `b584b9570eee2d2b4c08505b19336b08dfc37a77` |
 | Round 2 remediation (V7, Java fixes, V5 callback, new tests) | `0a885c8ee6a7e2409362169614f992a076eff779` |
 | Round 2 performance pre-registration (before any measurement) | `1b6ed6881343cc405c33c99475977de289f36e02` |
-| Round 2 evidence, audit, handoff, status (this document) | see §6 |
-| Final Round 2 head | see §6 |
+| Round 2 evidence, audit, handoff, status | `340272e3dfe320416d0cbbfc92a1ad37bb41fc10` |
+| Final Round 2 head (records the CI result of `340272e`) | the commit that adds this line; its own CI run is reported in the Round 2 final report |
 
 No branch, worktree, pull request, detached HEAD, force-push, or history rewrite was used. The baseline for the R2-P3
 comparison was exported with `git archive` into a scratch directory.
@@ -89,7 +89,7 @@ is corrected by `evidence/round2/performance/ROUND-1-ANNOTATIONS.md`. Details an
 | `b584b95` (baseline) | [43553101864](https://github.com/miku-wwl/ledgercore/actions/runs/43553101864) | full-stack acceptance success; OSV success | Round 1 final |
 | `0a885c8` (remediation) | [43560923022](https://github.com/miku-wwl/ledgercore/actions/runs/43560923022) | full-stack acceptance success; OSV success | 75 tests, 0 failures; V4/V5/V6 → V7 upgrades on Linux PostgreSQL 18; 3 Playwright passed; npm audit 2 low / 4 moderate |
 | `1b6ed68` (pre-registration) | [43561592007](https://github.com/miku-wwl/ledgercore/actions/runs/43561592007) | full-stack acceptance success; OSV success | harness compiled; no production change |
-| Evidence/audit commit | recorded in the CI follow-up commit | | |
+| `340272e` (evidence, audit, handoff) | [43563660267](https://github.com/miku-wwl/ledgercore/actions/runs/43563660267) | full-stack acceptance success; OSV success | 75 tests, 0 failures; 3 Playwright passed; npm audit 2 low / 4 moderate |
 
 A pending or failed run is not a pass. The final head's own run is reported in the Round 2 final report.
 

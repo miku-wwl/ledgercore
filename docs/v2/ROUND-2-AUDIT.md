@@ -249,7 +249,8 @@ at `high` (2 low, 4 moderate, 0 high/critical) and the Maven OSV scan both pass 
 | OpenAPI contract | `npm run generate:api` against the remediated JAR; `git diff --exit-code -- src/api/schema.d.ts` | no diff |
 | Browser | `npx playwright test` (Chromium) against the remediated JAR | 3 passed |
 | CI for remediation `0a885c8` | run [43560923022](https://github.com/miku-wwl/ledgercore/actions/runs/43560923022) | both jobs success; 75 tests; 3 Playwright passed; OSV success |
-| CI for later commits | see `ROUND-2-HANDOFF.md` §6 | recorded there |
+| CI for pre-registration `1b6ed68` | run [43561592007](https://github.com/miku-wwl/ledgercore/actions/runs/43561592007) | both jobs success |
+| CI for audit and evidence `340272e` | run [43563660267](https://github.com/miku-wwl/ledgercore/actions/runs/43563660267) | both jobs success; 75 tests; 3 Playwright passed |
 
 New tests: 19 payroll integrity tests (`PayrollIntegrityPostgresIntegrationTests`), 7 migration compatibility tests
 (`MigrationCompatibilityPostgresIntegrationTests`). The opt-in `Round2PerformanceFollowUpHarness` is compiled by every
@@ -273,8 +274,8 @@ build but excluded from normal discovery, like Round 1's harnesses.
 
 ## 11. Final Round 2 verdict
 
-**ACCEPTED_WITH_NONBLOCKING_RISKS** — provided the GitHub Actions run for the final Round 2 head succeeds, as recorded
-in `ROUND-2-HANDOFF.md` §6.
+**ACCEPTED_WITH_NONBLOCKING_RISKS.** GitHub Actions passed for every Round 2 commit through `340272e`
+(`ROUND-2-HANDOFF.md` §6); the CI-record commit that follows is documentation-only.
 
 - Every confirmed P0/P1 defect within E0–E3 is fixed and verified: R2-01, R2-02, R2-08. No P0 was found.
 - Every Round 1 claim was checked against source and raw evidence; where a claim was overstated (INV-08, result

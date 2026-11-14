@@ -21,8 +21,8 @@
   Fixed P2/P3: R2-05, R2-06, R2-07, R2-09 (H04 progress scan), R2-13, R2-16. No P0 found.
 - New forward-only migration V7; V1–V6 byte-identical with pinned checksums; V5 upgrade callback (ADR 0004).
 - R2-03 (direct corporate debit by `PAYROLL_MAKER`) is the established Policy A; recorded as owner decision OD-1.
-- Tests: 75 (49 + 19 payroll integrity + 7 migration compatibility), 0 failures locally and in CI run 43560923022;
-  3 Chromium E2E pass; OpenAPI unchanged.
+- Tests: 75 (49 + 19 payroll integrity + 7 migration compatibility), 0 failures locally and in CI runs 43560923022
+  (`0a885c8`), 43561592007 (`1b6ed68`), and 43563660267 (`340272e`); 3 Chromium E2E pass; OpenAPI unchanged.
 - Performance: R2-P1 SUPPORTED (batch-bounded progress); R2-P2 INCONCLUSIVE by rule but history-dependent ledger cost
   established; R2-P3 attributes within-batch payroll slowdown; Round 1 E3 interpretations annotated, not rewritten.
 - Evidence: `evidence/round2/`; findings: `evidence/round2/findings/FINDINGS-REGISTER.md`.
