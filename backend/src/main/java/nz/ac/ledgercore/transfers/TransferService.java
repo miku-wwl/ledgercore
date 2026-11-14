@@ -6,15 +6,18 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 import nz.ac.ledgercore.accounts.AccountService;
+import nz.ac.ledgercore.events.DurableEventStore;
 import nz.ac.ledgercore.ledger.InsufficientLedgerBalanceException;
 import nz.ac.ledgercore.ledger.LedgerWriter;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
+import nz.ac.ledgercore.organizations.OrganizationRole;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -35,14 +38,16 @@ public class TransferService {
 	private final JdbcTemplate jdbcTemplate;
 	private final AccountService accountService;
 	private final LedgerWriter ledgerWriter;
-    private final OrganizationAuthorizationService organizationAuthorizationService;
+	private final DurableEventStore eventStore;
+	private final OrganizationAuthorizationService organizationAuthorizationService;
 
 	public TransferService(JdbcTemplate jdbcTemplate, AccountService accountService, LedgerWriter ledgerWriter,
-            OrganizationAuthorizationService organizationAuthorizationService) {
+			DurableEventStore eventStore, OrganizationAuthorizationService organizationAuthorizationService) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.accountService = accountService;
 		this.ledgerWriter = ledgerWriter;
-        this.organizationAuthorizationService = organizationAuthorizationService;
+		this.eventStore = eventStore;
+		this.organizationAuthorizationService = organizationAuthorizationService;
 	}
 
 	/**
@@ -73,8 +78,22 @@ public class TransferService {
 	private TransferReceipt executeTransfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
 			Money amount, String idempotencyKey, TransferReceiptRecorder recorder) {
 		validateRequest(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey);
-		if (!accountService.belongsTo(authenticatedCustomerId, sourceAccountId)
-                && !organizationAuthorizationService.canDebitAccount(authenticatedCustomerId, sourceAccountId)) {
+		var sourceOwner = accountService.ownerOf(sourceAccountId)
+				.orElseThrow(() -> error(TransferErrorCode.ACCOUNT_NOT_FOUND, "The source account was not found."));
+		if (sourceOwner.organizationId() != null) {
+			if (recorder == null || !isApprovedPayrollItem(authenticatedCustomerId, sourceAccountId, targetAccountId,
+					amount, idempotencyKey)) {
+				List<OrganizationRole> sourceRoles = organizationAuthorizationService.rolesFor(authenticatedCustomerId,
+						sourceOwner.organizationId());
+				if (!sourceRoles.contains(OrganizationRole.PAYROLL_MAKER)
+						&& !sourceRoles.contains(OrganizationRole.PAYMENT_MAKER)) {
+					throw error(TransferErrorCode.ACCOUNT_NOT_FOUND, "The source account was not found.");
+				}
+				throw error(TransferErrorCode.CORPORATE_APPROVAL_REQUIRED,
+						"A corporate debit requires a separately approved payment intent or approved payroll item.");
+			}
+		}
+		else if (!authenticatedCustomerId.equals(sourceOwner.customerId())) {
 			throw error(TransferErrorCode.ACCOUNT_NOT_FOUND, "The source account was not found.");
 		}
 		if (sourceAccountId.equals(targetAccountId)) {
@@ -97,8 +116,6 @@ public class TransferService {
 		}
 
 		lockAndValidateAccounts(sourceAccountId, targetAccountId);
-        var sourceOwner = accountService.ownerOf(sourceAccountId)
-                .orElseThrow(() -> error(TransferErrorCode.ACCOUNT_NOT_FOUND, "The source account was not found."));
 		UUID transferId = UUID.randomUUID();
 		UUID journalEntryId;
 		try {
@@ -136,10 +153,50 @@ public class TransferService {
 		if (completed != 1) {
 			throw new IllegalStateException("The transfer success receipt could not be finalized.");
 		}
+		eventStore.enqueue("transfer.posted:" + transferId, "transfer.posted", "TRANSFER", transferId,
+				authenticatedCustomerId, sourceOwner.organizationId(), Map.of("transferId", transferId.toString(),
+					"sourceAccountId", sourceAccountId.toString(), "targetAccountId", targetAccountId.toString(),
+					"amountMinor", amount.minorUnits(), "currency", "NZD"));
 		if (recorder != null) {
 			recorder.record(receipt);
 		}
 		return receipt;
+	}
+
+	/**
+	 * Corporate payroll is the only permitted use of this internal callback boundary. The approved batch, exact item,
+	 * batch creator, active debit entitlement and stable system key must all match persisted state.
+	 */
+	private boolean isApprovedPayrollItem(UUID actorId, UUID sourceAccountId, UUID targetAccountId, Money amount,
+			String idempotencyKey) {
+		if (idempotencyKey == null || idempotencyKey.length() != 81 || !idempotencyKey.startsWith(
+				PAYROLL_IDEMPOTENCY_KEY_PREFIX)) {
+			return false;
+		}
+		UUID batchId;
+		UUID itemId;
+		try {
+			batchId = UUID.fromString(idempotencyKey.substring(8, 44));
+			itemId = UUID.fromString(idempotencyKey.substring(45));
+		}
+		catch (IllegalArgumentException exception) {
+			return false;
+		}
+		Integer matches = jdbcTemplate.queryForObject("""
+				SELECT count(*)
+				FROM payroll_batches b
+				JOIN payroll_items i ON i.batch_id = b.id
+				JOIN payroll_item_results r ON r.item_id = i.id AND r.batch_id = i.batch_id
+				JOIN organizations o ON o.id = b.organization_id AND o.status = 'ACTIVE'
+				JOIN organization_memberships m ON m.organization_id = b.organization_id
+				  AND m.customer_id = b.created_by_customer_id AND m.status = 'ACTIVE'
+				JOIN organization_membership_roles role ON role.organization_id = m.organization_id
+				  AND role.customer_id = m.customer_id AND role.role = 'PAYROLL_MAKER'
+				WHERE b.id = ? AND i.id = ? AND b.payer_account_id = ? AND i.payee_account_id = ?
+				  AND i.amount_minor = ? AND b.created_by_customer_id = ? AND b.status = 'PROCESSING'
+				  AND r.status = 'PENDING'
+				""", Integer.class, batchId, itemId, sourceAccountId, targetAccountId, amount.minorUnits(), actorId);
+		return matches != null && matches == 1;
 	}
 
 	private void validateRequest(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,

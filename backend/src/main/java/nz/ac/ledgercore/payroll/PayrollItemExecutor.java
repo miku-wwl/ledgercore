@@ -4,7 +4,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map;
 
+import nz.ac.ledgercore.events.DurableEventStore;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
 import nz.ac.ledgercore.transfers.TransferErrorCode;
@@ -25,12 +27,14 @@ public class PayrollItemExecutor {
     private final JdbcTemplate jdbcTemplate;
     private final TransferService transferService;
     private final OrganizationAuthorizationService authorizationService;
+    private final DurableEventStore eventStore;
 
     public PayrollItemExecutor(JdbcTemplate jdbcTemplate, TransferService transferService,
-            OrganizationAuthorizationService authorizationService) {
+            OrganizationAuthorizationService authorizationService, DurableEventStore eventStore) {
         this.jdbcTemplate = jdbcTemplate;
         this.transferService = transferService;
         this.authorizationService = authorizationService;
+        this.eventStore = eventStore;
     }
 
     /**
@@ -38,9 +42,10 @@ public class PayrollItemExecutor {
      * single-item transaction; callers must not wrap a batch loop in a transaction.
      */
     @Transactional
-    public ExecutionResult executeNext(UUID batchId) {
+    public ExecutionResult executeNext(UUID batchId, UUID releasingActorId) {
+        requireCanExecute(batchId, releasingActorId);
         Optional<WorkItem> selected = jdbcTemplate.query("""
-                SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+                SELECT b.id AS batch_id, b.organization_id, b.status AS batch_status, b.payer_account_id,
                        b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
                        i.amount_minor, r.status AS item_status, r.transfer_id
                 FROM payroll_batches b
@@ -50,14 +55,15 @@ public class PayrollItemExecutor {
                 ORDER BY i.sequence_no
                 LIMIT 1 FOR UPDATE OF r SKIP LOCKED
                 """, (rs, row) -> workItem(rs), batchId).stream().findFirst();
-        return selected.map(this::executeLocked).orElse(null);
+        return selected.map(item -> executeLocked(item, releasingActorId)).orElse(null);
     }
 
     /** Locks a specific pending item; useful for safe retry and proving duplicate worker behavior. */
     @Transactional
-    public ExecutionResult executeOne(UUID batchId, UUID itemId) {
+    public ExecutionResult executeOne(UUID batchId, UUID itemId, UUID releasingActorId) {
+        requireCanExecute(batchId, releasingActorId);
         WorkItem item = jdbcTemplate.query("""
-                SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+                SELECT b.id AS batch_id, b.organization_id, b.status AS batch_status, b.payer_account_id,
                        b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
                        i.amount_minor, r.status AS item_status, r.transfer_id
                 FROM payroll_batches b
@@ -71,10 +77,10 @@ public class PayrollItemExecutor {
         if (!"PENDING".equals(item.itemStatus())) {
             return new ExecutionResult(item.itemId(), false, item.itemStatus(), item.transferId(), null);
         }
-        return executeLocked(item);
+        return executeLocked(item, releasingActorId);
     }
 
-    private ExecutionResult executeLocked(WorkItem item) {
+    private ExecutionResult executeLocked(WorkItem item, UUID releasingActorId) {
         if (!"PROCESSING".equals(item.batchStatus())) {
             throw new PayrollException("BATCH_NOT_PROCESSING", "Payroll items can only execute while the batch is processing.",
                     HttpStatus.CONFLICT);
@@ -84,7 +90,7 @@ public class PayrollItemExecutor {
         try {
             TransferReceipt receipt = transferService.transferAndRecord(item.makerCustomerId(), item.payerAccountId(),
                     item.payeeAccountId(), new Money(item.amountMinor()), idempotencyKey,
-                    savedReceipt -> recordSuccess(item.itemId(), savedReceipt));
+                    savedReceipt -> recordSuccess(item, savedReceipt, releasingActorId));
             return new ExecutionResult(item.itemId(), true, "SUCCEEDED", receipt.transferId(), null);
         }
         catch (TransferException exception) {
@@ -109,25 +115,46 @@ public class PayrollItemExecutor {
 
     private boolean isPermanentBusinessFailure(TransferErrorCode code) {
         return switch (code) {
-            case INSUFFICIENT_FUNDS, ACCOUNT_NOT_FOUND, ACCOUNT_NOT_OPEN, INVALID_REQUEST -> true;
+            case INSUFFICIENT_FUNDS, ACCOUNT_NOT_FOUND, ACCOUNT_NOT_OPEN, INVALID_REQUEST,
+                    CORPORATE_APPROVAL_REQUIRED -> true;
             case UNAUTHENTICATED, IDEMPOTENCY_KEY_REUSED -> false;
         };
     }
 
-    private void recordSuccess(UUID itemId, TransferReceipt receipt) {
+    private void recordSuccess(WorkItem item, TransferReceipt receipt, UUID releasingActorId) {
         int updated = jdbcTemplate.update("""
                 UPDATE payroll_item_results
                 SET status = 'SUCCEEDED', attempt_count = attempt_count + 1, transfer_id = ?,
                     completed_at = clock_timestamp(), updated_at = clock_timestamp()
                 WHERE item_id = ? AND status = 'PENDING'
-                """, receipt.transferId(), itemId);
+                """, receipt.transferId(), item.itemId());
         if (updated != 1) {
             throw new IllegalStateException("The payroll result could not be committed with its transfer receipt.");
         }
+        eventStore.recordAudit(releasingActorId, "PAYROLL_ITEM_EXECUTED", "PAYROLL_ITEM", item.itemId(),
+                item.organizationId(), Map.of("batchId", item.batchId().toString(),
+                "transferId", receipt.transferId().toString()));
+        eventStore.enqueue("payroll.item.posted:" + item.itemId(), "payroll.item.posted", "PAYROLL_ITEM",
+                item.itemId(), releasingActorId, item.organizationId(), Map.of("batchId", item.batchId().toString(),
+                "transferId", receipt.transferId().toString()));
+    }
+
+    private void requireCanExecute(UUID batchId, UUID releasingActorId) {
+        if (releasingActorId == null) {
+            throw new PayrollException("EXECUTOR_REQUIRED", "An authenticated payroll executor is required.",
+                    HttpStatus.FORBIDDEN);
+        }
+        Optional<UUID> organizationId = jdbcTemplate.query("SELECT organization_id FROM payroll_batches WHERE id = ?",
+                (rs, row) -> rs.getObject(1, UUID.class), batchId).stream().findFirst();
+        if (organizationId.isEmpty()) {
+            throw new PayrollException("PAYROLL_BATCH_NOT_FOUND", "Payroll batch was not found.", HttpStatus.NOT_FOUND);
+        }
+        authorizationService.requireCanExecutePayroll(releasingActorId, organizationId.get());
     }
 
     private WorkItem workItem(ResultSet rs) throws SQLException {
-        return new WorkItem(rs.getObject("batch_id", UUID.class), rs.getString("batch_status"),
+        return new WorkItem(rs.getObject("batch_id", UUID.class), rs.getObject("organization_id", UUID.class),
+                rs.getString("batch_status"),
                 rs.getObject("payer_account_id", UUID.class), rs.getObject("created_by_customer_id", UUID.class),
                 rs.getObject("item_id", UUID.class), rs.getObject("payee_account_id", UUID.class),
                 rs.getLong("amount_minor"), rs.getString("item_status"), rs.getObject("transfer_id", UUID.class));
@@ -136,7 +163,7 @@ public class PayrollItemExecutor {
     public record ExecutionResult(UUID itemId, boolean attempted, String status, UUID transferId, String errorCode) {
     }
 
-    private record WorkItem(UUID batchId, String batchStatus, UUID payerAccountId, UUID makerCustomerId,
+    private record WorkItem(UUID batchId, UUID organizationId, String batchStatus, UUID payerAccountId, UUID makerCustomerId,
             UUID itemId, UUID payeeAccountId, long amountMinor, String itemStatus, UUID transferId) {
     }
 }

@@ -318,7 +318,7 @@ export async function getTransferAccounts(): Promise<TransferAccount[]> {
     return accounts.map((account) => ({
       ...account,
       displayName: organization.displayName + ' · ' + account.displayName,
-      canDebit: organization.roles.includes('PAYROLL_MAKER'),
+      canDebit: false,
     }))
   }))
   return [...personal, ...corporate.flat()]

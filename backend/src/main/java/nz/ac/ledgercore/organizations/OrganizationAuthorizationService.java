@@ -65,6 +65,19 @@ public class OrganizationAuthorizationService {
     }
 
     @Transactional(readOnly = true)
+    public void requireCanMakePayment(UUID customerId, UUID organizationId) {
+        requireRole(customerId, organizationId, OrganizationRole.PAYMENT_MAKER);
+    }
+
+    @Transactional(readOnly = true)
+    public void requireCanApprovePayment(UUID approverCustomerId, UUID organizationId, UUID makerCustomerId) {
+        requireRole(approverCustomerId, organizationId, OrganizationRole.PAYMENT_APPROVER);
+        if (approverCustomerId.equals(makerCustomerId)) {
+            throw new OrganizationAuthorizationException("A payment maker cannot approve their own payment.");
+        }
+    }
+
+    @Transactional(readOnly = true)
     public void requireCanApprovePayroll(UUID approverCustomerId, UUID organizationId, UUID makerCustomerId) {
         requireRole(approverCustomerId, organizationId, OrganizationRole.PAYROLL_APPROVER);
         if (approverCustomerId.equals(makerCustomerId)) {

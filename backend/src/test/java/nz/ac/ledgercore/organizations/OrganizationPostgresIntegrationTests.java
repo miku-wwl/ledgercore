@@ -22,6 +22,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import nz.ac.ledgercore.ledger.Money;
+import nz.ac.ledgercore.transfers.TransferErrorCode;
+import nz.ac.ledgercore.transfers.TransferException;
 import nz.ac.ledgercore.transfers.TransferService;
 
 @ActiveProfiles("test")
@@ -74,8 +76,15 @@ class OrganizationPostgresIntegrationTests {
         String makerId = maker.register("Payroll Maker");
         HttpResponse<String> makerGrant = admin.call("POST",
                 "/api/organizations/" + organizationId + "/members",
-                "{\"email\":\"" + maker.email + "\",\"roles\":[\"PAYROLL_MAKER\",\"PAYROLL_APPROVER\"]}", true);
+                "{\"email\":\"" + maker.email + "\",\"roles\":[\"PAYROLL_MAKER\",\"PAYMENT_MAKER\"]}", true);
         assertThat(makerGrant.statusCode()).isEqualTo(201);
+
+        Session approver = new Session();
+        String approverId = approver.register("Payment Approver");
+        HttpResponse<String> approverGrant = admin.call("POST",
+                "/api/organizations/" + organizationId + "/members",
+                "{\"email\":\"" + approver.email + "\",\"roles\":[\"PAYROLL_APPROVER\",\"PAYMENT_APPROVER\"]}", true);
+        assertThat(approverGrant.statusCode()).isEqualTo(201);
 
         Session viewer = new Session();
         String viewerId = viewer.register("Finance Viewer");
@@ -102,29 +111,96 @@ class OrganizationPostgresIntegrationTests {
                 .statusCode()).isEqualTo(404);
         assertThat(admin.call("POST", "/api/transfers", transfer, true, "admin-corporate-transfer")
                 .statusCode()).isEqualTo(404);
-
-        transferService.transfer(UUID.fromString(makerId), corporateId, UUID.fromString(personalTargetId),
-                new Money(1_000L), "maker-corporate-transfer");
         HttpResponse<String> posted = maker.call("POST", "/api/transfers", transfer, true, "maker-corporate-transfer");
-        assertThat(posted.statusCode()).isEqualTo(200);
-        assertThat(posted.body()).contains("\"status\":\"POSTED\"", "\"amount\":\"10.00\"");
+        assertThat(posted.statusCode()).isEqualTo(409);
+        assertThat(posted.body()).contains("CORPORATE_APPROVAL_REQUIRED");
+        assertThatThrownBy(() -> transferService.transfer(UUID.fromString(makerId), corporateId,
+                UUID.fromString(personalTargetId), new Money(1_000L), "maker-corporate-direct"))
+                .isInstanceOf(TransferException.class)
+                .satisfies(exception -> assertThat(((TransferException) exception).code())
+                        .isEqualTo(TransferErrorCode.CORPORATE_APPROVAL_REQUIRED));
+
+        String paymentRequest = "{\"sourceAccountId\":\"" + corporateAccountId
+                + "\",\"beneficiaryName\":\"External Supplier\",\"beneficiaryAccountReference\":\"NZ-12345\","
+                + "\"beneficiaryRoutingCode\":\"BANK-01\",\"amount\":\"10.00\"}";
+        HttpResponse<String> createdPayment = maker.call("POST", "/api/organizations/" + organizationId + "/payments",
+                paymentRequest, true);
+        assertThat(createdPayment.statusCode()).isEqualTo(201);
+        String paymentId = capture(ID, createdPayment.body());
+        assertThat(createdPayment.body()).contains("\"status\":\"DRAFT\"");
+        HttpResponse<String> submittedPayment = maker.call("POST", "/api/payments/" + paymentId + "/submit", null, true);
+        assertThat(submittedPayment.statusCode()).isEqualTo(200);
+        assertThat(submittedPayment.body()).contains("\"status\":\"SUBMITTED\"");
+        assertThat(maker.call("POST", "/api/payments/" + paymentId + "/submit", null, true).statusCode())
+                .isEqualTo(200);
+        assertThat(admin.call("GET", "/api/organizations/" + organizationId + "/accounts", null, false).body())
+                .contains("\"balance\":\"1000.00\"");
+        HttpResponse<String> makerApproval = maker.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+        assertThat(makerApproval.statusCode()).isEqualTo(403);
+        HttpResponse<String> approvedPayment = approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true);
+        assertThat(approvedPayment.statusCode()).isEqualTo(200);
+        assertThat(approvedPayment.body()).contains("\"status\":\"PENDING_CLEARING\"", "\"externalStatus\":null");
+        assertThat(approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true).statusCode())
+                .isEqualTo(200);
         assertThat(admin.call("GET", "/api/organizations/" + organizationId + "/accounts", null, false).body())
                 .contains("\"balance\":\"990.00\"");
         assertThat(admin.call("GET", "/api/accounts/" + personalTargetId, null, false).body())
-                .contains("\"balance\":\"1010.00\"");
+                .contains("\"balance\":\"1000.00\"");
+        UUID paymentUuid = UUID.fromString(paymentId);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM transfers WHERE source_account_id = ?
+                """, Integer.class, corporateId)).isZero();
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM corporate_payment_intents
+                WHERE id = ? AND operation_id = id AND created_by_customer_id = ?
+                  AND submitted_by_customer_id = ? AND approved_by_customer_id = ?
+                  AND intent_digest = approved_digest AND status = 'PENDING_CLEARING'
+                """, Integer.class, paymentUuid, UUID.fromString(makerId), UUID.fromString(makerId),
+                UUID.fromString(approverId))).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM journal_entries e JOIN postings p ON p.journal_entry_id = e.id
+                WHERE e.entry_type = 'CORPORATE_PAYMENT_BOOKING'
+                  AND e.reference = ? AND p.amount_minor = 1000
+                """, Integer.class, "corporate-payment:" + paymentId + ":booking")).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT balance_minor FROM account_balance_projection WHERE ledger_account_id =
+                    '00000000-0000-5000-8000-000000000002'
+                """, Long.class)).isEqualTo(1_000L);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM clearing_instructions WHERE payment_intent_id = ? AND operation_id = ?
+                """, Integer.class, paymentUuid, paymentUuid)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM outbox_events
+                WHERE aggregate_id = ? AND event_type IN ('corporate.payment.created',
+                    'corporate.payment.submitted', 'corporate.payment.approved')
+                """, Integer.class, paymentUuid)).isEqualTo(3);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM outbox_events
+                WHERE aggregate_id = ? AND organization_id = ? AND actor_customer_id = ?
+                  AND event_type IN ('corporate.payment.created', 'corporate.payment.submitted')
+                """, Integer.class, paymentUuid, orgId, UUID.fromString(makerId))).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM outbox_events
+                WHERE aggregate_id = ? AND organization_id = ? AND actor_customer_id = ?
+                  AND event_type IN ('corporate.payment.approved', 'clearing.instruction.ready')
+                """, Integer.class, paymentUuid, orgId, UUID.fromString(approverId))).isEqualTo(2);
 
-        HttpResponse<String> adminApproverGrant = admin.call("POST",
-                "/api/organizations/" + organizationId + "/members",
-                "{\"email\":\"" + admin.email + "\",\"roles\":[\"PAYROLL_APPROVER\"]}", true);
-        assertThat(adminApproverGrant.statusCode()).isEqualTo(201);
+        HttpResponse<String> adminSelfGrant = admin.call("POST",
+                "/api/organizations/" + organizationId + "/members/" + adminId + "/roles",
+                "{\"role\":\"PAYMENT_APPROVER\"}", true);
+        assertThat(adminSelfGrant.statusCode()).isEqualTo(403);
 
         UUID makerUuid = UUID.fromString(makerId);
         assertThatThrownBy(() -> authorizationService.requireCanApprovePayroll(makerUuid, orgId, makerUuid))
                 .isInstanceOf(OrganizationAuthorizationException.class)
+                .hasMessageContaining("role is required");
+        UUID approverUuid = UUID.fromString(approverId);
+        assertThatThrownBy(() -> authorizationService.requireCanApprovePayroll(approverUuid, orgId, approverUuid))
+                .isInstanceOf(OrganizationAuthorizationException.class)
                 .hasMessageContaining("cannot approve their own batch");
         assertThatThrownBy(() -> authorizationService.requireCanApprovePayroll(UUID.fromString(viewerId), orgId, makerUuid))
                 .isInstanceOf(OrganizationAuthorizationException.class);
-        authorizationService.requireCanApprovePayroll(UUID.fromString(adminId), orgId, makerUuid);
+        authorizationService.requireCanApprovePayroll(approverUuid, orgId, makerUuid);
 
         HttpResponse<String> otherOrg = outsider.call("POST", "/api/organizations",
                 "{\"displayName\":\"Other Company\"}", true);

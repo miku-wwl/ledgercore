@@ -20,7 +20,7 @@ async function openAccount(page: import('@playwright/test').Page, name: string) 
   await expect(page.getByRole('link', { name: new RegExp(name) })).toBeVisible()
 }
 
-test('organization admin grants a payroll maker access to transfer corporate funds', async ({ page, browser }) => {
+test('organization admin grants a payroll maker access without exposing corporate funds to generic transfers', async ({ page, browser }) => {
   const unique = crypto.randomUUID()
   const adminEmail = `e2e-org-admin-${unique}@example.test`
   const makerEmail = `e2e-payroll-maker-${unique}@example.test`
@@ -54,14 +54,9 @@ test('organization admin grants a payroll maker access to transfer corporate fun
     await expect(makerPage.getByText('Payroll account', { exact: true })).toBeVisible()
 
     await makerPage.getByRole('link', { name: 'Transfer', exact: true }).click()
-    await makerPage.getByLabel('From account').selectOption({ label: `${organizationName} · Payroll account · NZ$1,000.00` })
-    await makerPage.getByLabel('To account').selectOption({ label: 'Maker destination' })
-    await makerPage.getByLabel('Amount').fill('10.00')
-    await makerPage.getByRole('button', { name: 'Review transfer' }).click()
-    await makerPage.getByRole('dialog').getByRole('button', { name: /Confirm transfer/ }).click()
-
-    await expect(makerPage.getByRole('heading', { name: 'Transfer complete' })).toBeVisible()
-    await expect(makerPage.getByText('NZ$10.00 moved.', { exact: false })).toBeVisible()
+    await expect(makerPage.getByLabel('From account').locator('option', {
+      hasText: `${organizationName} · Payroll account`,
+    })).toHaveCount(0)
   } finally {
     await makerContext.close()
   }

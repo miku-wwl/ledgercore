@@ -55,10 +55,12 @@ class PayrollRecoveryFixtureHarness {
         String approverEmail = "recovery-approver-" + suffix + "@example.test";
         var maker = identityService.register(makerEmail, PASSWORD, "Recovery Fixture Maker");
         var approver = identityService.register(approverEmail, PASSWORD, "Recovery Fixture Approver");
-        var organization = organizationService.create(maker.id(), "Recovery Fixture " + suffix.substring(0, 8));
-        organizationService.addMember(maker.id(), organization.id(), makerEmail,
+        var admin = identityService.register("recovery-admin-" + suffix + "@example.test", PASSWORD,
+                "Recovery Fixture Admin");
+        var organization = organizationService.create(admin.id(), "Recovery Fixture " + suffix.substring(0, 8));
+        organizationService.addMember(admin.id(), organization.id(), makerEmail,
                 List.of(OrganizationRole.PAYROLL_MAKER));
-        organizationService.addMember(maker.id(), organization.id(), approverEmail,
+        organizationService.addMember(admin.id(), organization.id(), approverEmail,
                 List.of(OrganizationRole.PAYROLL_APPROVER, OrganizationRole.OPERATIONS));
 
         UUID payerAccountId = accountService.openOrganizationAccount(organization.id(), "500-item recovery payer");
@@ -78,7 +80,7 @@ class PayrollRecoveryFixtureHarness {
         var submitted = payrollService.submit(maker.id(), draft.id());
         var approved = payrollService.approve(approver.id(), submitted.id());
         assertThat(approved.status()).isEqualTo("APPROVED");
-        var processing = payrollService.startProcessing(approved.id());
+        var processing = payrollService.startProcessing(approved.id(), approver.id());
         assertThat(processing.status()).isEqualTo("PROCESSING");
 
         Path fixture = Path.of(System.getProperty("user.dir"), "..", "work", "e2", "recovery-fixture.json")

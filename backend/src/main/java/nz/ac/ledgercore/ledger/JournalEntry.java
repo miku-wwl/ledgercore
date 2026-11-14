@@ -65,6 +65,24 @@ public record JournalEntry(UUID id, JournalEntryType type, UUID reversesEntryId,
 				new Posting(targetLedgerAccountId, PostingSide.CREDIT, amount.minorUnits())));
 	}
 
+	public static JournalEntry corporatePaymentBooking(UUID customerDepositLedgerAccountId,
+			UUID clearingPayableLedgerAccountId, Money amount) {
+		return corporateEntry(JournalEntryType.CORPORATE_PAYMENT_BOOKING, customerDepositLedgerAccountId,
+				PostingSide.DEBIT, clearingPayableLedgerAccountId, PostingSide.CREDIT, amount);
+	}
+
+	public static JournalEntry clearingSettlement(UUID clearingPayableLedgerAccountId,
+			UUID simulationReserveLedgerAccountId, Money amount) {
+		return corporateEntry(JournalEntryType.CLEARING_SETTLEMENT, clearingPayableLedgerAccountId,
+				PostingSide.DEBIT, simulationReserveLedgerAccountId, PostingSide.CREDIT, amount);
+	}
+
+	public static JournalEntry corporatePaymentRefund(UUID clearingPayableLedgerAccountId,
+			UUID customerDepositLedgerAccountId, Money amount) {
+		return corporateEntry(JournalEntryType.CORPORATE_PAYMENT_REFUND, clearingPayableLedgerAccountId,
+				PostingSide.DEBIT, customerDepositLedgerAccountId, PostingSide.CREDIT, amount);
+	}
+
 	public static JournalEntry reversalOf(JournalEntry original) {
 		Objects.requireNonNull(original, "original");
 		if (original.type() == JournalEntryType.REVERSAL) {
@@ -85,5 +103,16 @@ public record JournalEntry(UUID id, JournalEntryType type, UUID reversesEntryId,
 		return new JournalEntry(UUID.randomUUID(), type, null, List.of(
 				new Posting(reserveLedgerAccountId, PostingSide.DEBIT, amount.minorUnits()),
 				new Posting(customerLedgerAccountId, PostingSide.CREDIT, amount.minorUnits())));
+	}
+
+	private static JournalEntry corporateEntry(JournalEntryType type, UUID debitLedgerAccountId,
+			PostingSide debitSide, UUID creditLedgerAccountId, PostingSide creditSide, Money amount) {
+		Objects.requireNonNull(amount, "amount");
+		if (amount.minorUnits() <= 0 || debitLedgerAccountId.equals(creditLedgerAccountId)) {
+			throw new IllegalArgumentException("A corporate payment entry requires two accounts and a positive amount.");
+		}
+		return new JournalEntry(UUID.randomUUID(), type, null, List.of(
+				new Posting(debitLedgerAccountId, debitSide, amount.minorUnits()),
+				new Posting(creditLedgerAccountId, creditSide, amount.minorUnits())));
 	}
 }

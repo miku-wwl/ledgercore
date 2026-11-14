@@ -1,0 +1,5 @@
+Playwright result: 3 passed (20.2s), Chromium, 3 workers.
+
+ok 1 — organization admin grants a payroll maker access without exposing corporate funds to generic transfers (8.9s)
+ok 2 — registers, transfers, recovers a lost response, pages history, and enforces ownership (15.3s)
+ok 3 — maker imports and submits payroll; independent approver executes once after a lost response (13.2s)

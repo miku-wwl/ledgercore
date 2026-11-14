@@ -39,6 +39,12 @@ Full rationale and constraints are in `ADR/0005-corporate-payment-approval-and-c
 
 A stage is not VALIDATED until its required tests, independent database evidence, direct-main commit/push, and relevant GitHub Actions run are complete. Partial, blocked, failed, and unexecuted checks stay explicit.
 
+## Current progress — 2026-11-14
+
+- Stage 0 baseline and Policy B design are committed on `main`; Stage 0 CI run `43567898184` succeeded.
+- E4 is **LOCAL PASS; CI pending** and committed directly on `main`. Its local backend, browser, API-contract, restart, and SQL evidence is in `evidence/round3/e4/LOCAL-VALIDATION.md`.
+- E5–E11 remain NOT_STARTED. No E12, textbook, or final PDF work has begun.
+
 ## Non-negotiable preservation rules
 
 - Preserve INV-01–INV-14 and every V1–V7 migration byte-for-byte. Use forward migrations V8+ only.

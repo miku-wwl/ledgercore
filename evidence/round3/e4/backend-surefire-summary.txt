@@ -1,0 +1,20 @@
+Round 3 E4 backend Maven Surefire summary
+Database: ledgercore_round3_e4_final (PostgreSQL 18.7 on isolated port 55436)
+Run: clean verify; total: 78 tests, 0 failures, 0 errors, 0 skipped
+
+nz.ac.ledgercore.accounts.AccountDomainTests: Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.324 s -- in nz.ac.ledgercore.accounts.AccountDomainTests
+nz.ac.ledgercore.CorrelationIdTests: Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s -- in nz.ac.ledgercore.CorrelationIdTests
+nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests: Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.51 s -- in nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests
+nz.ac.ledgercore.FullStackApiPostgresIntegrationTests: Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.327 s -- in nz.ac.ledgercore.FullStackApiPostgresIntegrationTests
+nz.ac.ledgercore.identity.CustomerPrincipalTests: Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.001 s -- in nz.ac.ledgercore.identity.CustomerPrincipalTests
+nz.ac.ledgercore.ledger.JournalEntryTests: Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in nz.ac.ledgercore.ledger.JournalEntryTests
+nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests: Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.389 s -- in nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests
+nz.ac.ledgercore.ledger.MoneyTests: Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in nz.ac.ledgercore.ledger.MoneyTests
+nz.ac.ledgercore.LedgerCoreApplicationTests: Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.976 s -- in nz.ac.ledgercore.LedgerCoreApplicationTests
+nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests: Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.24 s -- in nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests
+nz.ac.ledgercore.ModuleArchitectureTests: Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.487 s -- in nz.ac.ledgercore.ModuleArchitectureTests
+nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests: Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.857 s -- in nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests
+nz.ac.ledgercore.payroll.PayrollContentDigestTests: Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in nz.ac.ledgercore.payroll.PayrollContentDigestTests
+nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests: Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 46.98 s -- in nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests
+nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests: Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.62 s -- in nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests
+nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests: Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.565 s -- in nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests

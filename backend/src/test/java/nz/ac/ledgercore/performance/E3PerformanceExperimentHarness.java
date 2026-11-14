@@ -465,11 +465,12 @@ class E3PerformanceExperimentHarness {
                     BatchFixture executionBatch = createApprovedBatch(fixture,
                             "execute-" + itemCount + "-c" + concurrency + "-r" + repeat,
                             allItems.subList(0, itemCount), payerId);
-                    payrollService.startProcessing(executionBatch.batchId());
+                    payrollService.startProcessing(executionBatch.batchId(), fixture.approverId());
                     long deadlocksBefore = deadlockCount();
-                    PayrollRunResult result = runPayrollWorkers(executionBatch.batchId(), concurrency, itemCount);
+                    PayrollRunResult result = runPayrollWorkers(executionBatch.batchId(), concurrency, itemCount,
+                            fixture.approverId());
                     long deadlocksAfter = deadlockCount();
-                    var finalBatch = payrollService.finishIfReady(executionBatch.batchId());
+                    var finalBatch = payrollService.finishIfReady(executionBatch.batchId(), fixture.approverId());
                     assertThat(finalBatch.status()).isEqualTo("COMPLETED");
                     assertThat(result.successes()).isEqualTo(itemCount);
                     assertThat(result.failures()).isZero();
@@ -544,7 +545,8 @@ class E3PerformanceExperimentHarness {
         System.out.println("E3_H03_EVIDENCE=" + run.toAbsolutePath());
     }
 
-    private PayrollRunResult runPayrollWorkers(UUID batchId, int concurrency, int expectedItems) throws Exception {
+    private PayrollRunResult runPayrollWorkers(UUID batchId, int concurrency, int expectedItems, UUID executorId)
+            throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(concurrency);
         CountDownLatch ready = new CountDownLatch(concurrency);
         CountDownLatch start = new CountDownLatch(1);
@@ -566,7 +568,7 @@ class E3PerformanceExperimentHarness {
                         int sampleNumber = sequence.getAndIncrement();
                         long startedAt = System.nanoTime();
                         try {
-                            var result = payrollItemExecutor.executeNext(batchId);
+                            var result = payrollItemExecutor.executeNext(batchId, executorId);
                             long latency = System.nanoTime() - startedAt;
                             if (result == null) {
                                 if (completed.get() < expectedItems) {
@@ -622,11 +624,12 @@ class E3PerformanceExperimentHarness {
     private PayrollFixture createPayrollFixture() {
         UUID maker = newCustomer("e3-h03-maker");
         UUID approver = newCustomer("e3-h03-approver");
+        UUID admin = newCustomer("e3-h03-admin");
         UUID employeeOwner = newCustomer("e3-h03-employee-owner");
         String makerEmail = emailFor(maker);
-        var organization = organizationService.create(maker, "E3 payroll organization " + UUID.randomUUID());
-        organizationService.addMember(maker, organization.id(), makerEmail, List.of(OrganizationRole.PAYROLL_MAKER));
-        organizationService.addMember(maker, organization.id(), emailFor(approver),
+        var organization = organizationService.create(admin, "E3 payroll organization " + UUID.randomUUID());
+        organizationService.addMember(admin, organization.id(), makerEmail, List.of(OrganizationRole.PAYROLL_MAKER));
+        organizationService.addMember(admin, organization.id(), emailFor(approver),
                 List.of(OrganizationRole.PAYROLL_APPROVER, OrganizationRole.OPERATIONS));
         return new PayrollFixture(maker, approver, employeeOwner, organization.id());
     }

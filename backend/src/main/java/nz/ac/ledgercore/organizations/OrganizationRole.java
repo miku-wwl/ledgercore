@@ -4,6 +4,8 @@ public enum OrganizationRole {
     ORG_ADMIN,
     PAYROLL_MAKER,
     PAYROLL_APPROVER,
+    PAYMENT_MAKER,
+    PAYMENT_APPROVER,
     FINANCE_VIEWER,
     OPERATIONS
 }

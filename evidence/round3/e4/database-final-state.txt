@@ -1,0 +1,11 @@
+latest_migration=8|success=true
+outbox_status=DELIVERED|count=1545
+outbox_total=1545
+consumer_receipts=1545
+events_missing_observer_receipt=0
+journal_entries=1255
+corporate.payment.approved|status=DELIVERED|attempt=1|actor=1de4d0ba-b0d5-47f3-9bee-3284b2462735|org=42bc14ca-c641-42b3-91ce-3d0f2542e1fe
+clearing.instruction.ready|count=1|delivered=1
+corporate.payment.approved|count=1|delivered=1
+payroll.item.posted|count=630|delivered=630
+transfer.posted|count=645|delivered=645

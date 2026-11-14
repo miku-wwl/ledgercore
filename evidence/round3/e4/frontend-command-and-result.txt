@@ -1,0 +1,18 @@
+E4 frontend local validation (2026-11-14, Pacific/Auckland)
+
+API contract:
+  Command: npm.cmd run generate:api
+  Source: http://127.0.0.1:8080/v3/api-docs, application JAR on ledgercore_round3_e4_final (isolated PostgreSQL 18.7, port 55436)
+  Result: exit 0; frontend/src/api/schema.d.ts updated from live OpenAPI.
+
+Lint:
+  Command: npm.cmd run lint
+  Result: exit 0.
+
+Production build:
+  Command: npm.cmd run build
+  Result: exit 0; TypeScript build and Vite production build succeeded.
+
+Browser regression:
+  Command: npm.cmd run test:e2e
+  Result: exit 0; 3 Chromium tests passed. See playwright-summary.txt.

@@ -6,7 +6,7 @@
 |---|---|---|---|
 | 1 | GPT-6 Luna | E0–E3 | **FINISHED** (`b584b95`, CI run 43553101864) |
 | 2 | Claude Opus 5.5 | Independent audit and remediation of E0–E3 | **ACCEPTED_WITH_NONBLOCKING_RISKS** — `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md` |
-| 3 | GPT-6 Luna | E4–E11 | **IN_PROGRESS — Stage 0 complete** — baseline passed; Policy B recorded in ADR 0005; E4–E11 implementation not yet accepted |
+| 3 | GPT-6 Luna | E4–E11 | **IN_PROGRESS — E4 local pass; CI pending** — baseline passed; Policy B implemented and locally verified |
 | 4 | Claude Opus 5.5 | E12, final audit, V2 PDF | **NOT_STARTED** |
 
 - Next owner: GPT-6 Luna (Round 3).
@@ -17,8 +17,9 @@
 
 - Starting commit: `0db728171f7a28119ed4c4f19437896878f03fc6`; `main` and `origin/main` matched and the working tree was clean.
 - Stage 0: **BASELINE PASS**. On 2026-11-14, fresh disposable database `ledgercore_round3_baseline` on the isolated PostgreSQL 18.7 cluster passed `clean verify`: 75 tests, 0 failures/errors/skips; fresh V1–V7 migration succeeded. See `evidence/round3/baseline/BASELINE.md`.
-- Policy B: **DECIDED** in `ADR/0005-corporate-payment-approval-and-clearing.md`; implementation and verification remain pending.
-- E4–E11: **NOT_STARTED**; no runtime behavior is claimed accepted at this point.
+- Policy B: **DECIDED** in `ADR/0005-corporate-payment-approval-and-clearing.md`; E4 payment approval boundary and local verification are complete.
+- E4: **LOCAL PASS; CI pending** — committed directly on `main`; 78 backend tests pass; process restart recovered durable outbox events; frontend lint/build and 3 Playwright journeys pass. See `evidence/round3/e4/LOCAL-VALIDATION.md`.
+- E5–E11: **NOT_STARTED**; no runtime behavior is claimed accepted for these stages.
 - Round 3 plan and pre-registration: `ROUND-3-PLAN.md`, `evidence/round3/e4/PRE-REGISTRATION.md`, `evidence/round3/e6/PRE-REGISTRATION.md`, `evidence/round3/e9/PERFORMANCE-PRE-REGISTRATION.md`.
 - Stop after E11 and the Round 3 handoff. E12 and the final PDF remain Round 4 work.
 

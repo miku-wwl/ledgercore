@@ -100,6 +100,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/{paymentId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/{paymentId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/{paymentId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizations": {
         parameters: {
             query?: never;
@@ -132,6 +180,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/organizations/{organizationId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/operations/outbox/{eventId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retryOrganizationDeadLetterEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/organizations/{organizationId}/members": {
         parameters: {
             query?: never;
@@ -142,6 +222,54 @@ export interface paths {
         get: operations["listOrganizationMembers"];
         put?: never;
         post: operations["addOrganizationMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/members/{memberCustomerId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["suspendOrganizationMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/members/{memberCustomerId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["grantOrganizationMemberRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/members/{memberCustomerId}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reactivateOrganizationMember"];
         delete?: never;
         options?: never;
         head?: never;
@@ -219,9 +347,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list"];
+        get: operations["list_1"];
         put?: never;
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -236,6 +364,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getPayrollBatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/{paymentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/operations/outbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationOutboxEvents"];
         put?: never;
         post?: never;
         delete?: never;
@@ -283,7 +459,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get"];
+        get: operations["get_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -299,7 +475,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -335,6 +511,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/organizations/{organizationId}/members/{memberCustomerId}/roles/{role}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokeOrganizationMemberRole"];
         options?: never;
         head?: never;
         patch?: never;
@@ -420,6 +612,53 @@ export interface components {
             payeeAccountId: string;
             amount: string;
         };
+        PaymentView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            operationId?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            /** Format: uuid */
+            sourceAccountId?: string;
+            /** Format: uuid */
+            createdByCustomerId?: string;
+            /** Format: uuid */
+            submittedByCustomerId?: string;
+            /** Format: uuid */
+            approvedByCustomerId?: string;
+            /** Format: uuid */
+            rejectedByCustomerId?: string;
+            beneficiaryName?: string;
+            beneficiaryAccountReference?: string;
+            beneficiaryRoutingCode?: string;
+            amount?: string;
+            currency?: string;
+            /** Format: int32 */
+            version?: number;
+            intentDigest?: string;
+            approvedDigest?: string;
+            status?: string;
+            externalStatus?: string;
+            /** Format: uuid */
+            bookingJournalEntryId?: string;
+            /** Format: uuid */
+            settlementJournalEntryId?: string;
+            /** Format: uuid */
+            reversalJournalEntryId?: string;
+            rejectionReason?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: date-time */
+            approvedAt?: string;
+            /** Format: date-time */
+            completedAt?: string;
+        };
+        RejectPaymentRequest: {
+            reason: string;
+        };
         CreateOrganizationRequest: {
             displayName: string;
         };
@@ -427,24 +666,43 @@ export interface components {
             /** Format: uuid */
             id?: string;
             displayName?: string;
-            roles?: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+            roles?: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "PAYMENT_MAKER" | "PAYMENT_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
         };
         CreateBatchRequest: {
             name: string;
             /** Format: uuid */
             payerAccountId: string;
         };
+        CreatePaymentRequest: {
+            /** Format: uuid */
+            sourceAccountId: string;
+            beneficiaryName: string;
+            beneficiaryAccountReference: string;
+            beneficiaryRoutingCode: string;
+            amount: string;
+        };
+        RetryResult: {
+            /** Format: uuid */
+            eventId?: string;
+            status?: string;
+            /** Format: int32 */
+            previousAttemptCount?: number;
+        };
         AddMemberRequest: {
             /** Format: email */
             email: string;
-            roles: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+            roles: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "PAYMENT_MAKER" | "PAYMENT_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
         };
         MemberView: {
             /** Format: uuid */
             customerId?: string;
             displayName?: string;
             email?: string;
-            roles?: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+            roles?: ("ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "PAYMENT_MAKER" | "PAYMENT_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS")[];
+        };
+        GrantRoleRequest: {
+            /** @enum {string} */
+            role: "ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "PAYMENT_MAKER" | "PAYMENT_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS";
         };
         CreateAccountRequest: {
             displayName: string;
@@ -495,6 +753,36 @@ export interface components {
             errorMessage?: string;
             /** Format: date-time */
             completedAt?: string;
+        };
+        PaymentPage: {
+            items?: components["schemas"]["PaymentView"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int32 */
+            total?: number;
+        };
+        OutboxStatusView: {
+            /** Format: uuid */
+            id?: string;
+            eventKey?: string;
+            eventType?: string;
+            aggregateType?: string;
+            /** Format: uuid */
+            aggregateId?: string;
+            /** Format: uuid */
+            actorCustomerId?: string;
+            /** Format: uuid */
+            organizationId?: string;
+            status?: string;
+            /** Format: int32 */
+            attemptCount?: number;
+            lastError?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            deliveredAt?: string;
         };
         CsrfResponse: {
             token?: string;
@@ -716,6 +1004,76 @@ export interface operations {
             };
         };
     };
+    submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentView"];
+                };
+            };
+        };
+    };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentView"];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentView"];
+                };
+            };
+        };
+    };
     listOrganizations: {
         parameters: {
             query?: never;
@@ -808,6 +1166,80 @@ export interface operations {
             };
         };
     };
+    list: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentPage"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentView"];
+                };
+            };
+        };
+    };
+    retryOrganizationDeadLetterEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RetryResult"];
+                };
+            };
+        };
+    };
     listOrganizationMembers: {
         parameters: {
             query?: never;
@@ -847,6 +1279,79 @@ export interface operations {
         responses: {
             /** @description Organization member granted roles */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberView"];
+                };
+            };
+        };
+    };
+    suspendOrganizationMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberCustomerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberView"];
+                };
+            };
+        };
+    };
+    grantOrganizationMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberCustomerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberView"];
+                };
+            };
+        };
+    };
+    reactivateOrganizationMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberCustomerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -988,7 +1493,7 @@ export interface operations {
             };
         };
     };
-    list: {
+    list_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1008,7 +1513,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1054,6 +1559,74 @@ export interface operations {
             };
         };
     };
+    recent: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentView"][];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentView"];
+                };
+            };
+        };
+    };
+    listOrganizationOutboxEvents: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OutboxStatusView"][];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -1094,7 +1667,7 @@ export interface operations {
             };
         };
     };
-    get: {
+    get_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1116,7 +1689,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query?: {
                 limit?: number;
@@ -1182,6 +1755,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ReconciliationResult"];
+                };
+            };
+        };
+    };
+    revokeOrganizationMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberCustomerId: string;
+                role: "ORG_ADMIN" | "PAYROLL_MAKER" | "PAYROLL_APPROVER" | "PAYMENT_MAKER" | "PAYMENT_APPROVER" | "FINANCE_VIEWER" | "OPERATIONS";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MemberView"];
                 };
             };
         };

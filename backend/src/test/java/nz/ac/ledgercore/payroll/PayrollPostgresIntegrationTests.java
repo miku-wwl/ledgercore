@@ -106,8 +106,8 @@ class PayrollPostgresIntegrationTests {
                 .hasMessageContaining("only be added");
 
         UUID firstItemId = payrollService.items(actors.makerId(), draft.id()).getFirst().id();
-        payrollService.startProcessing(draft.id());
-        var duplicateExecutions = executeSameItemConcurrently(draft.id(), firstItemId);
+        payrollService.startProcessing(draft.id(), actors.approverId());
+        var duplicateExecutions = executeSameItemConcurrently(draft.id(), firstItemId, actors.approverId());
         assertThat(List.of(duplicateExecutions.first().attempted(), duplicateExecutions.second().attempted()))
                 .containsExactlyInAnyOrder(true, false);
         assertThat(duplicateExecutions.first().transferId()).isEqualTo(duplicateExecutions.second().transferId());
@@ -133,6 +133,12 @@ class PayrollPostgresIntegrationTests {
         assertThat(count("SELECT count(*) FROM idempotency_records WHERE owner_customer_id = ? "
                 + "AND operation = 'TRANSFER' AND idempotency_key LIKE ?", actors.makerId(),
                 "payroll-" + draft.id() + "-%")).isEqualTo(500);
+        assertThat(count("""
+                SELECT count(*) FROM outbox_events
+                WHERE event_type = 'payroll.item.posted'
+                  AND payload ->> 'batchId' = ?
+                  AND organization_id = ? AND actor_customer_id = ?
+                """, draft.id().toString(), actors.organizationId(), actors.approverId())).isEqualTo(500);
         assertThat(count("""
                 SELECT count(*) FROM (
                     SELECT t.id
@@ -191,7 +197,7 @@ class PayrollPostgresIntegrationTests {
                 new PayrollService.NewPayrollItem("EMP-ROLLBACK", "Rollback Employee", payee, "10.00")));
         payrollService.submit(actors.makerId(), draft.id());
         payrollService.approve(actors.approverId(), draft.id());
-        payrollService.startProcessing(draft.id());
+        payrollService.startProcessing(draft.id(), actors.approverId());
         long sourceBalanceBefore = balance(payer);
 
         jdbcTemplate.execute("DROP TRIGGER IF EXISTS trg_test_fail_payroll_result ON payroll_item_results");
@@ -294,10 +300,12 @@ class PayrollPostgresIntegrationTests {
                 "Payroll Maker");
         var approver = identityService.register("approver-" + UUID.randomUUID() + "@example.test", PASSWORD,
                 "Payroll Approver");
-        var organization = organizationService.create(maker.id(), "Synthetic Payroll Ltd "
+        var admin = identityService.register("admin-" + UUID.randomUUID() + "@example.test", PASSWORD,
+                "Payroll Organization Admin");
+        var organization = organizationService.create(admin.id(), "Synthetic Payroll Ltd "
                 + UUID.randomUUID().toString().substring(0, 8));
-        organizationService.addMember(maker.id(), organization.id(), maker.email(), List.of(OrganizationRole.PAYROLL_MAKER));
-        organizationService.addMember(maker.id(), organization.id(), approver.email(),
+        organizationService.addMember(admin.id(), organization.id(), maker.email(), List.of(OrganizationRole.PAYROLL_MAKER));
+        organizationService.addMember(admin.id(), organization.id(), approver.email(),
                 List.of(OrganizationRole.PAYROLL_APPROVER, OrganizationRole.OPERATIONS));
         return new Actors(organization.id(), maker.id(), maker.email(), approver.id(), approver.email());
     }
@@ -331,17 +339,18 @@ class PayrollPostgresIntegrationTests {
         return accounts;
     }
 
-    private DuplicateExecution executeSameItemConcurrently(UUID batchId, UUID itemId) throws Exception {
+    private DuplicateExecution executeSameItemConcurrently(UUID batchId, UUID itemId, UUID releaserActorId)
+            throws Exception {
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             Future<PayrollItemExecutor.ExecutionResult> first = executor.submit(() -> {
                 start.await();
-                return itemExecutor.executeOne(batchId, itemId);
+                return itemExecutor.executeOne(batchId, itemId, releaserActorId);
             });
             Future<PayrollItemExecutor.ExecutionResult> second = executor.submit(() -> {
                 start.await();
-                return itemExecutor.executeOne(batchId, itemId);
+                return itemExecutor.executeOne(batchId, itemId, releaserActorId);
             });
             start.countDown();
             return new DuplicateExecution(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS));

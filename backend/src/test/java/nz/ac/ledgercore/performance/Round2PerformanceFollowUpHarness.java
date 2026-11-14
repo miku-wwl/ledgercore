@@ -176,10 +176,11 @@ class Round2PerformanceFollowUpHarness {
         Path run = runDirectory("r2-p3-h03-within-batch");
         UUID maker = newCustomer("r2-p3-maker");
         UUID approver = newCustomer("r2-p3-approver");
+        UUID admin = newCustomer("r2-p3-admin");
         UUID employeeOwner = newCustomer("r2-p3-employee-owner");
-        var organization = organizationService.create(maker, "R2-P3 payroll organization " + UUID.randomUUID());
-        organizationService.addMember(maker, organization.id(), emailFor(maker), List.of(OrganizationRole.PAYROLL_MAKER));
-        organizationService.addMember(maker, organization.id(), emailFor(approver),
+        var organization = organizationService.create(admin, "R2-P3 payroll organization " + UUID.randomUUID());
+        organizationService.addMember(admin, organization.id(), emailFor(maker), List.of(OrganizationRole.PAYROLL_MAKER));
+        organizationService.addMember(admin, organization.id(), emailFor(approver),
                 List.of(OrganizationRole.PAYROLL_APPROVER, OrganizationRole.OPERATIONS));
         List<AccountFixture> employees = createPersonalAccounts(employeeOwner, 5_000, "r2-p3-employee", 100_000L);
         List<PayrollService.NewPayrollItem> items = new ArrayList<>(5_000);
@@ -213,7 +214,7 @@ class Round2PerformanceFollowUpHarness {
         }
         payrollService.submit(maker, draft.id());
         payrollService.approve(approver, draft.id());
-        payrollService.startProcessing(draft.id());
+        payrollService.startProcessing(draft.id(), approver);
         UUID payerLedger = jdbc.queryForObject(
                 "SELECT id FROM ledger_accounts WHERE customer_account_id = ? AND kind = 'CUSTOMER_DEPOSIT'",
                 UUID.class, payer);
@@ -227,13 +228,13 @@ class Round2PerformanceFollowUpHarness {
                 started += System.nanoTime() - pausedAt;
             }
             long itemStarted = System.nanoTime();
-            var result = payrollItemExecutor.executeNext(draft.id());
+            var result = payrollItemExecutor.executeNext(draft.id(), approver);
             latencies.add(System.nanoTime() - itemStarted);
             assertThat(result).isNotNull();
             assertThat(result.status()).isEqualTo("SUCCEEDED");
         }
         long elapsed = System.nanoTime() - started;
-        var finished = payrollService.finishIfReady(draft.id());
+        var finished = payrollService.finishIfReady(draft.id(), approver);
         int uniqueTransfers = jdbc.queryForObject("""
                 SELECT count(DISTINCT r.transfer_id) FROM payroll_item_results r JOIN payroll_items i ON i.id = r.item_id
                 WHERE i.batch_id = ? AND r.status = 'SUCCEEDED'

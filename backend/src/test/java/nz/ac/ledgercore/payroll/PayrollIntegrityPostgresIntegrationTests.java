@@ -170,7 +170,7 @@ class PayrollIntegrityPostgresIntegrationTests {
         }
         assertThat(itemIds(sourceBatch)).containsExactlyElementsOf(sourceItems);
         assertThat(payrollService.get(actors.approverId(), sourceBatch).approvedContentDigest()).isEqualTo(submittedDigest);
-        assertThat(payrollService.startProcessing(sourceBatch).status()).isEqualTo("PROCESSING");
+        assertThat(payrollService.startProcessing(sourceBatch, actors.approverId()).status()).isEqualTo("PROCESSING");
     }
 
     @Test
@@ -286,7 +286,7 @@ class PayrollIntegrityPostgresIntegrationTests {
         UUID payer = accountService.openOrganizationAccount(actors.organizationId(), "R2-02 linkage payer");
         UUID payee = createPersonalAccount("R2-02 linkage employee");
         PayrollViews.BatchView approved = approvedBatch(actors, payer, item("EMP-L", payee, "9.00"));
-        payrollService.startProcessing(approved.id());
+        payrollService.startProcessing(approved.id(), actors.approverId());
         UUID itemId = itemIds(approved.id()).getFirst();
         var unrelatedOwner = identityService.register("r2-unrelated-" + UUID.randomUUID() + "@example.test", PASSWORD,
                 "Unrelated Customer");
@@ -448,10 +448,11 @@ class PayrollIntegrityPostgresIntegrationTests {
         UUID payee = createPersonalAccount("R2 uncertain employee");
         UUID otherPayee = createPersonalAccount("R2 uncertain other employee");
         PayrollViews.BatchView approved = approvedBatch(actors, payer, item("EMP-U", payee, "5.00"));
-        payrollService.startProcessing(approved.id());
+        payrollService.startProcessing(approved.id(), actors.approverId());
         UUID itemId = itemIds(approved.id()).getFirst();
         // A conflicting receipt under the same operation identity cannot be classified as a business failure.
-        transferService.transferAndRecord(actors.makerId(), payer, otherPayee, new Money(100L),
+        UUID makerPersonalSource = accountService.openAccount(actors.makerId(), "R2 conflicting receipt source");
+        transferService.transferAndRecord(actors.makerId(), makerPersonalSource, otherPayee, new Money(100L),
                 "payroll-" + approved.id() + "-" + itemId, receipt -> {
                 });
 
@@ -571,12 +572,14 @@ class PayrollIntegrityPostgresIntegrationTests {
                 "R2 Approver");
         var operations = identityService.register("r2-operations-" + UUID.randomUUID() + "@example.test", PASSWORD,
                 "R2 Operations");
-        var organization = organizationService.create(maker.id(), "R2 Synthetic Payroll "
+        var admin = identityService.register("r2-admin-" + UUID.randomUUID() + "@example.test", PASSWORD,
+                "R2 Organization Admin");
+        var organization = organizationService.create(admin.id(), "R2 Synthetic Payroll "
                 + UUID.randomUUID().toString().substring(0, 8));
-        organizationService.addMember(maker.id(), organization.id(), maker.email(), List.of(OrganizationRole.PAYROLL_MAKER));
-        organizationService.addMember(maker.id(), organization.id(), approver.email(),
+        organizationService.addMember(admin.id(), organization.id(), maker.email(), List.of(OrganizationRole.PAYROLL_MAKER));
+        organizationService.addMember(admin.id(), organization.id(), approver.email(),
                 List.of(OrganizationRole.PAYROLL_APPROVER, OrganizationRole.OPERATIONS));
-        organizationService.addMember(maker.id(), organization.id(), operations.email(),
+        organizationService.addMember(admin.id(), organization.id(), operations.email(),
                 List.of(OrganizationRole.OPERATIONS));
         return new Actors(organization.id(), maker.id(), approver.id(), operations.id());
     }

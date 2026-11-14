@@ -1,0 +1,9 @@
+Java: work/toolchain/jdk21/jdk-21.0.13+9 (Java 21.0.13)
+Maven: ./backend/mvnw.cmd --batch-mode --no-transfer-progress -f backend/pom.xml clean verify
+Maven cache: work/m2
+MAVEN_USER_HOME: work/maven-home
+LEDGERCORE_TEST_DB_URL: jdbc:postgresql://127.0.0.1:55436/ledgercore_round3_e4_final
+LEDGERCORE_TEST_DB_USERNAME: ledgercore_r2
+LEDGERCORE_TEST_DB_PASSWORD: empty
+Result: BUILD SUCCESS; 78 tests, 0 failures, 0 errors, 0 skipped; Maven total time 2:05
+Finished: 2026-11-14 20:53:12 Pacific/Auckland

@@ -21,7 +21,7 @@ public class TransferExceptionHandler {
 			case UNAUTHENTICATED -> HttpStatus.UNAUTHORIZED;
 			case INVALID_REQUEST -> HttpStatus.BAD_REQUEST;
 			case ACCOUNT_NOT_FOUND -> HttpStatus.NOT_FOUND;
-			case ACCOUNT_NOT_OPEN, IDEMPOTENCY_KEY_REUSED -> HttpStatus.CONFLICT;
+			case ACCOUNT_NOT_OPEN, CORPORATE_APPROVAL_REQUIRED, IDEMPOTENCY_KEY_REUSED -> HttpStatus.CONFLICT;
 			case INSUFFICIENT_FUNDS -> HttpStatus.UNPROCESSABLE_ENTITY;
 		};
 		ProblemDetail problem = ApiProblems.create(status, "Transfer could not be completed", exception.getMessage(),

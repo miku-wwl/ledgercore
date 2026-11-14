@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import java.util.UUID;
 import nz.ac.ledgercore.accounts.AccountOwner;
 import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.api.ApiNotFoundException;
+import nz.ac.ledgercore.events.DurableEventStore;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationException;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
@@ -35,12 +37,14 @@ public class PayrollService {
     private final JdbcTemplate jdbcTemplate;
     private final AccountService accountService;
     private final OrganizationAuthorizationService authorizationService;
+    private final DurableEventStore eventStore;
 
     public PayrollService(JdbcTemplate jdbcTemplate, AccountService accountService,
-            OrganizationAuthorizationService authorizationService) {
+            OrganizationAuthorizationService authorizationService, DurableEventStore eventStore) {
         this.jdbcTemplate = jdbcTemplate;
         this.accountService = accountService;
         this.authorizationService = authorizationService;
+        this.eventStore = eventStore;
     }
 
     @Transactional
@@ -62,6 +66,10 @@ public class PayrollService {
                 INSERT INTO payroll_batches (id, organization_id, payer_account_id, name, created_by_customer_id)
                 VALUES (?, ?, ?, ?, ?)
                 """, batchId, organizationId, payerAccountId, normalizedName, actorCustomerId);
+        eventStore.recordAudit(actorCustomerId, "PAYROLL_BATCH_CREATED", "PAYROLL_BATCH", batchId, organizationId,
+                Map.of("payerAccountId", payerAccountId.toString()));
+        eventStore.enqueue("payroll.batch.created:" + batchId, "payroll.batch.created", "PAYROLL_BATCH", batchId,
+                actorCustomerId, organizationId, Map.of("batchId", batchId.toString()));
         return viewFor(batchId);
     }
 
@@ -152,6 +160,10 @@ public class PayrollService {
         if (updated != 1) {
             throw conflict("BATCH_STATE_CHANGED", "The payroll batch changed before submission completed.");
         }
+        eventStore.recordAudit(actorCustomerId, "PAYROLL_BATCH_SUBMITTED", "PAYROLL_BATCH", batchId,
+                batch.organizationId(), Map.of("contentDigest", digest));
+        eventStore.enqueue("payroll.batch.submitted:" + batchId, "payroll.batch.submitted", "PAYROLL_BATCH",
+                batchId, actorCustomerId, batch.organizationId(), Map.of("contentDigest", digest));
         return viewFor(batchId);
     }
 
@@ -185,6 +197,10 @@ public class PayrollService {
         if (updated != 1) {
             throw conflict("BATCH_STATE_CHANGED", "The payroll batch changed before approval completed.");
         }
+        eventStore.recordAudit(actorCustomerId, "PAYROLL_BATCH_APPROVED", "PAYROLL_BATCH", batchId,
+                batch.organizationId(), Map.of("contentDigest", actualDigest));
+        eventStore.enqueue("payroll.batch.approved:" + batchId, "payroll.batch.approved", "PAYROLL_BATCH", batchId,
+                actorCustomerId, batch.organizationId(), Map.of("contentDigest", actualDigest));
         return viewFor(batchId);
     }
 
@@ -221,6 +237,10 @@ public class PayrollService {
         if (updated != 1) {
             throw conflict("BATCH_STATE_CHANGED", "The payroll batch changed before rejection completed.");
         }
+        eventStore.recordAudit(actorCustomerId, "PAYROLL_BATCH_REJECTED", "PAYROLL_BATCH", batchId,
+                batch.organizationId(), Map.of("reason", normalizedReason));
+        eventStore.enqueue("payroll.batch.rejected:" + batchId, "payroll.batch.rejected", "PAYROLL_BATCH", batchId,
+                actorCustomerId, batch.organizationId(), Map.of("reason", normalizedReason));
         return viewFor(batchId);
     }
 
@@ -260,13 +280,15 @@ public class PayrollService {
     }
 
     @Transactional
-    public BatchView startProcessing(UUID batchId) {
+    public BatchView startProcessing(UUID batchId, UUID actorCustomerId) {
         BatchRow batch = lockBatch(batchId);
+        requireExecutionActor(actorCustomerId, batch.organizationId());
         if (batch.status() == PayrollBatchStatus.COMPLETED || batch.status() == PayrollBatchStatus.PARTIALLY_COMPLETED
                 || batch.status() == PayrollBatchStatus.FAILED) {
             return viewFor(batchId);
         }
-        if (batch.status() == PayrollBatchStatus.APPROVED) {
+        boolean starting = batch.status() == PayrollBatchStatus.APPROVED;
+        if (starting) {
             String actualDigest = PayrollContentDigest.calculate(batch.id(), batch.organizationId(),
                     batch.payerAccountId(), batch.name(), digestItems(batchId));
             if (!actualDigest.equals(batch.approvedContentDigest())) {
@@ -281,12 +303,18 @@ public class PayrollService {
         else if (batch.status() != PayrollBatchStatus.PROCESSING) {
             throw conflict("BATCH_NOT_APPROVED", "Only an approved or already processing batch can execute.");
         }
+        String action = starting ? "PAYROLL_EXECUTION_STARTED" : "PAYROLL_EXECUTION_RESUMED";
+        String eventType = starting ? "payroll.execution.started" : "payroll.execution.resumed";
+        eventStore.recordAudit(actorCustomerId, action, "PAYROLL_BATCH", batchId, batch.organizationId(), Map.of());
+        eventStore.enqueue(eventType + ":" + batchId + ":" + UUID.randomUUID(), eventType, "PAYROLL_BATCH", batchId,
+                actorCustomerId, batch.organizationId(), Map.of("batchId", batchId.toString()));
         return viewFor(batchId);
     }
 
     @Transactional
-    public BatchView finishIfReady(UUID batchId) {
+    public BatchView finishIfReady(UUID batchId, UUID actorCustomerId) {
         BatchRow batch = lockBatch(batchId);
+        requireExecutionActor(actorCustomerId, batch.organizationId());
         if (batch.status() != PayrollBatchStatus.PROCESSING) {
             return viewFor(batchId);
         }
@@ -306,17 +334,37 @@ public class PayrollService {
                 SET status = ?, completed_at = clock_timestamp(), updated_at = clock_timestamp()
                 WHERE id = ? AND status = 'PROCESSING'
                 """, terminalStatus, batchId);
+        eventStore.recordAudit(actorCustomerId, "PAYROLL_BATCH_COMPLETED", "PAYROLL_BATCH", batchId,
+                batch.organizationId(), Map.of("status", terminalStatus));
+        eventStore.enqueue("payroll.batch.completed:" + batchId, "payroll.batch.completed", "PAYROLL_BATCH", batchId,
+                actorCustomerId, batch.organizationId(), Map.of("status", terminalStatus));
         return viewFor(batchId);
     }
 
     @Transactional
-    public void markItemFailed(UUID itemId, String errorCode, String errorMessage) {
+    public void markItemFailed(UUID itemId, String errorCode, String errorMessage, UUID actorCustomerId) {
+        List<BatchIdentity> identities = jdbcTemplate.query("""
+                SELECT b.id, b.organization_id FROM payroll_items i
+                JOIN payroll_batches b ON b.id = i.batch_id WHERE i.id = ?
+                """, (rs, row) -> new BatchIdentity(rs.getObject("id", UUID.class),
+                rs.getObject("organization_id", UUID.class)), itemId);
+        if (identities.isEmpty()) {
+            return;
+        }
+        BatchIdentity identity = identities.getFirst();
         int updated = jdbcTemplate.update("""
                 UPDATE payroll_item_results
                 SET status = 'FAILED', attempt_count = attempt_count + 1, error_code = ?, error_message = ?,
                     completed_at = clock_timestamp(), updated_at = clock_timestamp()
                 WHERE item_id = ? AND status = 'PENDING'
                 """, errorCode, errorMessage, itemId);
+        if (updated == 1) {
+            eventStore.recordAudit(actorCustomerId, "PAYROLL_ITEM_FAILED", "PAYROLL_ITEM", itemId,
+                    identity.organizationId(), Map.of("errorCode", errorCode));
+            eventStore.enqueue("payroll.item.failed:" + itemId, "payroll.item.failed", "PAYROLL_ITEM", itemId,
+                    actorCustomerId, identity.organizationId(), Map.of("batchId", identity.batchId().toString(),
+                    "errorCode", errorCode));
+        }
         if (updated != 1) {
             // A concurrently executing worker may already have committed this item.
             Integer pending = jdbcTemplate.queryForObject("""
@@ -471,6 +519,14 @@ public class PayrollService {
         return timestamp == null ? null : timestamp.toInstant();
     }
 
+    private void requireExecutionActor(UUID actorCustomerId, UUID organizationId) {
+        if (actorCustomerId == null) {
+            throw new PayrollException("EXECUTOR_REQUIRED", "An authenticated payroll executor is required.",
+                    HttpStatus.FORBIDDEN);
+        }
+        authorizationService.requireCanExecutePayroll(actorCustomerId, organizationId);
+    }
+
     private PayrollException conflict(String code, String message) {
         return new PayrollException(code, message, HttpStatus.CONFLICT);
     }
@@ -488,5 +544,8 @@ public class PayrollService {
     }
 
     private record Counts(int itemCount, int resultCount, int pendingCount, int succeededCount, int failedCount) {
+    }
+
+    private record BatchIdentity(UUID batchId, UUID organizationId) {
     }
 }

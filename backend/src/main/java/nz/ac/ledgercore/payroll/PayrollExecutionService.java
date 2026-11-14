@@ -36,7 +36,7 @@ public class PayrollExecutionService {
             throw new PayrollException("BATCH_NOT_APPROVED", "Only an approved payroll batch can execute.",
                     org.springframework.http.HttpStatus.CONFLICT);
         }
-        current = payrollService.startProcessing(batchId);
+        current = payrollService.startProcessing(batchId, actorCustomerId);
         if (isTerminal(current.status())) {
             return current;
         }
@@ -44,7 +44,7 @@ public class PayrollExecutionService {
         int processed = 0;
         while (processed < maxItems) {
             try {
-                PayrollItemExecutor.ExecutionResult result = itemExecutor.executeNext(batchId);
+                PayrollItemExecutor.ExecutionResult result = itemExecutor.executeNext(batchId, actorCustomerId);
                 if (result == null) {
                     break;
                 }
@@ -54,11 +54,11 @@ public class PayrollExecutionService {
                 processed++;
             }
             catch (PayrollItemTransferFailure failure) {
-                payrollService.markItemFailed(failure.itemId(), failure.failureCode(), failure.getMessage());
+                payrollService.markItemFailed(failure.itemId(), failure.failureCode(), failure.getMessage(), actorCustomerId);
                 processed++;
             }
         }
-        payrollService.finishIfReady(batchId);
+        payrollService.finishIfReady(batchId, actorCustomerId);
         return payrollService.get(actorCustomerId, batchId);
     }
 

@@ -95,7 +95,7 @@ class MigrationCompatibilityPostgresIntegrationTests {
             flyway.validate();
             List<MigrationInfo> applied = versioned(flyway);
             assertThat(applied).extracting(info -> info.getVersion().getVersion())
-                    .containsExactly("1", "2", "3", "4", "5", "6", "7");
+                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8");
             assertThat(applied).allSatisfy(info -> assertThat(info.getState().isApplied()).isTrue());
             for (MigrationInfo info : applied) {
                 Integer published = PUBLISHED_CHECKSUMS.get(info.getScript());
@@ -173,7 +173,7 @@ class MigrationCompatibilityPostgresIntegrationTests {
     }
 
     @Test
-    void populatedV6PayrollSchemaUpgradesToV7WithoutRewritingResults() {
+    void populatedV6PayrollSchemaUpgradesToV8WithoutRewritingResults() {
         withSchema(schema -> {
             flyway(schema, MigrationVersion.fromVersion("6")).migrate();
             Seed seed = new Seed(schema);
@@ -541,8 +541,9 @@ class MigrationCompatibilityPostgresIntegrationTests {
                         (SELECT string_agg(owner_customer_id || ':' || idempotency_key || ':' || status || ':'
                                 || COALESCE(transfer_id::text, '-'), ',' ORDER BY owner_customer_id, idempotency_key)
                            FROM idempotency_records),
-                        (SELECT string_agg(ledger_account_id || ':' || balance_minor, ',' ORDER BY ledger_account_id)
-                           FROM account_balance_projection)))
+                        (SELECT string_agg(p.ledger_account_id || ':' || p.balance_minor, ',' ORDER BY p.ledger_account_id)
+                           FROM account_balance_projection p JOIN ledger_accounts a ON a.id = p.ledger_account_id
+                           WHERE a.kind <> 'CLEARING_PAYABLE')))
                     """, String.class);
         }
     }

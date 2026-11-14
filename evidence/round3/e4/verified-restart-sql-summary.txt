@@ -1,0 +1,3 @@
+status=DELIVERED|count=1529
+consumer_receipts=1529
+journal_entries=1241

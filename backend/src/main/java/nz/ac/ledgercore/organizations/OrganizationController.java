@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import nz.ac.ledgercore.accounts.AccountsQueryService.AccountView;
 import nz.ac.ledgercore.identity.CustomerPrincipal;
@@ -87,6 +89,35 @@ public class OrganizationController {
                 + member.customerId())).body(member);
     }
 
+    @Operation(operationId = "grantOrganizationMemberRole")
+    @PostMapping("/{organizationId}/members/{memberCustomerId}/roles")
+    MemberView grantRole(@AuthenticationPrincipal CustomerPrincipal principal,
+            @PathVariable UUID organizationId, @PathVariable UUID memberCustomerId,
+            @Valid @RequestBody GrantRoleRequest request) {
+        return organizationService.grantRole(principal.customerId(), organizationId, memberCustomerId, request.role());
+    }
+
+    @Operation(operationId = "revokeOrganizationMemberRole")
+    @DeleteMapping("/{organizationId}/members/{memberCustomerId}/roles/{role}")
+    MemberView revokeRole(@AuthenticationPrincipal CustomerPrincipal principal,
+            @PathVariable UUID organizationId, @PathVariable UUID memberCustomerId, @PathVariable OrganizationRole role) {
+        return organizationService.revokeRole(principal.customerId(), organizationId, memberCustomerId, role);
+    }
+
+    @Operation(operationId = "suspendOrganizationMember")
+    @PostMapping("/{organizationId}/members/{memberCustomerId}/suspend")
+    MemberView suspendMember(@AuthenticationPrincipal CustomerPrincipal principal,
+            @PathVariable UUID organizationId, @PathVariable UUID memberCustomerId) {
+        return organizationService.suspendMember(principal.customerId(), organizationId, memberCustomerId);
+    }
+
+    @Operation(operationId = "reactivateOrganizationMember")
+    @PostMapping("/{organizationId}/members/{memberCustomerId}/reactivate")
+    MemberView reactivateMember(@AuthenticationPrincipal CustomerPrincipal principal,
+            @PathVariable UUID organizationId, @PathVariable UUID memberCustomerId) {
+        return organizationService.reactivateMember(principal.customerId(), organizationId, memberCustomerId);
+    }
+
     public record CreateOrganizationRequest(@NotBlank @Size(max = 120) String displayName) {
     }
 
@@ -95,5 +126,8 @@ public class OrganizationController {
 
     public record AddMemberRequest(@NotBlank @Email @Size(max = 254) String email,
             @NotEmpty List<OrganizationRole> roles) {
+    }
+
+    public record GrantRoleRequest(@NotNull OrganizationRole role) {
     }
 }
