@@ -10,7 +10,7 @@
 | E5 clearing simulator | PARTIAL; local verification and CI passed | `evidence/round3/e5/LOCAL-VALIDATION.md`; separate process/database, stable operation, authenticated callbacks, restart, settlement/refund/UNKNOWN, balanced SQL; run `43580338058`; naturally underfunded reserve case remains unexercised |
 | E6 fault laboratory | PARTIAL | Three isolated personal-transfer process-kill/replay cases; payroll and broader clearing/database/worker faults remain unrun; CI run `43584590857` passed |
 | E7 independent reconciliation | PARTIAL | Projection drift and missing callback detected exactly; healthy payroll and two-process settled-payment scans clear; Operations exception controls pass; commit `19ddf21`, exact CI run `43591228075` passed; `evidence/round3/e7/LOCAL-VALIDATION.md` |
-| E8 security and audit | NOT_RUN | Not started; Policy B acceptance remains pending |
+| E8 security and audit | NOT_RUN | Authorization matrix, Policy B negative/positive probes, threat model and evidence rules pre-registered at `evidence/round3/e8/PRE-REGISTRATION.md`; no E8 test executed |
 | E9 observability/performance | NOT_RUN | R2-10/R2-12 pre-registered; no Round 3 measurements yet |
 | E10 recovery | NOT_RUN | No backup/restore or PITR claim |
 | E11 full stack | NOT_RUN | No Round 3 browser journeys or screenshots yet |
