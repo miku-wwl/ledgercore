@@ -2,7 +2,7 @@
 
 ## Result
 
-**E8 status: PARTIAL.** Policy B and several material authorization boundaries were exercised with synthetic identities and funds. The required role × route matrix, complete callback threat set, broad logging review, and exact-commit CI are not complete. This report does not claim regulatory certification.
+**E8 status: PARTIAL.** Policy B and several material authorization boundaries were exercised with synthetic identities and funds. The required role × route matrix, complete callback threat set, and broad logging review are not complete. Exact-commit CI passed. This report does not claim regulatory certification.
 
 ## Environment and runs
 
@@ -41,4 +41,6 @@ Audit/outbox snapshot facts contained amount/currency, payment/operation IDs, di
 
 ## Remaining required work and exact gate
 
-The following are **not claimed as passed**: suspended-organization coverage; every payroll maker/approver and payroll object route; clearing and reconciliation IDOR/read/write coverage; every corporate debit service/controller path; all altered payer/beneficiary/routing/currency mutations; rejection/cancellation/retry/correction audit variants; changed CSRF-token probes; wrong callback operation/payment/digest and conflicting/out-of-order duplicate sequences; exhaustive log/credential scan; local dependency scan; and exact-commit GitHub Actions.
+The following are **not claimed as passed**: suspended-organization coverage; every payroll maker/approver and payroll object route; clearing and reconciliation IDOR/read/write coverage; every corporate debit service/controller path; all altered payer/beneficiary/routing/currency mutations; rejection/cancellation/retry/correction audit variants; changed CSRF-token probes; wrong callback operation/payment/digest and conflicting/out-of-order duplicate sequences; exhaustive log/credential scan; and a local dependency scan.
+
+The recorded test/report set is therefore **PARTIAL** even though the current local backend and frontend checks passed. E8 implementation commit `3a1beed048a878077865d571d50dac0060470e87` was pushed directly to `main`; exact GitHub Actions run [43596797609](https://github.com/miku-wwl/ledgercore/actions/runs/43596797609) passed full-stack acceptance (backend, simulator, API contract, browser, and frontend steps) and Maven OSV. Do not modify V1–V9; any future schema correction must use a new forward-only migration.
