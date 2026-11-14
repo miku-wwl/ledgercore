@@ -1,0 +1,112 @@
+DO
+H04_BASELINE_GLOBAL_RESULT_COUNT
+ payroll_item_results_before 
+-----------------------------
+                       71500
+(1 row)
+
+H04_BASELINE_TARGET_COUNTS_AND_PLAN
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+          5000 |               0 |            0
+(1 row)
+
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=3425.00..3425.01 rows=1 width=24) (actual time=16.029..16.033 rows=1.00 loops=1)
+   Buffers: shared hit=962
+   ->  Hash Join  (cost=1617.51..3351.21 rows=4919 width=9) (actual time=2.029..15.514 rows=5000.00 loops=1)
+         Hash Cond: (r.item_id = i.id)
+         Buffers: shared hit=962
+         ->  Seq Scan on payroll_item_results r  (cost=0.00..1546.00 rows=71500 width=25) (actual time=0.017..5.144 rows=71500.00 loops=1)
+               Buffers: shared hit=831
+         ->  Hash  (cost=1556.03..1556.03 rows=4919 width=16) (actual time=1.996..1.998 rows=5000.00 loops=1)
+               Buckets: 8192  Batches: 1  Memory Usage: 299kB
+               Buffers: shared hit=131
+               ->  Bitmap Heap Scan on payroll_items i  (cost=194.54..1556.03 rows=4919 width=16) (actual time=0.446..1.181 rows=5000.00 loops=1)
+                     Recheck Cond: (batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                     Heap Blocks: exact=91
+                     Buffers: shared hit=131
+                     ->  Bitmap Index Scan on ix_payroll_items_batch_payee  (cost=0.00..193.31 rows=4919 width=0) (actual time=0.413..0.413 rows=5000.00 loops=1)
+                           Index Cond: (batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                           Index Searches: 1
+                           Buffers: shared hit=40
+ Planning:
+   Buffers: shared hit=17
+ Planning Time: 0.393 ms
+ Execution Time: 16.135 ms
+(22 rows)
+
+BEGIN
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 10
+INSERT 0 50000
+INSERT 0 50000
+COMMIT
+ANALYZE
+ANALYZE
+ANALYZE
+H04_ADDED_UNRELATED_ROWS
+ h04_organizations 
+-------------------
+                10
+(1 row)
+
+ h04_batches 
+-------------
+          10
+(1 row)
+
+ h04_items 
+-----------
+     50000
+(1 row)
+
+ h04_pending_results 
+---------------------
+               50000
+(1 row)
+
+ payroll_item_results_after 
+----------------------------
+                     121500
+(1 row)
+
+H04_TARGET_COUNTS_AND_PLAN_AFTER_OTHER_ORG_ROWS
+ pending_count | succeeded_count | failed_count 
+---------------+-----------------+--------------
+          5000 |               0 |            0
+(1 row)
+
+                                                                             QUERY PLAN                                                                              
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=5550.78..5550.79 rows=1 width=24) (actual time=28.068..28.073 rows=1.00 loops=1)
+   Buffers: shared hit=1361
+   ->  Hash Join  (cost=2700.63..5475.57 rows=5014 width=9) (actual time=1.617..27.548 rows=5000.00 loops=1)
+         Hash Cond: (r.item_id = i.id)
+         Buffers: shared hit=1361
+         ->  Seq Scan on payroll_item_results r  (cost=0.00..2456.00 rows=121500 width=25) (actual time=0.013..11.000 rows=121500.00 loops=1)
+               Buffers: shared hit=1241
+         ->  Hash  (cost=2637.95..2637.95 rows=5014 width=16) (actual time=1.556..1.558 rows=5000.00 loops=1)
+               Buckets: 8192  Batches: 1  Memory Usage: 299kB
+               Buffers: shared hit=120
+               ->  Bitmap Heap Scan on payroll_items i  (cost=211.28..2637.95 rows=5014 width=16) (actual time=0.256..0.872 rows=5000.00 loops=1)
+                     Recheck Cond: (batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                     Heap Blocks: exact=91
+                     Buffers: shared hit=120
+                     ->  Bitmap Index Scan on uq_payroll_items_batch_sequence  (cost=0.00..210.02 rows=5014 width=0) (actual time=0.233..0.233 rows=5000.00 loops=1)
+                           Index Cond: (batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                           Index Searches: 1
+                           Buffers: shared hit=29
+ Planning:
+   Buffers: shared hit=19
+ Planning Time: 0.394 ms
+ Execution Time: 28.207 ms
+(22 rows)
+

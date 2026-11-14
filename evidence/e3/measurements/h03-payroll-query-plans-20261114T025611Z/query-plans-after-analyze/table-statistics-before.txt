@@ -1,0 +1,9 @@
+            relname            | n_live_tup | n_mod_since_analyze |         last_analyze          |       last_autoanalyze        
+-------------------------------+------------+---------------------+-------------------------------+-------------------------------
+ organization_membership_roles |       5004 |                   0 | 2026-11-14 15:56:17.804669+13 | 
+ organization_memberships      |       5002 |                   0 | 2026-11-14 15:56:17.796758+13 | 
+ payroll_batches               |         26 |                   1 |                               | 2026-11-14 16:09:42.794672+13
+ payroll_item_results          |      71496 |                4541 |                               | 2026-11-14 16:09:00.19578+13
+ payroll_items                 |      71500 |                   0 |                               | 2026-11-14 16:09:43.497892+13
+(5 rows)
+

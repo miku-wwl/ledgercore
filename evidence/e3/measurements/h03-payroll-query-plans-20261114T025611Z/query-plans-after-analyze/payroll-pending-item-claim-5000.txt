@@ -1,0 +1,47 @@
+Batch size label: 5000
+Batch id: e4ed0868-85dc-4798-9520-3ab8b2fef32a
+
+SQL:
+EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+       b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
+       i.amount_minor, r.status AS item_status, r.transfer_id
+FROM payroll_batches b
+JOIN payroll_items i ON i.batch_id = b.id
+JOIN payroll_item_results r ON r.item_id = i.id
+WHERE b.id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid AND r.status = 'PENDING'
+ORDER BY i.sequence_no LIMIT 1 FOR UPDATE OF r SKIP LOCKED
+
+PLAN:
+                                                                                     QUERY PLAN                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.70..28.53 rows=1 width=144) (actual time=0.279..0.280 rows=1.00 loops=1)
+   Buffers: shared hit=8 read=3 dirtied=1
+   ->  LockRows  (cost=0.70..10296.80 rows=370 width=144) (actual time=0.278..0.279 rows=1.00 loops=1)
+         Buffers: shared hit=8 read=3 dirtied=1
+         ->  Nested Loop  (cost=0.70..10293.10 rows=370 width=144) (actual time=0.227..0.228 rows=1.00 loops=1)
+               Buffers: shared hit=6 read=3
+               ->  Nested Loop  (cost=0.70..10286.14 rows=370 width=97) (actual time=0.200..0.200 rows=1.00 loops=1)
+                     Buffers: shared hit=4 read=3
+                     ->  Index Scan using uq_payroll_items_batch_sequence on payroll_items i  (cost=0.42..5222.15 rows=4919 width=66) (actual time=0.138..0.139 rows=1.00 loops=1)
+                           Index Cond: (batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                           Index Searches: 1
+                           Buffers: shared hit=2 read=2
+                     ->  Index Scan using ix_payroll_item_results_pending on payroll_item_results r  (cost=0.28..1.03 rows=1 width=47) (actual time=0.058..0.058 rows=1.00 loops=1)
+                           Index Cond: (item_id = i.id)
+                           Filter: ((status)::text = 'PENDING'::text)
+                           Index Searches: 1
+                           Buffers: shared hit=2 read=1
+               ->  Materialize  (cost=0.00..2.33 rows=1 width=63) (actual time=0.025..0.025 rows=1.00 loops=1)
+                     Storage: Memory  Maximum Storage: 17kB
+                     Buffers: shared hit=2
+                     ->  Seq Scan on payroll_batches b  (cost=0.00..2.33 rows=1 width=63) (actual time=0.015..0.015 rows=1.00 loops=1)
+                           Filter: (id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                           Rows Removed by Filter: 1
+                           Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=421
+ Planning Time: 2.183 ms
+ Execution Time: 0.356 ms
+(28 rows)
+

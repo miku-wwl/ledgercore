@@ -1,0 +1,50 @@
+SQL:
+SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
+       b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
+       i.amount_minor, r.status AS item_status, r.transfer_id
+FROM payroll_batches b
+JOIN payroll_items i ON i.batch_id = b.id
+JOIN payroll_item_results r ON r.item_id = i.id
+WHERE b.id = ? AND r.status = 'PENDING'
+ORDER BY i.sequence_no LIMIT 1 FOR UPDATE OF r SKIP LOCKED
+
+
+PARAMETERS (synthetic): a1b6636b-4729-4de6-822e-5edf31216f25
+
+PLAN:
+Limit  (cost=35.87..35.89 rows=1 width=242) (actual time=22.732..22.735 rows=1.00 loops=1)
+  Buffers: shared hit=17578
+  ->  LockRows  (cost=35.87..35.89 rows=1 width=242) (actual time=22.731..22.733 rows=1.00 loops=1)
+        Buffers: shared hit=17578
+        ->  Sort  (cost=35.87..35.88 rows=1 width=242) (actual time=22.713..22.714 rows=1.00 loops=1)
+              Sort Key: i.sequence_no
+              Sort Method: quicksort  Memory: 103kB
+              Buffers: shared hit=17577
+              ->  Nested Loop  (cost=4.71..35.86 rows=1 width=242) (actual time=18.882..22.394 rows=500.00 loops=1)
+                    Buffers: shared hit=17577
+                    ->  Nested Loop  (cost=4.57..27.70 rows=1 width=138) (actual time=18.860..21.204 rows=500.00 loops=1)
+                          Buffers: shared hit=16577
+                          ->  Bitmap Heap Scan on payroll_item_results r  (cost=4.28..11.06 rows=2 width=88) (actual time=0.286..1.924 rows=5500.00 loops=1)
+                                Recheck Cond: ((status)::text = 'PENDING'::text)
+                                Heap Blocks: exact=46
+                                Buffers: shared hit=77
+                                ->  Bitmap Index Scan on ix_payroll_item_results_pending  (cost=0.00..4.28 rows=2 width=0) (actual time=0.261..0.261 rows=5500.00 loops=1)
+                                      Index Searches: 1
+                                      Buffers: shared hit=31
+                          ->  Memoize  (cost=0.29..8.31 rows=1 width=66) (actual time=0.003..0.003 rows=0.09 loops=5500)
+                                Cache Key: r.item_id
+                                Cache Mode: logical
+                                Hits: 0  Misses: 5500  Evictions: 0  Overflows: 0  Memory Usage: 478kB
+                                Buffers: shared hit=16500
+                                ->  Index Scan using payroll_items_pkey on payroll_items i  (cost=0.28..8.30 rows=1 width=66) (actual time=0.002..0.002 rows=0.09 loops=5500)
+                                      Index Cond: (id = r.item_id)
+                                      Filter: (batch_id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid)
+                                      Rows Removed by Filter: 1
+                                      Index Searches: 5500
+                                      Buffers: shared hit=16500
+                    ->  Index Scan using payroll_batches_pkey on payroll_batches b  (cost=0.14..8.16 rows=1 width=120) (actual time=0.002..0.002 rows=1.00 loops=500)
+                          Index Cond: (id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid)
+                          Index Searches: 500
+                          Buffers: shared hit=1000
+Planning Time: 0.298 ms
+Execution Time: 22.964 ms

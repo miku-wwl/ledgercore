@@ -1,0 +1,34 @@
+SQL:
+SELECT r.role FROM organization_memberships m
+JOIN organization_membership_roles r
+  ON r.organization_id = m.organization_id AND r.customer_id = m.customer_id
+JOIN organizations o ON o.id = m.organization_id AND o.status = 'ACTIVE'
+WHERE m.organization_id = ? AND m.customer_id = ? AND m.status = 'ACTIVE'
+ORDER BY r.role
+
+
+PARAMETERS (synthetic): ede2a959-ee01-4fd0-b254-e609a754b44e, 9fcf6450-4b65-41f2-a1f5-43df05fced20
+
+PLAN:
+Nested Loop  (cost=0.56..19.43 rows=2 width=14) (actual time=0.049..0.053 rows=2.00 loops=1)
+  Buffers: shared hit=7
+  ->  Index Only Scan using organization_membership_roles_pkey on organization_membership_roles r  (cost=0.28..10.07 rows=2 width=46) (actual time=0.023..0.024 rows=2.00 loops=1)
+        Index Cond: ((organization_id = 'ede2a959-ee01-4fd0-b254-e609a754b44e'::uuid) AND (customer_id = '9fcf6450-4b65-41f2-a1f5-43df05fced20'::uuid))
+        Heap Fetches: 2
+        Index Searches: 1
+        Buffers: shared hit=3
+  ->  Materialize  (cost=0.28..9.34 rows=1 width=32) (actual time=0.013..0.014 rows=1.00 loops=2)
+        Storage: Memory  Maximum Storage: 17kB
+        Buffers: shared hit=4
+        ->  Nested Loop  (cost=0.28..9.33 rows=1 width=32) (actual time=0.022..0.024 rows=1.00 loops=1)
+              Buffers: shared hit=4
+              ->  Index Scan using ix_organization_memberships_customer on organization_memberships m  (cost=0.28..8.30 rows=1 width=32) (actual time=0.011..0.012 rows=1.00 loops=1)
+                    Index Cond: ((customer_id = '9fcf6450-4b65-41f2-a1f5-43df05fced20'::uuid) AND (organization_id = 'ede2a959-ee01-4fd0-b254-e609a754b44e'::uuid))
+                    Filter: ((status)::text = 'ACTIVE'::text)
+                    Index Searches: 1
+                    Buffers: shared hit=3
+              ->  Seq Scan on organizations o  (cost=0.00..1.01 rows=1 width=16) (actual time=0.010..0.011 rows=1.00 loops=1)
+                    Filter: ((id = 'ede2a959-ee01-4fd0-b254-e609a754b44e'::uuid) AND ((status)::text = 'ACTIVE'::text))
+                    Buffers: shared hit=1
+Planning Time: 0.219 ms
+Execution Time: 0.084 ms

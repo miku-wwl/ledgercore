@@ -1,0 +1,28 @@
+Baseline plan: ledger-balance-history-100000-repeat-3.txt
+Current source ledger id: 071ca0b7-b25b-43e2-8db2-c9477b70dfbd
+Current posting rows include 30 measured transfers after the original history snapshot.
+
+                                                                            QUERY PLAN                                                                             
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=4019.92..15299.26 rows=1 width=76) (actual time=60.262..60.263 rows=1.00 loops=1)
+   Buffers: shared hit=3266
+   ->  Nested Loop Left Join  (cost=4019.92..14541.17 rows=101077 width=58) (actual time=10.733..45.792 rows=100030.00 loops=1)
+         Buffers: shared hit=3266
+         ->  Index Scan using uq_ledger_accounts_id_currency on ledger_accounts la  (cost=0.15..8.17 rows=1 width=44) (actual time=0.017..0.020 rows=1.00 loops=1)
+               Index Cond: (id = '071ca0b7-b25b-43e2-8db2-c9477b70dfbd'::uuid)
+               Index Searches: 1
+               Buffers: shared hit=2
+         ->  Bitmap Heap Scan on postings p  (cost=4019.77..13522.23 rows=101077 width=30) (actual time=10.706..31.180 rows=100030.00 loops=1)
+               Recheck Cond: (ledger_account_id = '071ca0b7-b25b-43e2-8db2-c9477b70dfbd'::uuid)
+               Heap Blocks: exact=2471
+               Buffers: shared hit=3264
+               ->  Bitmap Index Scan on ix_postings_ledger_account  (cost=0.00..3994.50 rows=101077 width=0) (actual time=10.341..10.341 rows=100030.00 loops=1)
+                     Index Cond: (ledger_account_id = '071ca0b7-b25b-43e2-8db2-c9477b70dfbd'::uuid)
+                     Index Searches: 1
+                     Buffers: shared hit=793
+ Planning:
+   Buffers: shared hit=238
+ Planning Time: 1.443 ms
+ Execution Time: 60.449 ms
+(20 rows)
+

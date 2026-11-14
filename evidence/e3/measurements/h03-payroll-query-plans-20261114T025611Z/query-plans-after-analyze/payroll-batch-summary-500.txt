@@ -1,0 +1,52 @@
+Batch size label: 500
+Batch id: a1b6636b-4729-4de6-822e-5edf31216f25
+
+SQL:
+EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+SELECT b.id, b.organization_id, b.name, b.payer_account_id, b.status,
+       count(i.id) AS item_count, COALESCE(sum(i.amount_minor), 0) AS total_minor,
+       count(*) FILTER (WHERE r.status = 'PENDING') AS pending_count,
+       count(*) FILTER (WHERE r.status = 'SUCCEEDED') AS succeeded_count,
+       count(*) FILTER (WHERE r.status = 'FAILED') AS failed_count,
+       COALESCE(sum(i.amount_minor) FILTER (WHERE r.status = 'SUCCEEDED'), 0) AS succeeded_minor,
+       b.created_by_customer_id, b.submitted_by_customer_id, b.approved_by_customer_id,
+       b.rejected_by_customer_id, b.rejection_reason, b.content_digest,
+       b.approved_content_digest, b.created_at, b.submitted_at, b.approved_at,
+       b.rejected_at, b.started_at, b.completed_at
+FROM payroll_batches b LEFT JOIN payroll_items i ON i.batch_id = b.id
+LEFT JOIN payroll_item_results r ON r.item_id = i.id
+WHERE b.id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid GROUP BY b.id
+
+PLAN:
+                                                                             QUERY PLAN                                                                              
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=998.08..2751.66 rows=1 width=932) (actual time=21.378..21.382 rows=1.00 loops=1)
+   Buffers: shared hit=850
+   ->  Nested Loop Left Join  (cost=998.08..2739.12 rows=501 width=869) (actual time=2.000..21.127 rows=500.00 loops=1)
+         Buffers: shared hit=850
+         ->  Seq Scan on payroll_batches b  (cost=0.00..2.33 rows=1 width=836) (actual time=0.052..0.062 rows=1.00 loops=1)
+               Filter: (id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid)
+               Rows Removed by Filter: 25
+               Buffers: shared hit=2
+         ->  Hash Right Join  (cost=998.08..2731.78 rows=501 width=49) (actual time=1.936..20.918 rows=500.00 loops=1)
+               Hash Cond: (r.item_id = i.id)
+               Buffers: shared hit=848
+               ->  Seq Scan on payroll_item_results r  (cost=0.00..1546.00 rows=71500 width=25) (actual time=0.022..8.289 rows=71500.00 loops=1)
+                     Buffers: shared hit=831
+               ->  Hash  (cost=991.82..991.82 rows=501 width=40) (actual time=0.435..0.437 rows=500.00 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 44kB
+                     Buffers: shared hit=17
+                     ->  Bitmap Heap Scan on payroll_items i  (cost=20.30..991.82 rows=501 width=40) (actual time=0.139..0.309 rows=500.00 loops=1)
+                           Recheck Cond: (batch_id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid)
+                           Heap Blocks: exact=10
+                           Buffers: shared hit=17
+                           ->  Bitmap Index Scan on ix_payroll_items_batch_payee  (cost=0.00..20.18 rows=501 width=0) (actual time=0.105..0.105 rows=500.00 loops=1)
+                                 Index Cond: (batch_id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid)
+                                 Index Searches: 1
+                                 Buffers: shared hit=7
+ Planning:
+   Buffers: shared hit=359 read=2
+ Planning Time: 2.652 ms
+ Execution Time: 21.662 ms
+(28 rows)
+

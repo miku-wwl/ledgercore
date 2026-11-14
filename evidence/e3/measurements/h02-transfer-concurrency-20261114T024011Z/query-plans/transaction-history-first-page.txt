@@ -1,0 +1,60 @@
+SQL:
+SELECT t.id, t.source_account_id, t.target_account_id, t.amount_minor, t.currency,
+       t.created_at, source.display_name AS source_name, target.display_name AS target_name
+FROM transfers t
+JOIN accounts current_account ON current_account.id = ? AND current_account.owner_customer_id = ?
+JOIN accounts source ON source.id = t.source_account_id
+JOIN accounts target ON target.id = t.target_account_id
+WHERE (t.source_account_id = ? OR t.target_account_id = ?)
+ ORDER BY t.created_at DESC, t.id DESC LIMIT ?
+
+PARAMETERS (synthetic): 8292cd1a-5254-477d-a9ed-9b142ec1e836, 8474b810-dde4-4215-a2d1-6fe214658fe7, 8292cd1a-5254-477d-a9ed-9b142ec1e836, 8292cd1a-5254-477d-a9ed-9b142ec1e836, 11
+
+PLAN:
+Limit  (cost=614.68..614.70 rows=11 width=140) (actual time=10.878..10.886 rows=11.00 loops=1)
+  Buffers: shared hit=163 read=37
+  ->  Sort  (cost=614.68..615.21 rows=215 width=140) (actual time=10.877..10.883 rows=11.00 loops=1)
+        Sort Key: t.created_at DESC, t.id DESC
+        Sort Method: top-N heapsort  Memory: 30kB
+        Buffers: shared hit=163 read=37
+        ->  Nested Loop  (cost=65.20..609.88 rows=215 width=140) (actual time=1.587..8.663 rows=5000.00 loops=1)
+              Buffers: shared hit=160 read=37
+              ->  Index Only Scan using ix_accounts_owner_created on accounts current_account  (cost=0.28..7.52 rows=1 width=0) (actual time=0.091..0.095 rows=1.00 loops=1)
+                    Index Cond: ((owner_customer_id = '8474b810-dde4-4215-a2d1-6fe214658fe7'::uuid) AND (id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid))
+                    Heap Fetches: 1
+                    Index Searches: 1
+                    Buffers: shared hit=7 read=2
+              ->  Hash Join  (cost=64.93..600.21 rows=215 width=140) (actual time=1.493..7.620 rows=5000.00 loops=1)
+                    Hash Cond: (t.target_account_id = target.id)
+                    Buffers: shared hit=153 read=35
+                    ->  Hash Join  (cost=41.74..576.46 rows=215 width=104) (actual time=1.026..4.443 rows=5000.00 loops=1)
+                          Hash Cond: (t.source_account_id = source.id)
+                          Buffers: shared hit=150 read=28
+                          ->  Bitmap Heap Scan on transfers t  (cost=18.56..552.71 rows=215 width=68) (actual time=0.742..1.697 rows=5000.00 loops=1)
+                                Recheck Cond: ((source_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid) OR (target_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid))
+                                Heap Blocks: exact=100
+                                Buffers: shared hit=140 read=28
+                                ->  BitmapOr  (cost=18.56..18.56 rows=216 width=0) (actual time=0.712..0.713 rows=0.00 loops=1)
+                                      Buffers: shared hit=40 read=28
+                                      ->  Bitmap Index Scan on ix_transfers_source_created  (cost=0.00..9.22 rows=108 width=0) (actual time=0.663..0.663 rows=5000.00 loops=1)
+                                            Index Cond: (source_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid)
+                                            Index Searches: 1
+                                            Buffers: shared hit=38 read=27
+                                      ->  Bitmap Index Scan on ix_transfers_target_created  (cost=0.00..9.22 rows=108 width=0) (actual time=0.031..0.031 rows=0.00 loops=1)
+                                            Index Cond: (target_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid)
+                                            Index Searches: 1
+                                            Buffers: shared hit=2 read=1
+                          ->  Hash  (cost=15.86..15.86 rows=586 width=52) (actual time=0.269..0.270 rows=594.00 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 57kB
+                                Buffers: shared hit=10
+                                ->  Seq Scan on accounts source  (cost=0.00..15.86 rows=586 width=52) (actual time=0.023..0.114 rows=594.00 loops=1)
+                                      Buffers: shared hit=10
+                    ->  Hash  (cost=15.86..15.86 rows=586 width=52) (actual time=0.461..0.462 rows=594.00 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 57kB
+                          Buffers: shared hit=3 read=7
+                          ->  Seq Scan on accounts target  (cost=0.00..15.86 rows=586 width=52) (actual time=0.098..0.302 rows=594.00 loops=1)
+                                Buffers: shared hit=3 read=7
+Planning:
+  Buffers: shared hit=30 read=12 dirtied=1
+Planning Time: 1.669 ms
+Execution Time: 10.992 ms

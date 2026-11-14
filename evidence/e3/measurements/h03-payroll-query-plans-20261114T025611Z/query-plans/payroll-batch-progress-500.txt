@@ -1,0 +1,31 @@
+SQL:
+SELECT count(*) FILTER (WHERE r.status = 'PENDING') AS pending_count,
+       count(*) FILTER (WHERE r.status = 'SUCCEEDED') AS succeeded_count,
+       count(*) FILTER (WHERE r.status = 'FAILED') AS failed_count
+FROM payroll_items i JOIN payroll_item_results r ON r.item_id = i.id
+WHERE i.batch_id = ?
+
+
+PARAMETERS (synthetic): a1b6636b-4729-4de6-822e-5edf31216f25
+
+PLAN:
+Aggregate  (cost=78.79..78.80 rows=1 width=24) (actual time=1.605..1.608 rows=1.00 loops=1)
+  Buffers: shared hit=61
+  ->  Hash Join  (cost=26.95..78.76 rows=2 width=50) (actual time=1.416..1.549 rows=500.00 loops=1)
+        Hash Cond: (r.item_id = i.id)
+        Buffers: shared hit=61
+        ->  Seq Scan on payroll_item_results r  (cost=0.00..50.60 rows=460 width=66) (actual time=0.021..0.558 rows=5500.00 loops=1)
+              Buffers: shared hit=46
+        ->  Hash  (cost=26.86..26.86 rows=7 width=16) (actual time=0.275..0.276 rows=500.00 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 32kB
+              Buffers: shared hit=15
+              ->  Bitmap Heap Scan on payroll_items i  (cost=4.33..26.86 rows=7 width=16) (actual time=0.077..0.180 rows=500.00 loops=1)
+                    Recheck Cond: (batch_id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid)
+                    Heap Blocks: exact=10
+                    Buffers: shared hit=15
+                    ->  Bitmap Index Scan on ix_payroll_items_batch_payee  (cost=0.00..4.33 rows=7 width=0) (actual time=0.063..0.063 rows=500.00 loops=1)
+                          Index Cond: (batch_id = 'a1b6636b-4729-4de6-822e-5edf31216f25'::uuid)
+                          Index Searches: 1
+                          Buffers: shared hit=5
+Planning Time: 0.281 ms
+Execution Time: 1.682 ms

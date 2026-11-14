@@ -1,0 +1,10 @@
+{
+  "capturedAtUtc": "2026-11-14T03:18:41.6723731Z",
+  "sourceCommit": "230e5873ba7f0d1c7df546eb1e81622fa12a8cc0",
+  "preregistrationCommit": "81a903876ea3ac3214113dbf7bacb86f40307454",
+  "branch": "main",
+  "database": "ledgercore_e3_perf",
+  "host": "127.0.0.1:55434",
+  "targetBatchId": "e4ed0868-85dc-4798-9520-3ab8b2fef32a",
+  "unrelatedFixture": "10 synthetic organizations x 5,000 DRAFT payroll items/results"
+}

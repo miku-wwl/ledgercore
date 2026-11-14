@@ -1,0 +1,11 @@
+DO
+   database_name    | h04_organizations | h04_draft_batches | h04_items | h04_pending_results | h04_postings 
+--------------------+-------------------+-------------------+-----------+---------------------+--------------
+ ledgercore_e3_perf |                10 |                10 |     50000 |               50000 |            0
+(1 row)
+
+                                                                 global_financial_invariants                                                                 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"unbalancedJournalEntries" : 0, "projectionMismatches" : 0, "negativeLedgerBalances" : 0, "transferReceiptMismatches" : 0, "duplicateIdempotencyKeys" : 0}
+(1 row)
+

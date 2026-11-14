@@ -1,0 +1,65 @@
+Source fixture: {"sourceAccountId":"8292cd1a-5254-477d-a9ed-9b142ec1e836","ownerCustomerId":"8474b810-dde4-4215-a2d1-6fe214658fe7","cursorCreatedAt":"2026-11-14T02:44:14.067237Z","cursorTransferId":"0f04b7d3-44f8-4fbe-8695-2beb490f23fe","sourcePostingCount":5001,"sourceCommit":"230e5873ba7f0d1c7df546eb1e81622fa12a8cc0"}
+
+SQL:
+EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+SELECT t.id, t.source_account_id, t.target_account_id, t.amount_minor, t.currency,
+       t.created_at, source.display_name AS source_name, target.display_name AS target_name
+FROM transfers t
+JOIN accounts current_account ON current_account.id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid AND current_account.owner_customer_id = '8474b810-dde4-4215-a2d1-6fe214658fe7'::uuid
+JOIN accounts source ON source.id = t.source_account_id
+JOIN accounts target ON target.id = t.target_account_id
+WHERE (t.source_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid OR t.target_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid)
+ORDER BY t.created_at DESC, t.id DESC LIMIT 11
+
+PLAN:
+                                                                                        QUERY PLAN                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=2612.82..2612.85 rows=11 width=140) (actual time=7.673..7.680 rows=11.00 loops=1)
+   Buffers: shared hit=32 read=167
+   ->  Sort  (cost=2612.82..2625.02 rows=4881 width=140) (actual time=7.672..7.678 rows=11.00 loops=1)
+         Sort Key: t.created_at DESC, t.id DESC
+         Sort Method: top-N heapsort  Memory: 30kB
+         Buffers: shared hit=32 read=167
+         ->  Nested Loop  (cost=335.08..2503.99 rows=4881 width=140) (actual time=1.854..6.477 rows=5000.00 loops=1)
+               Buffers: shared hit=26 read=167
+               ->  Index Only Scan using uq_accounts_id_owner_customer on accounts current_account  (cost=0.28..8.29 rows=1 width=0) (actual time=0.039..0.040 rows=1.00 loops=1)
+                     Index Cond: ((id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid) AND (owner_customer_id = '8474b810-dde4-4215-a2d1-6fe214658fe7'::uuid))
+                     Heap Fetches: 1
+                     Index Searches: 1
+                     Buffers: shared hit=2 read=1
+               ->  Hash Join  (cost=334.80..2446.88 rows=4881 width=140) (actual time=1.808..5.753 rows=5000.00 loops=1)
+                     Hash Cond: (t.target_account_id = target.id)
+                     Buffers: shared hit=24 read=166
+                     ->  Hash Join  (cost=309.36..2408.53 rows=4881 width=104) (actual time=1.568..4.324 rows=5000.00 loops=1)
+                           Hash Cond: (t.source_account_id = source.id)
+                           Buffers: shared hit=13 read=166
+                           ->  Bitmap Heap Scan on transfers t  (cost=283.91..2370.19 rows=4881 width=68) (actual time=1.385..2.650 rows=5000.00 loops=1)
+                                 Recheck Cond: ((source_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid) OR (target_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid))
+                                 Heap Blocks: exact=100
+                                 Buffers: shared hit=2 read=166
+                                 ->  BitmapOr  (cost=283.91..283.91 rows=4885 width=0) (actual time=1.251..1.251 rows=0.00 loops=1)
+                                       Buffers: shared hit=2 read=66
+                                       ->  Bitmap Index Scan on ix_transfers_source_created  (cost=0.00..272.34 rows=4789 width=0) (actual time=1.211..1.211 rows=5000.00 loops=1)
+                                             Index Cond: (source_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid)
+                                             Index Searches: 1
+                                             Buffers: shared hit=1 read=64
+                                       ->  Bitmap Index Scan on ix_transfers_target_created  (cost=0.00..9.14 rows=96 width=0) (actual time=0.036..0.036 rows=0.00 loops=1)
+                                             Index Cond: (target_account_id = '8292cd1a-5254-477d-a9ed-9b142ec1e836'::uuid)
+                                             Index Searches: 1
+                                             Buffers: shared hit=1 read=2
+                           ->  Hash  (cost=17.42..17.42 rows=642 width=52) (actual time=0.172..0.176 rows=642.00 loops=1)
+                                 Buckets: 1024  Batches: 1  Memory Usage: 61kB
+                                 Buffers: shared hit=11
+                                 ->  Seq Scan on accounts source  (cost=0.00..17.42 rows=642 width=52) (actual time=0.010..0.075 rows=642.00 loops=1)
+                                       Buffers: shared hit=11
+                     ->  Hash  (cost=17.42..17.42 rows=642 width=52) (actual time=0.225..0.225 rows=642.00 loops=1)
+                           Buckets: 1024  Batches: 1  Memory Usage: 61kB
+                           Buffers: shared hit=11
+                           ->  Seq Scan on accounts target  (cost=0.00..17.42 rows=642 width=52) (actual time=0.018..0.123 rows=642.00 loops=1)
+                                 Buffers: shared hit=11
+ Planning:
+   Buffers: shared hit=358 read=15
+ Planning Time: 3.674 ms
+ Execution Time: 7.846 ms
+(47 rows)
+

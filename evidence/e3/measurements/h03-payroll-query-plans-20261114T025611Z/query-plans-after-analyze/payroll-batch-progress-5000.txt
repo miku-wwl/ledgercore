@@ -1,0 +1,38 @@
+Batch size label: 5000
+Batch id: e4ed0868-85dc-4798-9520-3ab8b2fef32a
+
+SQL:
+EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+SELECT count(*) FILTER (WHERE r.status = 'PENDING') AS pending_count,
+       count(*) FILTER (WHERE r.status = 'SUCCEEDED') AS succeeded_count,
+       count(*) FILTER (WHERE r.status = 'FAILED') AS failed_count
+FROM payroll_items i JOIN payroll_item_results r ON r.item_id = i.id
+WHERE i.batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid
+
+PLAN:
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=3425.00..3425.01 rows=1 width=24) (actual time=18.338..18.340 rows=1.00 loops=1)
+   Buffers: shared hit=835 read=127
+   ->  Hash Join  (cost=1617.51..3351.21 rows=4919 width=9) (actual time=3.228..17.761 rows=5000.00 loops=1)
+         Hash Cond: (r.item_id = i.id)
+         Buffers: shared hit=835 read=127
+         ->  Seq Scan on payroll_item_results r  (cost=0.00..1546.00 rows=71500 width=25) (actual time=0.022..6.454 rows=71500.00 loops=1)
+               Buffers: shared hit=831
+         ->  Hash  (cost=1556.03..1556.03 rows=4919 width=16) (actual time=3.167..3.169 rows=5000.00 loops=1)
+               Buckets: 8192  Batches: 1  Memory Usage: 299kB
+               Buffers: shared hit=4 read=127
+               ->  Bitmap Heap Scan on payroll_items i  (cost=194.54..1556.03 rows=4919 width=16) (actual time=0.943..2.463 rows=5000.00 loops=1)
+                     Recheck Cond: (batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                     Heap Blocks: exact=91
+                     Buffers: shared hit=4 read=127
+                     ->  Bitmap Index Scan on ix_payroll_items_batch_payee  (cost=0.00..193.31 rows=4919 width=0) (actual time=0.892..0.892 rows=5000.00 loops=1)
+                           Index Cond: (batch_id = 'e4ed0868-85dc-4798-9520-3ab8b2fef32a'::uuid)
+                           Index Searches: 1
+                           Buffers: shared hit=2 read=38
+ Planning:
+   Buffers: shared hit=329
+ Planning Time: 1.885 ms
+ Execution Time: 18.500 ms
+(22 rows)
+

@@ -53,3 +53,24 @@ The existing main CI baseline is run 43386644262 for source commit 5eb6a626242bc
 ## Isolation and cleanup
 
 The temporary 55434 cluster is separate from the persistent PostgreSQL service on 55432. Confirm database name, user, port, and cluster directory before any write or destructive experiment. Keep development, integration, performance, and destructive experiments in distinct databases. Never drop or recursively delete a directory based only on a computed path. For later stages, add the exact start/stop and cleanup commands only after verifying the cluster configuration and target paths.
+
+## E3 performance experiments
+
+The preserved E3 run used the environment recorded in `evidence/e3/environment/environment.json`: Java 21.0.2, PostgreSQL 18.7, database `ledgercore_e3_perf`, Hikari maximum 10, and the local host recorded there. `evidence/e3/hypotheses/` and `evidence/e3/workloads/workload-specification.json` contain the pre-registered design. The measured application source is `230e5873ba7f0d1c7df546eb1e81622fa12a8cc0`.
+
+To reproduce the full workload, start with a fresh, disposable PostgreSQL 18.7 cluster on port 55434 and a new `ledgercore_e3_perf` database owned by the local `ledgercore_test` role. Never reset or drop the database containing the committed results. The E3 runner applies the project's Flyway schema through the test application and then executes the selected harness phase:
+
+    .\evidence\e3\scripts\run-e3.ps1 -Phase all
+
+This runs environment capture, H01, H02, and H03 in order. It is a write workload and is intended to run once per fresh database. H04 requires the H03 `E3 plan-5000` fixture and should be run afterward:
+
+    .\evidence\e3\scripts\run-h04-cross-org-progress.ps1
+    .\work\postgresql-binaries\pgsql\bin\psql.exe -X -w -h 127.0.0.1 -p 55434 -U ledgercore_test -d ledgercore_e3_perf -f evidence\e3\scripts\check-h04-post-fixture-invariants.sql
+
+The H04 SQL refuses to add duplicate fixtures. Each H04 runner invocation gets a timestamped output directory; select a fresh database rather than rerunning a workload in the database that already contains evidence fixtures.
+
+Generate the figures from the preserved result files with:
+
+    python evidence\e3\scripts\plot-e3-results.py
+
+The figures use Matplotlib; the version present when this Round 1 set was generated was 3.10.6. The exact per-run samples, plans, SQL output, and environment metadata remain authoritative. These synthetic local results are not production capacity estimates.

@@ -1,3 +1,7 @@
+param(
+    [string]$RunLabel
+)
+
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 if ((& git -C $repositoryRoot branch --show-current).Trim() -cne 'main') {
@@ -6,8 +10,15 @@ if ((& git -C $repositoryRoot branch --show-current).Trim() -cne 'main') {
 
 $pg = Join-Path $repositoryRoot 'work\postgresql-binaries\pgsql\bin\psql.exe'
 if (-not (Test-Path -LiteralPath $pg)) { throw "Local PostgreSQL 18.7 psql was not found: $pg" }
-$output = Join-Path $repositoryRoot 'evidence\e3\measurements\h04-cross-org-progress-followup'
-if (Test-Path -LiteralPath $output) { throw "H04 output already exists; preserve it and do not repeat the fixture: $output" }
+$measurements = Join-Path $repositoryRoot 'evidence\e3\measurements'
+if ([string]::IsNullOrWhiteSpace($RunLabel)) {
+    $RunLabel = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ')
+}
+if ($RunLabel -notmatch '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$') {
+    throw 'RunLabel may contain only letters, digits, underscores, and hyphens.'
+}
+$output = Join-Path $measurements "h04-cross-org-progress-$RunLabel"
+if (Test-Path -LiteralPath $output) { throw "H04 output already exists; preserve it and choose a new RunLabel: $output" }
 New-Item -ItemType Directory -Path $output | Out-Null
 
 $batchId = (& $pg -X -w -tA -h 127.0.0.1 -p 55434 -U ledgercore_test -d ledgercore_e3_perf `
@@ -17,9 +28,10 @@ if ($LASTEXITCODE -ne 0 -or $batchId -notmatch '^[0-9a-f-]{36}$') {
 }
 
 $sourceCommit = (& git -C $repositoryRoot log -1 --format=%H -- backend/src/test/java/nz/ac/ledgercore/performance/E3PerformanceExperimentHarness.java).Trim()
+$capturedAtUtc = [DateTime]::UtcNow.ToString('o')
 @"
 {
-  "capturedAtUtc": "$(Get-Date).ToUniversalTime().ToString('o')",
+  "capturedAtUtc": "$capturedAtUtc",
   "sourceCommit": "$sourceCommit",
   "preregistrationCommit": "$(git -C $repositoryRoot rev-parse HEAD)",
   "branch": "main",
