@@ -5,8 +5,8 @@
 | Stage | Status | Evidence |
 |---|---|---|
 | Stage 0 baseline | PASS | Fresh `ledgercore_round3_baseline`, PostgreSQL 18.7, V1–V7; 75 tests, 0 failures/errors/skips; `evidence/round3/baseline/BASELINE.md` |
-| Policy B design | DECIDED; verification pending | `ADR/0005-corporate-payment-approval-and-clearing.md`; INV-15 added without changing INV-01–INV-14 |
-| E4 durable events | LOCAL PASS; CI PENDING | `evidence/round3/e4/LOCAL-VALIDATION.md`; 78 backend tests; restart recovery and SQL evidence; OpenAPI, frontend lint/build, and 3 Playwright journeys pass |
+| Policy B design and E4 core | E4 VALIDATED; clearing callback verification pending | ADR 0005; INV-15; commit `0dfcb0c`; GitHub Actions run `43574289360` passed |
+| E4 durable events | VALIDATED | `evidence/round3/e4/LOCAL-VALIDATION.md`; 78 backend tests; restart recovery and SQL evidence; OpenAPI, frontend lint/build, 3 Playwright journeys, and CI run `43574289360` pass |
 | E5 clearing simulator | NOT_RUN | Not started |
 | E6 fault laboratory | NOT_RUN | Pre-registered; no injection run yet |
 | E7 independent reconciliation | NOT_RUN | Not started |

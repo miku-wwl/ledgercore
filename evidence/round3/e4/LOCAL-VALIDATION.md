@@ -3,9 +3,9 @@
 - Date: 2026-11-14 (Pacific/Auckland).
 - Repository: `D:\workshop\nov\ledgercore`, branch `main`.
 - Source baseline: Round 3 accepted commit `0db728171f7a28119ed4c4f19437896878f03fc6`; Stage 0 plan commit `869585e4421af450f477ba174a53eb5225715d6f`.
-- Implementation commit: recorded in the Round 3 E4 commit on `main`.
+- Implementation commit: `0dfcb0c6afddb4bc10af98aa16eba4764a6eb02a`, pushed directly to `main`.
 - Database: isolated PostgreSQL 18.7 on `127.0.0.1:55436`; persistent PostgreSQL on 55432 was not used.
-- Result: **E4 local PASS; GitHub Actions pending.**
+- Result: **E4 VALIDATED.** GitHub Actions run [`43574289360`](https://github.com/miku-wwl/ledgercore/actions/runs/43574289360) passed both full-stack acceptance and OSV dependency scan for the implementation SHA.
 
 ## Backend regression and database constraints
 

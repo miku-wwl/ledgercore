@@ -2,7 +2,7 @@
 
 - Registered: 2026-11-14, before E4 implementation/failure measurements.
 - Starting source: `0db728171f7a28119ed4c4f19437896878f03fc6`.
-- Status: EXECUTED — local evidence passes; direct-main implementation is committed; CI verification is pending.
+- Status: EXECUTED — local evidence and direct-main CI pass (commit `0dfcb0c`, run `43574289360`).
 
 ## Question and prediction
 

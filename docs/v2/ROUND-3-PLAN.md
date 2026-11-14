@@ -42,7 +42,7 @@ A stage is not VALIDATED until its required tests, independent database evidence
 ## Current progress — 2026-11-14
 
 - Stage 0 baseline and Policy B design are committed on `main`; Stage 0 CI run `43567898184` succeeded.
-- E4 is **LOCAL PASS; CI pending** and committed directly on `main`. Its local backend, browser, API-contract, restart, and SQL evidence is in `evidence/round3/e4/LOCAL-VALIDATION.md`.
+- E4 is **VALIDATED**: commit `0dfcb0c6afddb4bc10af98aa16eba4764a6eb02a` is on `main`, and GitHub Actions run `43574289360` passed. Local backend, browser, API-contract, restart, and SQL evidence is in `evidence/round3/e4/LOCAL-VALIDATION.md`.
 - E5–E11 remain NOT_STARTED. No E12, textbook, or final PDF work has begun.
 
 ## Non-negotiable preservation rules

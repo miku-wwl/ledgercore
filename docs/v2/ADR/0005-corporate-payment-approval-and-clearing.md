@@ -1,6 +1,6 @@
 # ADR 0005: Independently Approved Corporate Payments and External Clearing
 
-- Status: Accepted for Round 3 implementation; acceptance remains pending runtime and PostgreSQL verification.
+- Status: Accepted for Round 3 implementation. E4 Policy B and durable-outbox core passed local and CI verification (commit `0dfcb0c`, run `43574289360`); clearing simulator and callback verification remains E5/E8.
 - Date: 2026-11-14.
 - Supersedes: ADR 0002 decision 5 only insofar as it allowed immediate corporate debit by `PAYROLL_MAKER` without an approved payment intent. Round 2's historical Policy A audit remains unchanged.
 
