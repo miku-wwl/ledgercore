@@ -141,3 +141,72 @@ Set `JAVA_HOME` to `work\toolchain\jdk21\jdk-21.0.13+9`, add its `bin` to proces
 Record the exact target database and confirm the output's JDBC URL. For recovery or clearing tests, use a separate cluster/database and explicit credentials; never run destructive scenarios against the baseline database. Stop only the verified disposable cluster after no test or application process depends on it:
 
     work\postgresql-binaries\pgsql\bin\pg_ctl.exe -D work\pg-round2-audit -m fast -w stop
+
+## Round 3 E10 recovery experiment
+
+The completed one-run backup/PITR/cross-system experiment and its measured RPO/RTO are in
+[`evidence/round3/e10/LOCAL-VALIDATION.md`](../../evidence/round3/e10/LOCAL-VALIDATION.md). Selected raw command results,
+manifests, SQL grades, and the tested Windows restore helper are committed alongside it. The original PostgreSQL data,
+WAL archive, simulator state, and complete application/server logs remain under the ignored
+`work/e10-lab/runs/20261115-recovery/`. Use the versioned pre-registration and amendment to run a new experiment with
+new, dedicated database directories and a new recovery target. Do not reuse the old recovered directories as a fresh
+source. The E10 cluster used bank port 55439, simulator port 55440, base-restore port 55441, and PITR port 55442; all
+services were loopback-only and separate from the persistent service on 55432.
+
+## Round 3 E11 local full-stack suite
+
+The final run used a dedicated PostgreSQL 18.7 cluster under
+`work/e11-lab/runs/20261115-fullstack/postgres-data` on `127.0.0.1:55443`, with only the named databases
+`ledgercore_e11_bank` and `ledgercore_e11_sim`. The bank and clearing simulator were separate Java processes on ports
+18096 and 18097. The isolated test databases were `ledgercore_e11_verify` and `ledgercore_e11_sim_verify`; their
+credentials must be supplied through process environment variables. Never point tests or either app at port 55432.
+
+Build before starting the processes. Use the local JDK 21/Maven wrapper recorded in the baseline section and run from
+the uppercase `D:\workshop\nov\ledgercore` path. Start the simulator before the bank application. The simulator
+process receives `CLEARING_SIMULATOR_DB_URL`, `CLEARING_SIMULATOR_DB_USERNAME`, `CLEARING_SIMULATOR_DB_PASSWORD`,
+`CLEARING_SIMULATOR_PORT=18097`, `CLEARING_SIMULATOR_CALLBACK_DISPATCH_ENABLED=true`,
+`LEDGERCORE_CLEARING_HMAC_SECRET`, and `LEDGERCORE_BANK_CALLBACK_URL=http://127.0.0.1:18096/api/clearing/callbacks`.
+The bank process receives `SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:55443/ledgercore_e11_bank`, its dedicated
+database username/password, matching `LEDGERCORE_DB_URL` / `LEDGERCORE_DB_USER` / `LEDGERCORE_DB_PASSWORD`,
+`LEDGERCORE_CLEARING_ENABLED=true`, `LEDGERCORE_CLEARING_SIMULATOR_URL=http://127.0.0.1:18097`, and the same local
+HMAC secret. Read that secret from a local file outside Git; do not paste it into a command transcript or commit it.
+Bind both apps to `127.0.0.1` only. Starting the migrated apps applies their forward migrations to these dedicated
+databases.
+
+Run the frontend checks and browser suite from the uppercase drive path:
+
+```powershell
+Set-Location D:\workshop\nov\ledgercore\frontend
+npx openapi-typescript http://127.0.0.1:18096/v3/api-docs -o src/api/schema.d.ts
+npm run lint
+npm run build
+$env:VITE_API_TARGET = 'http://127.0.0.1:18096'
+npx playwright test
+```
+
+Supply `LEDGERCORE_TEST_DB_URL`, `LEDGERCORE_TEST_DB_USERNAME`, and
+`LEDGERCORE_TEST_DB_PASSWORD` for backend `mvn clean verify`, targeting a new disposable `ledgercore_e11_verify`
+database. Use a separate fresh `ledgercore_e11_sim_verify` for the simulator module. The E2E identities use random
+synthetic `example.test` addresses; no database reset is needed between browser runs.
+
+### Stop, reset, and cleanup
+
+1. Stop the bank and simulator processes with Ctrl+C in the shells that own them; verify ports 18096 and 18097 no
+   longer have listeners.
+2. Stop only the verified E11 cluster with the PostgreSQL `pg_ctl` belonging to the selected local installation:
+
+   ```powershell
+   Set-Location D:\workshop\nov\ledgercore
+   $e11Data = 'D:\workshop\nov\ledgercore\work\e11-lab\runs\20261115-fullstack\postgres-data'
+   .\work\postgresql-binaries\pgsql\bin\pg_ctl.exe status -D $e11Data
+   .\work\postgresql-binaries\pgsql\bin\pg_ctl.exe -D $e11Data -m fast -w stop
+   ```
+
+3. E2E data is disposable but also part of the local evidence environment. Preserve it until the committed log,
+   screenshots, and SQL grades have been reviewed. For a reset, stop both apps, verify the cluster path and the exact
+   database names first, then recreate only the two `ledgercore_e11_*` app databases; do not remove the cluster, the
+   E10 run, the Round 2 cluster, or any other database as a cleanup shortcut.
+4. For final cleanup, leaving the E11 cluster stopped preserves the local experiment and costs no running resources.
+   If local raw data is ever retired, verify that the resolved target is exactly under
+   `work/e11-lab/runs/20261115-fullstack/` and that all intended evidence has another retained copy before removing
+   only that run directory.
