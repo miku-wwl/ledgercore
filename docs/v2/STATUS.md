@@ -14,7 +14,7 @@
 
 | Stage | Status | Evidence / next action |
 |---|---|---|
-| E0 | Local baseline passed; stage commit and its CI confirmation pending | evidence/e0/BASELINE.md; commit/push this documentation, then record the actual run |
+| E0 | VALIDATED | Commit a7fe0de280b61b66e87cf14c95aa4cf30d0982b8; local gates passed; CI run 43531591907 succeeded |
 | E1 | NOT_RUN | No corporate domain or authorization changes started |
 | E2 | NOT_RUN | No payroll implementation or scenario started |
 | E3 | NOT_RUN | No performance hypothesis or measurement started |
@@ -28,3 +28,9 @@
 - V1 application source and V1 textbook are the protected compatibility baseline.
 
 The E0 local test database was a separate disposable PostgreSQL 18.7 cluster on 127.0.0.1:55434, database ledgercore_test. The existing persistent PostgreSQL service on port 55432 was not used. E2E generated synthetic test identities only in the disposable database.
+
+## E0 stage acceptance
+
+- Commit: a7fe0de280b61b66e87cf14c95aa4cf30d0982b8.
+- Direct push to origin/main succeeded; the run checked out the same SHA.
+- GitHub Actions: https://github.com/miku-wwl/ledgercore/actions/runs/43531591907 — verify and OSV dependency-scan jobs succeeded.

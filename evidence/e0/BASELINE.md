@@ -32,5 +32,11 @@
 - Corporate ownership, organization memberships, payroll, and worker recovery are not implemented or tested in E0.
 - npm reports six low/moderate advisories through existing frontend tooling dependencies; the configured high-severity CI threshold passes. No forced major dependency update was applied.
 - The E2E flow wrote only random synthetic identities to the disposable database.
-- The verified CI run is for the V1 baseline SHA, not the upcoming E0 documentation commit.
+- The V1 baseline CI and the later E0 documentation-commit CI are distinct runs; both are linked above.
 - No E3 load test, performance result, or production-capacity claim exists.
+
+## E0 stage commit acceptance
+
+- E0 documentation commit: a7fe0de280b61b66e87cf14c95aa4cf30d0982b8, pushed directly to origin/main.
+- CI run: https://github.com/miku-wwl/ledgercore/actions/runs/43531591907.
+- Observed run conclusion: success. Full-stack acceptance and Maven OSV dependency scan both succeeded.

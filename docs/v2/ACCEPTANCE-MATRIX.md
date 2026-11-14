@@ -2,7 +2,7 @@
 
 | Gate | Acceptance evidence | E0 | E1 | E2 | E3 |
 |---|---|---:|---:|---:|---:|
-| Main-only workflow | Branch, HEAD, remote, clean tracked tree; direct push and CI | Verified at baseline; E0 stage push pending | NOT_RUN | NOT_RUN | NOT_RUN |
+| Main-only workflow | Branch, HEAD, remote, clean tracked tree; direct push and CI | PASS; E0 commit a7fe0de and its GitHub Actions run 43531591907 succeeded | NOT_RUN | NOT_RUN | NOT_RUN |
 | Backend regression | Maven unit + PostgreSQL integration + Modulith | PASS: 42 tests, 0 failures/errors/skips | NOT_RUN | NOT_RUN | NOT_RUN |
 | Frontend | Lint and production TypeScript/Vite build | PASS | NOT_RUN | NOT_RUN | NOT_RUN |
 | OpenAPI | Generate types from running application and compare tracked contract | PASS: no diff | NOT_RUN | NOT_RUN | NOT_RUN |
