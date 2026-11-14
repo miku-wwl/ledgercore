@@ -98,6 +98,11 @@ public class OrganizationAuthorizationService {
     }
 
     @Transactional(readOnly = true)
+    public void requireCanOperateClearing(UUID customerId, UUID organizationId) {
+        requireRole(customerId, organizationId, OrganizationRole.OPERATIONS);
+    }
+
+    @Transactional(readOnly = true)
     public void requireCanManage(UUID customerId, UUID organizationId) {
         requireRole(customerId, organizationId, OrganizationRole.ORG_ADMIN);
     }

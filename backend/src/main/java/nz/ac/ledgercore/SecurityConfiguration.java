@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -49,8 +50,9 @@ public class SecurityConfiguration {
 				.requestMatchers("/actuator/health", "/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**",
 						"/swagger-ui.html", "/api/auth/csrf", "/api/auth/register", "/api/auth/login")
 				.permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/clearing/callbacks").permitAll()
 				.anyRequest().authenticated())
-			.csrf(Customizer.withDefaults())
+			.csrf(csrf -> csrf.ignoringRequestMatchers("/api/clearing/callbacks"))
 			.formLogin(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))

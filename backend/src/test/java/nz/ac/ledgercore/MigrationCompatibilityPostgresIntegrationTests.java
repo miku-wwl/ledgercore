@@ -95,7 +95,7 @@ class MigrationCompatibilityPostgresIntegrationTests {
             flyway.validate();
             List<MigrationInfo> applied = versioned(flyway);
             assertThat(applied).extracting(info -> info.getVersion().getVersion())
-                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8");
+                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9");
             assertThat(applied).allSatisfy(info -> assertThat(info.getState().isApplied()).isTrue());
             for (MigrationInfo info : applied) {
                 Integer published = PUBLISHED_CHECKSUMS.get(info.getScript());
@@ -212,6 +212,40 @@ class MigrationCompatibilityPostgresIntegrationTests {
     }
 
     @Test
+    void populatedV8ClearingIntentUpgradesAndEnforcesForwardOnlyOutcomeTransitions() {
+        withSchema(schema -> {
+            flyway(schema, MigrationVersion.fromVersion("8")).migrate();
+            Seed seed = new Seed(schema);
+            ClearingSeed payment = seed.corporatePaymentAwaitingClearing();
+            String bookingReference = "corporate-payment:" + payment.paymentId() + ":booking";
+            assertThat(seed.jdbc.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                    String.class, payment.paymentId())).isEqualTo("PENDING_CLEARING");
+            assertThat(seed.jdbc.queryForObject("SELECT count(*) FROM postings p JOIN journal_entries e ON e.id = p.journal_entry_id WHERE e.reference = ?",
+                    Integer.class, bookingReference)).isEqualTo(2);
+
+            flyway(schema, MigrationVersion.LATEST).migrate();
+
+            assertThat(seed.jdbc.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                    String.class, payment.paymentId())).isEqualTo("PENDING_CLEARING");
+            assertThat(seed.jdbc.queryForObject("SELECT status FROM clearing_instructions WHERE operation_id = ?",
+                    String.class, payment.operationId())).isEqualTo("READY");
+            assertThat(unvalidatedConstraints(schema)).isZero();
+            seed.jdbc.update("UPDATE corporate_payment_intents SET external_status = 'UNKNOWN', status = 'UNKNOWN' WHERE id = ?",
+                    payment.paymentId());
+            seed.jdbc.update("UPDATE clearing_instructions SET status = 'UNKNOWN' WHERE operation_id = ?",
+                    payment.operationId());
+            assertThatThrownBy(() -> seed.jdbc.update("UPDATE corporate_payment_intents SET external_status = 'PENDING' WHERE id = ?",
+                    payment.paymentId())).isInstanceOf(DataAccessException.class);
+            seed.jdbc.update("UPDATE corporate_payment_intents SET external_status = 'SETTLED' WHERE id = ?",
+                    payment.paymentId());
+            seed.jdbc.update("UPDATE clearing_instructions SET status = 'SETTLED' WHERE operation_id = ?",
+                    payment.operationId());
+            assertThat(seed.jdbc.queryForObject("SELECT external_status FROM corporate_payment_intents WHERE id = ?",
+                    String.class, payment.paymentId())).isEqualTo("SETTLED");
+        });
+    }
+
+    @Test
     void v7RefusesToMigratePayrollHistoryWithAMissingResult() {
         withSchema(schema -> {
             flyway(schema, MigrationVersion.fromVersion("6")).migrate();
@@ -288,6 +322,9 @@ class MigrationCompatibilityPostgresIntegrationTests {
 
     private record PayrollSeed(UUID draftBatch, UUID processingBatch, UUID processingSucceededItem,
             UUID processingPendingItem) {
+    }
+
+    private record ClearingSeed(UUID paymentId, UUID operationId) {
     }
 
     /** Writes representative, constraint-valid synthetic rows directly through SQL into one isolated schema. */
@@ -447,6 +484,51 @@ class MigrationCompatibilityPostgresIntegrationTests {
                     WHERE item_id = ?
                     """, items.get(1));
             return new PayrollSeed(draft, processing, items.get(0), items.get(2));
+        }
+
+        ClearingSeed corporatePaymentAwaitingClearing() {
+            UUID maker = customer("payment-maker");
+            UUID approver = customer("payment-approver");
+            UUID organization = organization(maker, "ORG_ADMIN", "PAYMENT_MAKER");
+            addMember(organization, approver, "PAYMENT_APPROVER");
+            UUID source = fundedAccount(null, organization, 10_000L);
+            UUID sourceLedger = ledgerOf(source);
+            UUID paymentId = UUID.randomUUID();
+            String digest = "cd".repeat(32);
+            return inTransaction(() -> {
+                jdbc.update("""
+                        INSERT INTO corporate_payment_intents (id, operation_id, organization_id, source_account_id,
+                            created_by_customer_id, beneficiary_name, beneficiary_account_reference,
+                            beneficiary_routing_code, amount_minor, currency)
+                        VALUES (?, ?, ?, ?, ?, 'Synthetic beneficiary', 'NZ-MIGRATION-1', 'SIM-PENDING', 2500, 'NZD')
+                        """, paymentId, paymentId, organization, source, maker);
+                jdbc.update("""
+                        UPDATE corporate_payment_intents SET status = 'SUBMITTED', submitted_by_customer_id = ?,
+                            submitted_at = clock_timestamp(), intent_digest = ? WHERE id = ?
+                        """, maker, digest, paymentId);
+                jdbc.update("""
+                        UPDATE corporate_payment_intents SET status = 'APPROVED', approved_by_customer_id = ?,
+                            approved_at = clock_timestamp(), approved_version = 1, approved_digest = ? WHERE id = ?
+                        """, approver, digest, paymentId);
+                UUID bookingEntry = UUID.randomUUID();
+                jdbc.update("""
+                        INSERT INTO journal_entries (id, entry_type, currency, reference)
+                        VALUES (?, 'CORPORATE_PAYMENT_BOOKING', 'NZD', ?)
+                        """, bookingEntry, "corporate-payment:" + paymentId + ":booking");
+                posting(bookingEntry, sourceLedger, "DEBIT", 2_500L);
+                posting(bookingEntry, UUID.fromString("00000000-0000-5000-8000-000000000002"), "CREDIT", 2_500L);
+                refreshProjection(sourceLedger);
+                refreshProjection(UUID.fromString("00000000-0000-5000-8000-000000000002"));
+                jdbc.update("""
+                        UPDATE corporate_payment_intents SET status = 'PENDING_CLEARING',
+                            booking_journal_entry_id = ? WHERE id = ?
+                        """, bookingEntry, paymentId);
+                jdbc.update("""
+                        INSERT INTO clearing_instructions (operation_id, payment_intent_id, intent_digest)
+                        VALUES (?, ?, ?)
+                        """, paymentId, paymentId, digest);
+                return new ClearingSeed(paymentId, paymentId);
+            });
         }
 
         /** Adds a draft item exactly as PayrollService does (result inserted without batch_id) in one transaction. */

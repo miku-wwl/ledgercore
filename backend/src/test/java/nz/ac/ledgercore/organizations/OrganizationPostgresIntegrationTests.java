@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,10 +22,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
+import nz.ac.ledgercore.clearing.ClearingCallbackService;
+import nz.ac.ledgercore.clearing.ClearingDtos.Callback;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.transfers.TransferErrorCode;
 import nz.ac.ledgercore.transfers.TransferException;
 import nz.ac.ledgercore.transfers.TransferService;
+import tools.jackson.databind.json.JsonMapper;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,6 +48,9 @@ class OrganizationPostgresIntegrationTests {
 
     @Autowired
     TransferService transferService;
+
+    @Autowired
+    ClearingCallbackService clearingCallbackService;
 
     @Test
     void corporateOwnershipMembershipRolesAndTransfersUsePostgres() throws Exception {
@@ -185,6 +192,59 @@ class OrganizationPostgresIntegrationTests {
                   AND event_type IN ('corporate.payment.approved', 'clearing.instruction.ready')
                 """, Integer.class, paymentUuid, orgId, UUID.fromString(approverId))).isEqualTo(2);
 
+        Callback settled = callback(paymentUuid, 1, "SETTLED");
+        assertThat(deliver(settled)).isEqualTo("ACCEPTED");
+        assertThat(deliver(settled)).isEqualTo("DUPLICATE");
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                String.class, paymentUuid)).isEqualTo("COMPLETED");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM journal_entries WHERE reference = ?",
+                Integer.class, "corporate-payment:" + paymentId + ":settlement")).isEqualTo(1);
+
+        Callback alteredDuplicate = new Callback(settled.callbackId(), paymentUuid, paymentUuid,
+                jdbcTemplate.queryForObject("SELECT intent_digest FROM corporate_payment_intents WHERE id = ?",
+                        String.class, paymentUuid), 2, "REJECTED", settled.simulatorReference(), Instant.now());
+        assertThat(deliver(alteredDuplicate)).isEqualTo("EXCEPTION_RECORDED");
+        assertThat(deliver(callback(paymentUuid, 2, "REJECTED"))).isEqualTo("EXCEPTION_RECORDED");
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                String.class, paymentUuid)).isEqualTo("COMPLETED");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM journal_entries WHERE reference = ?",
+                Integer.class, "corporate-payment:" + paymentId + ":refund")).isZero();
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM reconciliation_exceptions
+                WHERE operation_id = ? AND category IN ('CLEARING_CALLBACK_ID_REUSE', 'ILLEGAL_CLEARING_TRANSITION')
+                """, Integer.class, paymentUuid)).isEqualTo(2);
+
+        String unknownPaymentId = createApprovedPayment(maker, approver, organizationId, corporateAccountId,
+                "SIM-UNKNOWN", "5.00", "Uncertain Supplier");
+        UUID unknownPaymentUuid = UUID.fromString(unknownPaymentId);
+        assertThat(deliver(new Callback(UUID.randomUUID(), unknownPaymentUuid, unknownPaymentUuid,
+                "f".repeat(64), 1, "SETTLED", "SIM-TEST-WRONG-DIGEST", Instant.now())))
+                .isEqualTo("EXCEPTION_RECORDED");
+        assertThat(deliver(callback(unknownPaymentUuid, 2, "SETTLED"))).isEqualTo("EXCEPTION_RECORDED");
+        assertThat(jdbcTemplate.queryForObject("SELECT external_status FROM corporate_payment_intents WHERE id = ?",
+                String.class, unknownPaymentUuid)).isNull();
+        Callback unknown = callback(unknownPaymentUuid, 1, "UNKNOWN");
+        assertThat(deliver(unknown)).isEqualTo("ACCEPTED");
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                String.class, unknownPaymentUuid)).isEqualTo("UNKNOWN");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM journal_entries WHERE reference = ?",
+                Integer.class, "corporate-payment:" + unknownPaymentId + ":refund")).isZero();
+        assertThat(deliver(callback(unknownPaymentUuid, 1, "PENDING"))).isEqualTo("EXCEPTION_RECORDED");
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                String.class, unknownPaymentUuid)).isEqualTo("UNKNOWN");
+        assertThat(deliver(callback(unknownPaymentUuid, 2, "SETTLED"))).isEqualTo("ACCEPTED");
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                String.class, unknownPaymentUuid)).isEqualTo("COMPLETED");
+
+        String rejectedPaymentId = createApprovedPayment(maker, approver, organizationId, corporateAccountId,
+                "SIM-REJECT", "5.00", "Rejected Supplier");
+        UUID rejectedPaymentUuid = UUID.fromString(rejectedPaymentId);
+        assertThat(deliver(callback(rejectedPaymentUuid, 1, "REJECTED"))).isEqualTo("ACCEPTED");
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?",
+                String.class, rejectedPaymentUuid)).isEqualTo("REJECTED");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM journal_entries WHERE reference = ?",
+                Integer.class, "corporate-payment:" + rejectedPaymentId + ":refund")).isEqualTo(1);
+
         HttpResponse<String> adminSelfGrant = admin.call("POST",
                 "/api/organizations/" + organizationId + "/members/" + adminId + "/roles",
                 "{\"role\":\"PAYMENT_APPROVER\"}", true);
@@ -218,6 +278,32 @@ class OrganizationPostgresIntegrationTests {
                 VALUES (?, ?, ?, 'Two owners', 'OPEN', 'NZD')
                 """, UUID.randomUUID(), UUID.fromString(adminId), orgId))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    private String createApprovedPayment(Session maker, Session approver, String organizationId,
+            String corporateAccountId, String routingCode, String amount, String beneficiaryName) throws Exception {
+        String request = "{\"sourceAccountId\":\"" + corporateAccountId + "\",\"beneficiaryName\":\""
+                + beneficiaryName + "\",\"beneficiaryAccountReference\":\"NZ-" + UUID.randomUUID()
+                + "\",\"beneficiaryRoutingCode\":\"" + routingCode + "\",\"amount\":\"" + amount + "\"}";
+        HttpResponse<String> draft = maker.call("POST", "/api/organizations/" + organizationId + "/payments", request, true);
+        assertThat(draft.statusCode()).isEqualTo(201);
+        String paymentId = capture(ID, draft.body());
+        assertThat(maker.call("POST", "/api/payments/" + paymentId + "/submit", null, true).statusCode())
+                .isEqualTo(200);
+        assertThat(approver.call("POST", "/api/payments/" + paymentId + "/approve", null, true).statusCode())
+                .isEqualTo(200);
+        return paymentId;
+    }
+
+    private Callback callback(UUID paymentId, long sequenceNo, String status) {
+        String digest = jdbcTemplate.queryForObject(
+                "SELECT intent_digest FROM corporate_payment_intents WHERE id = ?", String.class, paymentId);
+        return new Callback(UUID.randomUUID(), paymentId, paymentId, digest, sequenceNo, status,
+                "SIM-TEST-" + paymentId.toString().substring(0, 8), Instant.now());
+    }
+
+    private String deliver(Callback callback) throws Exception {
+        return clearingCallbackService.receive(callback, JsonMapper.builder().build().writeValueAsBytes(callback)).result();
     }
 
     private String createPersonalAccount(Session session, String name) throws Exception {

@@ -1,0 +1,47 @@
+package nz.ac.ledgercore.clearing;
+
+import java.util.List;
+import java.util.UUID;
+
+import nz.ac.ledgercore.ledger.LedgerWriter;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class ClearingFinancialEffectProcessor {
+
+    private final JdbcTemplate jdbc;
+    private final LedgerWriter ledgerWriter;
+
+    public ClearingFinancialEffectProcessor(JdbcTemplate jdbc, LedgerWriter ledgerWriter) {
+        this.jdbc = jdbc;
+        this.ledgerWriter = ledgerWriter;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void apply(UUID paymentId) {
+        List<EffectState> states = jdbc.query("""
+                SELECT status, external_status, settlement_journal_entry_id, reversal_journal_entry_id
+                FROM corporate_payment_intents WHERE id = ? FOR UPDATE
+                """, (rs, row) -> new EffectState(rs.getString("status"), rs.getString("external_status"),
+                    rs.getObject("settlement_journal_entry_id", UUID.class),
+                    rs.getObject("reversal_journal_entry_id", UUID.class)), paymentId);
+        if (states.isEmpty()) {
+            return;
+        }
+        EffectState state = states.getFirst();
+        if ("SETTLED".equals(state.externalStatus()) && state.settlementEntryId() == null
+                && List.of("PENDING_CLEARING", "UNKNOWN").contains(state.status())) {
+            ledgerWriter.settleClearingPayment(paymentId);
+        }
+        else if ("REJECTED".equals(state.externalStatus()) && state.reversalEntryId() == null
+                && List.of("PENDING_CLEARING", "UNKNOWN").contains(state.status())) {
+            ledgerWriter.refundRejectedCorporatePayment(paymentId);
+        }
+    }
+
+    private record EffectState(String status, String externalStatus, UUID settlementEntryId, UUID reversalEntryId) {
+    }
+}

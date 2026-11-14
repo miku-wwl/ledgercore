@@ -29,7 +29,7 @@ Full rationale and constraints are in `ADR/0005-corporate-payment-approval-and-c
 |---|---|---|
 | Stage 0 | BASELINE PASS; design recorded | Fresh isolated 75-test baseline; Policy B ADR; pre-registered experiments; plan committed. |
 | E4 | NOT_STARTED | Approved-operation boundary; durable outbox; at-least-once dispatch; idempotent consumers; actor-attributed payroll and payment events; crash/retry evidence. |
-| E5 | NOT_STARTED | Separately restartable clearing simulator and separate DB; authenticated callbacks; stable operation identity; balanced booking, settlement and rejection entries; UNKNOWN reconciliation. |
+| E5 | PARTIAL | Independent simulator process/database, authenticated callback lifecycle, stable operation identity, balanced booking/settlement/refund, restart and UNKNOWN inquiry are locally verified; CI and a naturally underfunded reserve case remain outstanding. See `evidence/round3/e5/LOCAL-VALIDATION.md`. |
 | E6 | NOT_STARTED | Safe `inject` / `grade` / `restore` laboratory; real fault hooks behind explicit test configuration; independent SQL verdicts and case inventory. |
 | E7 | NOT_STARTED | Independent SQL reconciliation across ledger, receipts, payroll, payment intent, clearing, events, terminal states and organization boundaries; controlled exception workflow. |
 | E8 | NOT_STARTED | Authorization matrix; Policy B negative and positive tests; entitlement governance; audit trail; callback and operations authority tests. |
@@ -43,7 +43,7 @@ A stage is not VALIDATED until its required tests, independent database evidence
 
 - Stage 0 baseline and Policy B design are committed on `main`; Stage 0 CI run `43567898184` succeeded.
 - E4 is **VALIDATED**: commit `0dfcb0c6afddb4bc10af98aa16eba4764a6eb02a` is on `main`, and GitHub Actions run `43574289360` passed. Local backend, browser, API-contract, restart, and SQL evidence is in `evidence/round3/e4/LOCAL-VALIDATION.md`.
-- E5 is **PRE-REGISTERED; NOT_RUN** in `evidence/round3/e5/PRE-REGISTRATION.md`; implementation remains unstarted.
+- E5 is **PARTIAL**: the independent simulator, bank callback lifecycle, operations inquiry, migration V9, and typed OpenAPI endpoints are implemented on `main`. Local bank `clean verify` passed 81 tests, simulator `clean verify` passed 4, and a two-process/two-database restart exercise passed with balanced entries and zero projection mismatches. CI is pending. A test injects the reserve-insufficient exception and proves safe retry, but a real liquidity-shortfall state remains unexercised because no reserve-drain business operation exists. See `evidence/round3/e5/LOCAL-VALIDATION.md`; the pre-registration remains unchanged.
 - E6–E11 remain NOT_STARTED. No E12, textbook, or final PDF work has begun.
 
 ## Non-negotiable preservation rules

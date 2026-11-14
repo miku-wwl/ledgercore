@@ -18,6 +18,7 @@ import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 import nz.ac.ledgercore.api.ApiNotFoundException;
 
 @Order(Ordered.LOWEST_PRECEDENCE)
@@ -42,6 +43,14 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(ApiNotFoundException.class)
 	ResponseEntity<ProblemDetail> handleNotFound(ApiNotFoundException exception, HttpServletRequest request) {
 		return problem(HttpStatus.NOT_FOUND, "Not Found", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(ResponseStatusException.class)
+	ResponseEntity<ProblemDetail> handleResponseStatus(ResponseStatusException exception,
+			HttpServletRequest request) {
+		HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+		return problem(status, "Request rejected", exception.getReason() == null
+				? "The request was rejected." : exception.getReason(), request);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)

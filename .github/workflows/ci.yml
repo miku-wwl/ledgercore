@@ -40,6 +40,9 @@ jobs:
       LEDGERCORE_DB_USERNAME: ledgercore_ci
       LEDGERCORE_DB_PASSWORD: ledgercore_ci_password
       LEDGERCORE_COOKIE_SECURE: "false"
+      CLEARING_SIMULATOR_TEST_DB_URL: jdbc:postgresql://127.0.0.1:5432/ledgercore_simulator_test
+      CLEARING_SIMULATOR_TEST_DB_USERNAME: ledgercore_ci
+      CLEARING_SIMULATOR_TEST_DB_PASSWORD: ledgercore_ci_password
 
     steps:
       - name: Check out main
@@ -51,7 +54,9 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-          cache-dependency-path: backend/pom.xml
+          cache-dependency-path: |
+            backend/pom.xml
+            clearing-simulator/pom.xml
 
       - name: Set up Node.js 22
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -63,6 +68,16 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Create isolated simulator database
+        run: |
+          postgres_container=$(docker ps --filter "ancestor=postgres:18" --format "{{.ID}}" | head -n 1)
+          if [ -z "$postgres_container" ]; then
+            echo "PostgreSQL service container was not found" >&2
+            exit 1
+          fi
+          docker exec "$postgres_container" psql -U ledgercore_ci -d postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE DATABASE ledgercore_simulator_test OWNER ledgercore_ci"
 
       - name: Check JavaScript dependencies
         working-directory: frontend
@@ -77,8 +92,14 @@ jobs:
       - name: Verify backend, integration tests, and architecture rules
         run: ./backend/mvnw --batch-mode --no-transfer-progress -f backend/pom.xml clean verify
 
+      - name: Verify independent clearing simulator and PostgreSQL tests
+        run: ./backend/mvnw --batch-mode --no-transfer-progress -f clearing-simulator/pom.xml clean verify
+
       - name: Start application for API contract and browser checks
         shell: bash
+        env:
+          LEDGERCORE_CLEARING_ENABLED: "true"
+          LEDGERCORE_CLEARING_HMAC_SECRET: ci-contract-only-secret-with-32-bytes
         run: |
           java -jar backend/target/ledgercore-0.0.1-SNAPSHOT.jar --server.port=8080 > "$RUNNER_TEMP/ledgercore.log" 2>&1 &
           for attempt in {1..60}; do
@@ -115,6 +136,7 @@ jobs:
         --data-source=native
         --maven-registry=https://repo.maven.apache.org/maven2/
         --lockfile=backend/pom.xml
+        --lockfile=clearing-simulator/pom.xml
     permissions:
       actions: read
       contents: read
