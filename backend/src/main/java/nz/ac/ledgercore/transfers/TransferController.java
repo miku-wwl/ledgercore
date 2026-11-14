@@ -2,6 +2,8 @@ package nz.ac.ledgercore.transfers;
 
 import java.util.UUID;
 
+import nz.ac.ledgercore.api.E6FaultInjectionHook;
+import org.springframework.beans.factory.ObjectProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.spi.LoggingEventBuilder;
@@ -29,9 +31,11 @@ public class TransferController {
 	private static final Logger logger = LoggerFactory.getLogger(TransferController.class);
 
 	private final TransferService transferService;
+	private final ObjectProvider<E6FaultInjectionHook> e6FaultLab;
 
-	public TransferController(TransferService transferService) {
+	public TransferController(TransferService transferService, ObjectProvider<E6FaultInjectionHook> e6FaultLab) {
 		this.transferService = transferService;
+		this.e6FaultLab = e6FaultLab;
 	}
 
 	@PostMapping
@@ -42,6 +46,13 @@ public class TransferController {
 		try {
 			TransferReceipt receipt = transferService.transfer(principal.customerId(), request.sourceAccountId(),
 					request.targetAccountId(), amount, idempotencyKey);
+			E6FaultInjectionHook hook = e6FaultLab.getIfAvailable();
+			if (hook != null) {
+				java.util.Map<String, ?> facts = java.util.Map.of("transferId", receipt.transferId().toString(),
+						"idempotencyKey", idempotencyKey);
+				hook.checkpoint(E6FaultInjectionHook.TRANSFER_AFTER_COMMIT_BEFORE_RESPONSE, facts);
+				hook.checkpoint(E6FaultInjectionHook.OUTBOX_PERSISTED_BEFORE_DISPATCH, facts);
+			}
 			logTransfer("succeeded", "NONE", startedAt);
 			return ResponseEntity.ok(receipt);
 		}

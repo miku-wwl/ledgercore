@@ -6,7 +6,7 @@
 |---|---|---|---|
 | 1 | GPT-6 Luna | E0–E3 | **FINISHED** (`b584b95`, CI run 43553101864) |
 | 2 | Claude Opus 5.5 | Independent audit and remediation of E0–E3 | **ACCEPTED_WITH_NONBLOCKING_RISKS** — `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md` |
-| 3 | GPT-6 Luna | E4–E11 | **IN_PROGRESS — E4 VALIDATED; E5 PARTIAL** — E5 local backend/simulator verification and dual-process evidence are recorded; GitHub Actions run `43580338058` passed; E6–E11 remain |
+| 3 | GPT-6 Luna | E4–E11 | **IN_PROGRESS — E4 VALIDATED; E5 PARTIAL; E6 PARTIAL** — E5 CI run `43580338058` passed; E6 has three local crash/recovery cases and 82-test backend verification, with its CI pending; E7–E11 remain |
 | 4 | Claude Opus 5.5 | E12, final audit, V2 PDF | **NOT_STARTED** |
 
 - Next owner: GPT-6 Luna (Round 3).
@@ -20,7 +20,8 @@
 - Policy B: **DECIDED** in `ADR/0005-corporate-payment-approval-and-clearing.md`; E4 payment approval boundary and local verification are complete.
 - E4: **VALIDATED** — commit `0dfcb0c6afddb4bc10af98aa16eba4764a6eb02a` pushed directly to `main`; GitHub Actions run `43574289360` passed both full-stack acceptance and OSV scan. Local evidence: 78 backend tests, outbox restart/SQL verification, OpenAPI, frontend lint/build, and 3 Playwright journeys in `evidence/round3/e4/LOCAL-VALIDATION.md`.
 - E5: **PARTIAL** — bank `clean verify`: 81 tests passed; simulator `clean verify`: 4 passed; separate bank/simulator processes and databases completed settlement, UNKNOWN inquiry, simulator restart, callback replay, and balanced-ledger SQL checks. A test injects the insufficient-reserve exception to verify no settlement and retry recovery; naturally underfunded reserve behavior remains unexercised. GitHub Actions run `43580338058` passed verification, browser acceptance, and OSV. Evidence: `evidence/round3/e5/LOCAL-VALIDATION.md`; preregistration is preserved in `PRE-REGISTRATION.md`.
-- E6–E11: **NOT_STARTED**; no runtime behavior is claimed accepted for these stages.
+- E6: **PARTIAL** — three isolated personal-transfer process-kill/SQL-grade/recovery cases passed (pre-commit, post-commit/pre-response, and persisted outbox/pre-dispatch). Post-fix backend `clean verify` passed 82 tests, 0 failures/errors/skips. Payroll checkpoint and broader clearing, database, lock, worker, and migration faults remain unexecuted; E6 GitHub Actions is pending. Evidence: `evidence/round3/e6/LOCAL-VALIDATION.md` and `CASE-INVENTORY.md`.
+- E7–E11: **NOT_STARTED**; no runtime behavior is claimed accepted for these stages.
 - Round 3 plan and pre-registration: `ROUND-3-PLAN.md`, `evidence/round3/e4/PRE-REGISTRATION.md`, `evidence/round3/e5/PRE-REGISTRATION.md`, `evidence/round3/e6/PRE-REGISTRATION.md`, `evidence/round3/e9/PERFORMANCE-PRE-REGISTRATION.md`.
 - Stop after E11 and the Round 3 handoff. E12 and the final PDF remain Round 4 work.
 

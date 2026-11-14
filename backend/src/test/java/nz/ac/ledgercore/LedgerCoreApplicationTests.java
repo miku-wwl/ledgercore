@@ -11,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import nz.ac.ledgercore.api.E6FaultInjectionHook;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -20,6 +22,9 @@ class LedgerCoreApplicationTests {
 
 	@Autowired
 	JdbcTemplate jdbcTemplate;
+
+	@Autowired
+	ApplicationContext applicationContext;
 
 	@Value("${local.server.port}")
 	int port;
@@ -33,6 +38,11 @@ class LedgerCoreApplicationTests {
 		assertThat(response.statusCode()).isEqualTo(200);
 		assertThat(response.body()).contains("\"status\":\"UP\"");
 		assertThat(response.headers().firstValue(CorrelationIdFilter.HEADER_NAME)).contains("p1-health-check-01");
+	}
+
+	@Test
+	void faultInjectionHookIsAbsentWithoutTheDedicatedE6Profile() {
+		assertThat(applicationContext.getBeansOfType(E6FaultInjectionHook.class)).isEmpty();
 	}
 
 	@Test

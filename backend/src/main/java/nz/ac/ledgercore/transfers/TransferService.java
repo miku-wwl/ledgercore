@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import nz.ac.ledgercore.api.E6FaultInjectionHook;
 import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.events.DurableEventStore;
 import nz.ac.ledgercore.ledger.InsufficientLedgerBalanceException;
@@ -19,6 +20,7 @@ import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
 import nz.ac.ledgercore.organizations.OrganizationRole;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,14 +42,17 @@ public class TransferService {
 	private final LedgerWriter ledgerWriter;
 	private final DurableEventStore eventStore;
 	private final OrganizationAuthorizationService organizationAuthorizationService;
+	private final ObjectProvider<E6FaultInjectionHook> e6FaultLab;
 
 	public TransferService(JdbcTemplate jdbcTemplate, AccountService accountService, LedgerWriter ledgerWriter,
-			DurableEventStore eventStore, OrganizationAuthorizationService organizationAuthorizationService) {
+			DurableEventStore eventStore, OrganizationAuthorizationService organizationAuthorizationService,
+			ObjectProvider<E6FaultInjectionHook> e6FaultLab) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.accountService = accountService;
 		this.ledgerWriter = ledgerWriter;
 		this.eventStore = eventStore;
 		this.organizationAuthorizationService = organizationAuthorizationService;
+		this.e6FaultLab = e6FaultLab;
 	}
 
 	/**
@@ -159,6 +164,11 @@ public class TransferService {
 					"amountMinor", amount.minorUnits(), "currency", "NZD"));
 		if (recorder != null) {
 			recorder.record(receipt);
+		}
+		E6FaultInjectionHook hook = e6FaultLab.getIfAvailable();
+		if (hook != null) {
+			hook.checkpoint(E6FaultInjectionHook.TRANSFER_PRE_COMMIT,
+					Map.of("transferId", transferId.toString(), "idempotencyKey", idempotencyKey));
 		}
 		return receipt;
 	}

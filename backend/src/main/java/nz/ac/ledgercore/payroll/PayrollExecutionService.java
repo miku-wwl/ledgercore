@@ -2,7 +2,9 @@ package nz.ac.ledgercore.payroll;
 
 import java.util.UUID;
 
+import nz.ac.ledgercore.api.E6FaultInjectionHook;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,12 +15,15 @@ public class PayrollExecutionService {
     private final PayrollService payrollService;
     private final OrganizationAuthorizationService authorizationService;
     private final PayrollItemExecutor itemExecutor;
+    private final ObjectProvider<E6FaultInjectionHook> e6FaultLab;
 
     public PayrollExecutionService(PayrollService payrollService,
-            OrganizationAuthorizationService authorizationService, PayrollItemExecutor itemExecutor) {
+            OrganizationAuthorizationService authorizationService, PayrollItemExecutor itemExecutor,
+            ObjectProvider<E6FaultInjectionHook> e6FaultLab) {
         this.payrollService = payrollService;
         this.authorizationService = authorizationService;
         this.itemExecutor = itemExecutor;
+        this.e6FaultLab = e6FaultLab;
     }
 
     /** The orchestration method is deliberately non-transactional: each executor call commits one item. */
@@ -54,6 +59,12 @@ public class PayrollExecutionService {
                 processed++;
             }
             catch (PayrollItemTransferFailure failure) {
+                E6FaultInjectionHook hook = e6FaultLab.getIfAvailable();
+                if (hook != null) {
+                    hook.checkpoint(E6FaultInjectionHook.PAYROLL_AFTER_ROLLBACK_BEFORE_FAILURE_MARK,
+                            java.util.Map.of("batchId", failure.batchId().toString(),
+                                    "itemId", failure.itemId().toString(), "failureCode", failure.failureCode()));
+                }
                 payrollService.markItemFailed(failure.itemId(), failure.failureCode(), failure.getMessage(), actorCustomerId);
                 processed++;
             }
