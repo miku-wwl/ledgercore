@@ -77,6 +77,27 @@ class SimulatorOperationPostgresIntegrationTests {
                 Integer.class, request.operationId())).isEqualTo(1);
     }
 
+    @Test
+    void preservesCorrelationIdForCallbackDispatchAcrossOperationAndInquiry() {
+        OperationRequest request = request("SIM-UNKNOWN");
+        String correlationId = "e9-" + UUID.randomUUID();
+        operations.submit(request, correlationId);
+        assertThat(jdbc.queryForObject("SELECT correlation_id FROM simulator_operations WHERE operation_id = ?",
+                String.class, request.operationId())).isEqualTo(correlationId);
+        assertThat(jdbc.queryForObject("""
+                SELECT o.correlation_id
+                FROM simulator_callback_outbox c
+                JOIN simulator_operations o ON o.operation_id = c.operation_id
+                WHERE c.operation_id = ?
+                """, String.class, request.operationId())).isEqualTo(correlationId);
+        operations.inquire(request.operationId());
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM simulator_callback_outbox c
+                JOIN simulator_operations o ON o.operation_id = c.operation_id
+                WHERE c.operation_id = ? AND o.correlation_id = ?
+                """, Integer.class, request.operationId(), correlationId)).isEqualTo(2);
+    }
+
     private OperationRequest request(String routingCode) {
         return new OperationRequest(UUID.randomUUID(), UUID.randomUUID(), "b".repeat(64), 12_345,
                 "NZD", "TEST-" + UUID.randomUUID(), routingCode);

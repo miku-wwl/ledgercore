@@ -5,6 +5,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
@@ -16,6 +19,8 @@ import org.springframework.web.client.RestClient;
 @Service
 @ConditionalOnProperty(name = "ledgercore.clearing.callback-dispatch-enabled", havingValue = "true", matchIfMissing = true)
 public class SimulatorCallbackDispatcher {
+
+    private static final Logger log = LoggerFactory.getLogger(SimulatorCallbackDispatcher.class);
 
     private final SimulatorCallbackStore callbackStore;
     private final ClearingSignature signature;
@@ -40,21 +45,36 @@ public class SimulatorCallbackDispatcher {
             if (row == null) {
                 return;
             }
+            String previousCorrelationId = MDC.get("correlationId");
+            MDC.put("correlationId", row.correlationId());
             try {
                 long timestamp = Instant.now().getEpochSecond();
                 byte[] body = row.payload().getBytes(StandardCharsets.UTF_8);
                 client.post().uri(callbackUrl).contentType(MediaType.APPLICATION_JSON)
                         .header(ClearingSignature.TIMESTAMP_HEADER, Long.toString(timestamp))
                         .header(ClearingSignature.SIGNATURE_HEADER, signature.sign(timestamp, body))
+                        .header("X-Correlation-ID", row.correlationId())
                         .body(body).retrieve().toBodilessEntity();
                 callbackStore.markDelivered(row.callbackId());
+                log.info("Simulator callback delivered callbackId={} operationId={}", row.callbackId(), row.operationId());
             }
             catch (RuntimeException exception) {
                 callbackStore.markFailed(row, exception.getClass().getSimpleName());
+                log.warn("Simulator callback delivery failed callbackId={} operationId={} failureType={}",
+                        row.callbackId(), row.operationId(), exception.getClass().getSimpleName());
+            }
+            finally {
+                if (previousCorrelationId == null) {
+                    MDC.remove("correlationId");
+                }
+                else {
+                    MDC.put("correlationId", previousCorrelationId);
+                }
             }
         }
     }
 
-    public record CallbackRow(UUID callbackId, UUID operationId, int attemptCount, String payload) {
+    public record CallbackRow(UUID callbackId, UUID operationId, int attemptCount, String correlationId,
+            String payload) {
     }
 }

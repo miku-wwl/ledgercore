@@ -10,12 +10,14 @@ import java.util.UUID;
 import nz.ac.ledgercore.accounts.AccountOwner;
 import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.api.ApiNotFoundException;
+import nz.ac.ledgercore.TransactionRollbackMetrics;
 import nz.ac.ledgercore.events.DurableEventStore;
 import nz.ac.ledgercore.ledger.InsufficientLedgerBalanceException;
 import nz.ac.ledgercore.ledger.LedgerWriter;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
 import nz.ac.ledgercore.organizations.OrganizationRole;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -29,15 +31,19 @@ public class CorporatePaymentService {
     private final OrganizationAuthorizationService authorizationService;
     private final LedgerWriter ledgerWriter;
     private final DurableEventStore eventStore;
+    private final MeterRegistry meterRegistry;
+    private final TransactionRollbackMetrics rollbackMetrics;
 
     public CorporatePaymentService(JdbcTemplate jdbcTemplate, AccountService accountService,
             OrganizationAuthorizationService authorizationService, LedgerWriter ledgerWriter,
-            DurableEventStore eventStore) {
+            DurableEventStore eventStore, MeterRegistry meterRegistry, TransactionRollbackMetrics rollbackMetrics) {
         this.jdbcTemplate = jdbcTemplate;
         this.accountService = accountService;
         this.authorizationService = authorizationService;
         this.ledgerWriter = ledgerWriter;
         this.eventStore = eventStore;
+        this.meterRegistry = meterRegistry;
+        this.rollbackMetrics = rollbackMetrics;
     }
 
     @Transactional
@@ -103,6 +109,7 @@ public class CorporatePaymentService {
 
     @Transactional
     public PaymentView approve(UUID actorCustomerId, UUID paymentId) {
+        rollbackMetrics.observe("corporate_payment_approval");
         PaymentRow payment = lockPayment(paymentId);
         authorizationService.requireCanApprovePayment(actorCustomerId, payment.organizationId(),
                 payment.createdByCustomerId());
@@ -149,6 +156,14 @@ public class CorporatePaymentService {
         catch (InsufficientLedgerBalanceException exception) {
             throw new CorporatePaymentException("INSUFFICIENT_FUNDS",
                     "The corporate account does not have enough available funds.", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+        Double approvalDelaySeconds = jdbcTemplate.queryForObject("""
+                SELECT extract(epoch FROM approved_at - submitted_at)
+                FROM corporate_payment_intents WHERE id = ?
+                """, Double.class, paymentId);
+        if (approvalDelaySeconds != null && approvalDelaySeconds >= 0) {
+            meterRegistry.timer("ledgercore.corporate_payment.approval.delay", "outcome", "approved")
+                    .record(java.time.Duration.ofNanos((long) (approvalDelaySeconds * 1_000_000_000L)));
         }
         return viewFor(actorCustomerId, paymentId);
     }

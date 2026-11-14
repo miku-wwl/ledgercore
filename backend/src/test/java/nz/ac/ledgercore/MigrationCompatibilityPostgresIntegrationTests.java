@@ -95,7 +95,7 @@ class MigrationCompatibilityPostgresIntegrationTests {
             flyway.validate();
             List<MigrationInfo> applied = versioned(flyway);
             assertThat(applied).extracting(info -> info.getVersion().getVersion())
-                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9");
+                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
             assertThat(applied).allSatisfy(info -> assertThat(info.getState().isApplied()).isTrue());
             for (MigrationInfo info : applied) {
                 Integer published = PUBLISHED_CHECKSUMS.get(info.getScript());

@@ -13,12 +13,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class SimulatorOperationService {
 
+    private static final Logger log = LoggerFactory.getLogger(SimulatorOperationService.class);
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private final JdbcTemplate jdbc;
 
@@ -28,7 +31,16 @@ public class SimulatorOperationService {
 
     @Transactional
     public OperationResponse submit(OperationRequest request) {
+        return submit(request, request == null || request.operationId() == null
+                ? UUID.randomUUID().toString() : request.operationId().toString());
+    }
+
+    @Transactional
+    public OperationResponse submit(OperationRequest request, String correlationId) {
         validate(request);
+        if (correlationId == null || !correlationId.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,63}")) {
+            correlationId = request.operationId().toString();
+        }
         List<OperationResponse> existing = find(request.operationId(), true);
         if (!existing.isEmpty()) {
             OperationResponse current = existing.getFirst();
@@ -47,14 +59,16 @@ public class SimulatorOperationService {
         String reference = "SIM-" + request.operationId().toString().replace("-", "").substring(0, 20).toUpperCase();
         jdbc.update("""
                 INSERT INTO simulator_operations (operation_id, payment_id, intent_digest, amount_minor, currency,
-                    beneficiary_reference, routing_code, outcome_policy, external_status, simulator_reference)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    beneficiary_reference, routing_code, outcome_policy, external_status, simulator_reference,
+                    correlation_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, request.operationId(), request.paymentId(), request.intentDigest(), request.amountMinor(),
                 request.currency(), request.beneficiaryReference(), request.routingCode(), route.policy(),
-                route.initialStatus(), reference);
+                route.initialStatus(), reference, correlationId);
         OperationResponse response = new OperationResponse(request.operationId(), request.paymentId(),
                 request.intentDigest(), route.initialStatus(), reference, 1);
         enqueueCallback(response);
+        log.info("Simulator operation accepted operationId={} status={}", request.operationId(), route.initialStatus());
         return response;
     }
 
@@ -62,12 +76,12 @@ public class SimulatorOperationService {
     public OperationResponse inquire(UUID operationId) {
         List<OperationRow> rows = jdbc.query("""
                 SELECT operation_id, payment_id, intent_digest, external_status, simulator_reference, inquiry_count,
-                       outcome_policy
+                       outcome_policy, correlation_id
                 FROM simulator_operations WHERE operation_id = ? FOR UPDATE
                 """, (rs, row) -> new OperationRow(rs.getObject("operation_id", UUID.class),
                     rs.getObject("payment_id", UUID.class), rs.getString("intent_digest").trim(),
                     rs.getString("external_status"), rs.getString("simulator_reference"),
-                    rs.getInt("inquiry_count"), rs.getString("outcome_policy")), operationId);
+                    rs.getInt("inquiry_count"), rs.getString("outcome_policy"), rs.getString("correlation_id")), operationId);
         if (rows.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Simulator operation was not found.");
         }
@@ -88,6 +102,7 @@ public class SimulatorOperationService {
             OperationResponse response = new OperationResponse(current.operationId(), current.paymentId(),
                     current.digest(), next, current.reference(), current.inquiryCount() + 2L);
             enqueueCallback(response);
+            log.info("Simulator operation inquiry changed status operationId={} status={}", operationId, next);
             return response;
         }
         jdbc.update("UPDATE simulator_operations SET inquiry_count = inquiry_count + 1, updated_at = clock_timestamp() WHERE operation_id = ?",
@@ -162,6 +177,6 @@ public class SimulatorOperationService {
     }
 
     private record OperationRow(UUID operationId, UUID paymentId, String digest, String status, String reference,
-            int inquiryCount, String policy) {
+            int inquiryCount, String policy, String correlationId) {
     }
 }

@@ -9,7 +9,9 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.identity.IdentityService;
 import nz.ac.ledgercore.ledger.Money;
@@ -23,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.slf4j.MDC;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -54,6 +57,9 @@ class DurableOutboxPostgresIntegrationTests {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    MeterRegistry meterRegistry;
+
     @Test
     void retriesExpiredLeasesIdempotentlyAndAllowsAuditedDeadLetterRecovery() {
         var admin = identityService.register(email("admin"), PASSWORD, "Outbox Test Admin");
@@ -79,8 +85,11 @@ class DurableOutboxPostgresIntegrationTests {
         assertThat(status(eventId)).isEqualTo("DELIVERED");
         assertThat(attemptCount(eventId)).isEqualTo(2);
         assertThat(receiptCount(eventId, "durable-fact-observer-v1")).isEqualTo(1);
+        double duplicateReceiptsBefore = meterRegistry.counter("ledgercore.events.duplicate.receipts").count();
         eventStore.recordConsumerReceipt(firstClaim, "durable-fact-observer-v1");
         assertThat(receiptCount(eventId, "durable-fact-observer-v1")).isEqualTo(1);
+        assertThat(meterRegistry.counter("ledgercore.events.duplicate.receipts").count())
+                .isEqualTo(duplicateReceiptsBefore + 1);
 
         UUID deadEventId = eventStore.enqueue("round3.outbox.dead:" + UUID.randomUUID(), "round3.outbox.dead",
                 "TEST", UUID.randomUUID(), admin.id(), organization.id(), Map.of("failure", true));
@@ -175,6 +184,48 @@ class DurableOutboxPostgresIntegrationTests {
                 JOIN outbox_events event ON event.id = receipt.event_id
                 WHERE event.event_key LIKE ? AND receipt.consumer_key = 'durable-fact-observer-v1'
                 """, Integer.class, eventKeyPrefix + "%")).isEqualTo(eventCount);
+    }
+
+    @Test
+    void carriesPersistedCorrelationIdIntoBackgroundHandlerAndRestoresWorkerContext() {
+        drainPendingEvents();
+        String eventCorrelationId = "e9-trace-" + UUID.randomUUID();
+        String previousCorrelationId = MDC.get("correlationId");
+        try {
+            MDC.put("correlationId", eventCorrelationId);
+            UUID eventId = eventStore.enqueue("e9.correlation:" + UUID.randomUUID(), "e9.correlation.test", "TEST",
+                    UUID.randomUUID(), null, null, java.util.Map.of("fixture", true));
+            MDC.put("correlationId", "outer-worker-context");
+            OutboxEvent claimed = eventStore.claimNext();
+            assertThat(claimed).isNotNull();
+            assertThat(claimed.id()).isEqualTo(eventId);
+
+            AtomicReference<String> observedCorrelationId = new AtomicReference<>();
+            OutboxDispatcher correlatedDispatcher = new OutboxDispatcher(eventStore, List.of(new OutboxEventHandler() {
+                @Override
+                public boolean supports(OutboxEvent event) {
+                    return event.eventType().equals("e9.correlation.test");
+                }
+
+                @Override
+                public void handle(OutboxEvent event) {
+                    observedCorrelationId.set(MDC.get("correlationId"));
+                }
+            }), meterRegistry);
+            correlatedDispatcher.dispatchClaimed(claimed);
+
+            assertThat(observedCorrelationId.get()).isEqualTo(eventCorrelationId);
+            assertThat(MDC.get("correlationId")).isEqualTo("outer-worker-context");
+            assertThat(status(eventId)).isEqualTo("DELIVERED");
+        }
+        finally {
+            if (previousCorrelationId == null) {
+                MDC.remove("correlationId");
+            }
+            else {
+                MDC.put("correlationId", previousCorrelationId);
+            }
+        }
     }
 
     @Test

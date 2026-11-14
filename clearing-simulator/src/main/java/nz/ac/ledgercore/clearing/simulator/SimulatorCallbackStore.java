@@ -21,8 +21,10 @@ public class SimulatorCallbackStore {
     @Transactional
     public CallbackRow claimNext() {
         List<CallbackRow> rows = jdbc.query("""
-                SELECT c.callback_id, c.operation_id, c.attempt_count, c.payload::text AS payload
+                SELECT c.callback_id, c.operation_id, c.attempt_count, c.payload::text AS payload,
+                       o.correlation_id
                 FROM simulator_callback_outbox c
+                JOIN simulator_operations o ON o.operation_id = c.operation_id
                 WHERE ((c.delivery_status = 'PENDING' AND c.next_attempt_at <= clock_timestamp())
                     OR (c.delivery_status = 'PROCESSING' AND c.lease_until < clock_timestamp()))
                     AND c.attempt_count < ?
@@ -36,7 +38,7 @@ public class SimulatorCallbackStore {
                 FOR UPDATE SKIP LOCKED LIMIT 1
                 """, (rs, row) -> new CallbackRow(rs.getObject("callback_id", UUID.class),
                     rs.getObject("operation_id", UUID.class), rs.getInt("attempt_count") + 1,
-                    rs.getString("payload")), MAX_ATTEMPTS);
+                    rs.getString("correlation_id"), rs.getString("payload")), MAX_ATTEMPTS);
         if (rows.isEmpty()) {
             jdbc.update("""
                     UPDATE simulator_callback_outbox SET delivery_status = 'DEAD', lease_until = NULL,

@@ -35,7 +35,8 @@ public class SimulatorInternalController {
             @RequestBody byte[] rawBody) {
         verify(timestamp, signed, rawBody);
         try {
-            return operations.submit(JSON.readValue(rawBody, OperationRequest.class));
+            return operations.submit(JSON.readValue(rawBody, OperationRequest.class),
+                    org.slf4j.MDC.get("correlationId"));
         }
         catch (JacksonException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Operation request is malformed.");

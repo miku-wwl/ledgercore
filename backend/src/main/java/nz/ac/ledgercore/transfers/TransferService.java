@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import nz.ac.ledgercore.api.E6FaultInjectionHook;
+import nz.ac.ledgercore.TransactionRollbackMetrics;
 import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.events.DurableEventStore;
 import nz.ac.ledgercore.ledger.InsufficientLedgerBalanceException;
@@ -19,6 +20,8 @@ import nz.ac.ledgercore.ledger.LedgerWriter;
 import nz.ac.ledgercore.ledger.Money;
 import nz.ac.ledgercore.organizations.OrganizationAuthorizationService;
 import nz.ac.ledgercore.organizations.OrganizationRole;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -43,16 +46,21 @@ public class TransferService {
 	private final DurableEventStore eventStore;
 	private final OrganizationAuthorizationService organizationAuthorizationService;
 	private final ObjectProvider<E6FaultInjectionHook> e6FaultLab;
+	private final MeterRegistry meterRegistry;
+	private final TransactionRollbackMetrics rollbackMetrics;
 
 	public TransferService(JdbcTemplate jdbcTemplate, AccountService accountService, LedgerWriter ledgerWriter,
 			DurableEventStore eventStore, OrganizationAuthorizationService organizationAuthorizationService,
-			ObjectProvider<E6FaultInjectionHook> e6FaultLab) {
+			ObjectProvider<E6FaultInjectionHook> e6FaultLab, MeterRegistry meterRegistry,
+			TransactionRollbackMetrics rollbackMetrics) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.accountService = accountService;
 		this.ledgerWriter = ledgerWriter;
 		this.eventStore = eventStore;
 		this.organizationAuthorizationService = organizationAuthorizationService;
 		this.e6FaultLab = e6FaultLab;
+		this.meterRegistry = meterRegistry;
+		this.rollbackMetrics = rollbackMetrics;
 	}
 
 	/**
@@ -62,11 +70,23 @@ public class TransferService {
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public TransferReceipt transfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
 			Money amount, String idempotencyKey) {
-		if (idempotencyKey != null && idempotencyKey.startsWith(PAYROLL_IDEMPOTENCY_KEY_PREFIX)) {
-			throw error(TransferErrorCode.INVALID_REQUEST,
-					"Idempotency-Key values starting with 'payroll-' are reserved for payroll execution.");
+		rollbackMetrics.observe("customer_transfer");
+		Timer.Sample sample = Timer.start(meterRegistry);
+		String outcome = "success";
+		try {
+			if (idempotencyKey != null && idempotencyKey.startsWith(PAYROLL_IDEMPOTENCY_KEY_PREFIX)) {
+				throw error(TransferErrorCode.INVALID_REQUEST,
+						"Idempotency-Key values starting with 'payroll-' are reserved for payroll execution.");
+			}
+			return executeTransfer(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey, null);
 		}
-		return executeTransfer(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey, null);
+		catch (RuntimeException exception) {
+			outcome = "failure";
+			throw exception;
+		}
+		finally {
+			sample.stop(meterRegistry.timer("ledgercore.transfer.duration", "path", "customer", "outcome", outcome));
+		}
 	}
 
 	/**
@@ -76,8 +96,20 @@ public class TransferService {
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public TransferReceipt transferAndRecord(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,
 			Money amount, String idempotencyKey, TransferReceiptRecorder recorder) {
-		return executeTransfer(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey,
-				Objects.requireNonNull(recorder, "recorder"));
+		rollbackMetrics.observe("recorded_transfer");
+		Timer.Sample sample = Timer.start(meterRegistry);
+		String outcome = "success";
+		try {
+			return executeTransfer(authenticatedCustomerId, sourceAccountId, targetAccountId, amount, idempotencyKey,
+					Objects.requireNonNull(recorder, "recorder"));
+		}
+		catch (RuntimeException exception) {
+			outcome = "failure";
+			throw exception;
+		}
+		finally {
+			sample.stop(meterRegistry.timer("ledgercore.transfer.duration", "path", "recorded", "outcome", outcome));
+		}
 	}
 
 	private TransferReceipt executeTransfer(UUID authenticatedCustomerId, UUID sourceAccountId, UUID targetAccountId,

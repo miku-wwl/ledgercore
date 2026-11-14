@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import nz.ac.ledgercore.accounts.AccountService;
 import nz.ac.ledgercore.ledger.LedgerBalanceReader;
 import nz.ac.ledgercore.ledger.LedgerWriter;
@@ -51,6 +52,9 @@ class TransferPostgresIntegrationTests {
 
 	@Autowired
 	PlatformTransactionManager transactionManager;
+
+	@Autowired
+	MeterRegistry meterRegistry;
 
 	@Test
 	void transferIsDoubleEntryAtomicAndItsSuccessfulReceiptIsDurable() {
@@ -148,6 +152,8 @@ class TransferPostgresIntegrationTests {
 
 	@Test
 	void rejectsUnauthorizedSourceAndInsufficientFundsWithoutPersistingFailureReceipts() {
+		double rollbacksBefore = meterRegistry.counter("ledgercore.transaction.rollbacks", "boundary",
+				"customer_transfer").count();
 		UUID alice = createCustomer();
 		UUID bob = createCustomer();
 		UUID aliceAccount = createAccount(alice, "Alice");
@@ -166,6 +172,8 @@ class TransferPostgresIntegrationTests {
 		assertThat(idempotencyCount(alice)).isZero();
 		assertThat(balanceReader.ledgerBalanceForCustomerAccount(aliceAccount).minorUnits()).isEqualTo(100_000L);
 		assertThat(balanceReader.ledgerBalanceForCustomerAccount(bobAccount).minorUnits()).isEqualTo(100_000L);
+		assertThat(meterRegistry.counter("ledgercore.transaction.rollbacks", "boundary", "customer_transfer").count())
+				.isEqualTo(rollbacksBefore + 2);
 	}
 
 	@Test

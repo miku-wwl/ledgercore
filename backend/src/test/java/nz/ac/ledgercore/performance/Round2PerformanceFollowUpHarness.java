@@ -70,10 +70,10 @@ class Round2PerformanceFollowUpHarness {
             SELECT b.id AS batch_id, b.status AS batch_status, b.payer_account_id,
                    b.created_by_customer_id, i.id AS item_id, i.payee_account_id,
                    i.amount_minor, r.status AS item_status, r.transfer_id
-            FROM payroll_batches b
-            JOIN payroll_items i ON i.batch_id = b.id
-            JOIN payroll_item_results r ON r.item_id = i.id
-            WHERE b.id = ? AND r.status = 'PENDING'
+            FROM payroll_item_results r
+            JOIN payroll_items i ON i.id = r.item_id AND i.batch_id = r.batch_id
+            JOIN payroll_batches b ON b.id = r.batch_id
+            WHERE r.batch_id = ? AND r.status = 'PENDING'
             ORDER BY i.sequence_no
             LIMIT 1 FOR UPDATE OF r SKIP LOCKED
             """;

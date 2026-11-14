@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.MDC;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -24,9 +25,11 @@ public class DurableEventStore {
     private static final JsonMapper OBJECT_MAPPER = JsonMapper.builder().build();
 
     private final JdbcTemplate jdbcTemplate;
+    private final MeterRegistry meterRegistry;
 
-    public DurableEventStore(JdbcTemplate jdbcTemplate) {
+    public DurableEventStore(JdbcTemplate jdbcTemplate, MeterRegistry meterRegistry) {
         this.jdbcTemplate = jdbcTemplate;
+        this.meterRegistry = meterRegistry;
     }
 
     @Transactional
@@ -118,11 +121,14 @@ public class DurableEventStore {
 
     @Transactional
     public void recordConsumerReceipt(OutboxEvent event, String consumerKey) {
-        jdbcTemplate.update("""
+        int inserted = jdbcTemplate.update("""
                 INSERT INTO outbox_consumer_receipts (event_id, consumer_key, result_digest)
                 VALUES (?, ?, ?)
                 ON CONFLICT (event_id, consumer_key) DO NOTHING
                 """, event.id(), consumerKey, sha256(event.payloadJson()));
+        if (inserted == 0) {
+            meterRegistry.counter("ledgercore.events.duplicate.receipts").increment();
+        }
     }
 
     @Transactional(readOnly = true)

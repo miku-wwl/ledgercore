@@ -2,18 +2,33 @@ package nz.ac.ledgercore.events;
 
 import java.util.List;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /** At-least-once dispatcher. Handlers must be idempotent because a crash can follow a successful side effect. */
 @Service
 public class OutboxDispatcher {
 
+    private static final Logger log = LoggerFactory.getLogger(OutboxDispatcher.class);
+
     private final DurableEventStore eventStore;
     private final List<OutboxEventHandler> handlers;
+    private final MeterRegistry meterRegistry;
 
-    public OutboxDispatcher(DurableEventStore eventStore, List<OutboxEventHandler> handlers) {
+    @Autowired
+    public OutboxDispatcher(DurableEventStore eventStore, List<OutboxEventHandler> handlers, MeterRegistry meterRegistry) {
         this.eventStore = eventStore;
         this.handlers = handlers;
+        this.meterRegistry = meterRegistry;
+    }
+
+    public OutboxDispatcher(DurableEventStore eventStore, List<OutboxEventHandler> handlers) {
+        this(eventStore, handlers, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
     }
 
     public boolean dispatchOne() {
@@ -21,16 +36,43 @@ public class OutboxDispatcher {
         if (event == null) {
             return false;
         }
+        dispatchClaimed(event);
+        return true;
+    }
+
+    void dispatchClaimed(OutboxEvent event) {
+        String previousCorrelationId = MDC.get("correlationId");
+        if (event.correlationId() == null) {
+            MDC.remove("correlationId");
+        }
+        else {
+            MDC.put("correlationId", event.correlationId());
+        }
+        Timer.Sample sample = Timer.start(meterRegistry);
+        String outcome = "success";
         try {
             OutboxEventHandler handler = handlers.stream().filter(candidate -> candidate.supports(event))
                     .findFirst().orElseThrow(() -> new IllegalStateException("No handler accepts the event type."));
             handler.handle(event);
             eventStore.markDelivered(event.id());
+            log.info("Outbox event delivered type={} id={}", event.eventType(), event.id());
         }
         catch (RuntimeException exception) {
-            eventStore.markDeliveryFailure(event.id(), event.attemptCount(), exception.getMessage());
+            outcome = "failure";
+            meterRegistry.counter("ledgercore.outbox.delivery.failures").increment();
+            eventStore.markDeliveryFailure(event.id(), event.attemptCount(), exception.getClass().getSimpleName());
+            log.warn("Outbox event delivery failed type={} id={} failureType={}", event.eventType(), event.id(),
+                    exception.getClass().getSimpleName());
         }
-        return true;
+        finally {
+            sample.stop(meterRegistry.timer("ledgercore.outbox.delivery.duration", "outcome", outcome));
+            if (previousCorrelationId == null) {
+                MDC.remove("correlationId");
+            }
+            else {
+                MDC.put("correlationId", previousCorrelationId);
+            }
+        }
     }
 
     public int dispatchAvailable(int limit) {

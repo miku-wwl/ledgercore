@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
@@ -44,9 +45,16 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, LedgerCoreObservability observability) throws Exception {
 		return http
 			.authorizeHttpRequests(authorize -> authorize
+				.requestMatchers("/actuator/prometheus", "/actuator/ledgercore").access((authentication, context) -> {
+					if (authentication.get() == null
+							|| !(authentication.get().getPrincipal() instanceof nz.ac.ledgercore.identity.CustomerPrincipal principal)) {
+						return new AuthorizationDecision(false);
+					}
+					return new AuthorizationDecision(observability.isOperationsMember(principal.customerId()));
+				})
 				.requestMatchers("/actuator/health", "/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**",
 						"/swagger-ui.html", "/api/auth/csrf", "/api/auth/register", "/api/auth/login")
 				.permitAll()

@@ -1,0 +1,38 @@
+groups:
+  - name: ledgercore-e9-local
+    rules:
+      - alert: LedgerCoreOutboxPendingTooLong
+        expr: ledgercore_outbox_oldest_pending_age_seconds > 30
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: A committed outbox event has waited more than 30 seconds.
+      - alert: LedgerCoreClearingOutcomeUnknown
+        expr: ledgercore_clearing_unknown_operations > 0
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: A clearing operation has an unresolved UNKNOWN outcome.
+      - alert: LedgerCoreReconciliationExceptionOpen
+        expr: ledgercore_reconciliation_open_exceptions > 0
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: A reconciliation exception remains open or assigned.
+      - alert: LedgerCoreHikariConnectionWait
+        expr: ledgercore_hikari_pending_acquisitions > 0
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: An application thread is waiting to acquire a Hikari connection.
+      - alert: LedgerCorePostgreSqlLockWait
+        expr: ledgercore_postgresql_lock_wait_sessions > 0
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: PostgreSQL reports one or more sessions waiting on a lock.

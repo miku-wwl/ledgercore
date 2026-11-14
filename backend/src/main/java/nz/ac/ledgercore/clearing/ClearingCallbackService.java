@@ -1,6 +1,8 @@
 package nz.ac.ledgercore.clearing;
 
 import java.security.MessageDigest;
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,8 @@ import java.util.UUID;
 import nz.ac.ledgercore.clearing.ClearingDtos.Callback;
 import nz.ac.ledgercore.clearing.ClearingDtos.CallbackAck;
 import nz.ac.ledgercore.events.DurableEventStore;
+import nz.ac.ledgercore.TransactionRollbackMetrics;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,16 +29,22 @@ public class ClearingCallbackService {
     private final JdbcTemplate jdbc;
     private final DurableEventStore events;
     private final ApplicationEventPublisher applicationEvents;
+    private final MeterRegistry meterRegistry;
+    private final TransactionRollbackMetrics rollbackMetrics;
 
     public ClearingCallbackService(JdbcTemplate jdbc, DurableEventStore events,
-            ApplicationEventPublisher applicationEvents) {
+            ApplicationEventPublisher applicationEvents, MeterRegistry meterRegistry,
+            TransactionRollbackMetrics rollbackMetrics) {
         this.jdbc = jdbc;
         this.events = events;
         this.applicationEvents = applicationEvents;
+        this.meterRegistry = meterRegistry;
+        this.rollbackMetrics = rollbackMetrics;
     }
 
     @Transactional
     public CallbackAck receive(Callback callback, byte[] rawBody) {
+        rollbackMetrics.observe("clearing_callback");
         validate(callback);
         String digest = digest(rawBody);
         List<PaymentRow> payments = jdbc.query("""
@@ -64,6 +74,7 @@ public class ClearingCallbackService {
                 (rs, row) -> rs.getString(1).trim(), callback.callbackId());
         if (!callbackDigests.isEmpty()) {
             if (callbackDigests.getFirst().equals(digest)) {
+                meterRegistry.counter("ledgercore.clearing.duplicate.callbacks").increment();
                 applicationEvents.publishEvent(new ClearingOutcomeRecorded(payment.paymentId(),
                         payment.operationId(), payment.organizationId()));
                 return new CallbackAck(callback.callbackId(), "DUPLICATE");
@@ -78,6 +89,7 @@ public class ClearingCallbackService {
                 """, (rs, row) -> rs.getString(1).trim(), callback.operationId(), callback.sequenceNo());
         if (!sequenceDigests.isEmpty()) {
             if (sequenceDigests.getFirst().equals(digest)) {
+                meterRegistry.counter("ledgercore.clearing.duplicate.callbacks").increment();
                 applicationEvents.publishEvent(new ClearingOutcomeRecorded(payment.paymentId(),
                         payment.operationId(), payment.organizationId()));
                 return new CallbackAck(callback.callbackId(), "DUPLICATE");
@@ -102,6 +114,18 @@ public class ClearingCallbackService {
                     Map.of("externalStatus", String.valueOf(payment.externalStatus())),
                     Map.of("externalStatus", callback.externalStatus()));
             return new CallbackAck(callback.callbackId(), "EXCEPTION_RECORDED");
+        }
+
+        if (List.of("SETTLED", "REJECTED").contains(callback.externalStatus())) {
+            Double delaySeconds = jdbc.queryForObject("""
+                    SELECT extract(epoch FROM (? - created_at))
+                    FROM clearing_instructions WHERE operation_id = ?
+                    """, Double.class, Timestamp.from(callback.occurredAt()), callback.operationId());
+            if (delaySeconds != null && delaySeconds >= 0) {
+                meterRegistry.timer("ledgercore.clearing.instruction.to.terminal.duration",
+                                "status", callback.externalStatus())
+                        .record(Duration.ofNanos((long) (delaySeconds * 1_000_000_000L)));
+            }
         }
 
         String payload;
@@ -143,6 +167,9 @@ public class ClearingCallbackService {
                         "externalStatus", callback.externalStatus()));
         applicationEvents.publishEvent(new ClearingOutcomeRecorded(payment.paymentId(),
                 payment.operationId(), payment.organizationId()));
+        org.slf4j.LoggerFactory.getLogger(ClearingCallbackService.class).info(
+                "Clearing callback accepted status={} operationId={} callbackId={}", callback.externalStatus(),
+                callback.operationId(), callback.callbackId());
         return new CallbackAck(callback.callbackId(), "ACCEPTED");
     }
 
