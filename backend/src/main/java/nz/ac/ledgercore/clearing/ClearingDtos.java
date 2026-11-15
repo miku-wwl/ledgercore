@@ -12,7 +12,8 @@ public final class ClearingDtos {
             String currency, String beneficiaryReference, String routingCode) {
     }
 
-    public record InquiryRequest(UUID operationId) {
+    /** afterSequence: the highest callback sequence the bank holds; later callbacks are redelivered (R4-07). */
+    public record InquiryRequest(UUID operationId, Long afterSequence) {
     }
 
     public record OperationResponse(UUID operationId, UUID paymentId, String intentDigest, String externalStatus,

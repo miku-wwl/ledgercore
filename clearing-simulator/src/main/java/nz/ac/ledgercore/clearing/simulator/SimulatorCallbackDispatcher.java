@@ -47,15 +47,20 @@ public class SimulatorCallbackDispatcher {
             }
             String previousCorrelationId = MDC.get("correlationId");
             MDC.put("correlationId", row.correlationId());
-            try {
+            long spanStart = System.nanoTime();
+            SimulatorTrace.Context dispatch = SimulatorTrace.root();
+            String status = "ERROR";
+            try (SimulatorTrace.AutoCloseableScope scope = dispatch.open()) {
                 long timestamp = Instant.now().getEpochSecond();
                 byte[] body = row.payload().getBytes(StandardCharsets.UTF_8);
                 client.post().uri(callbackUrl).contentType(MediaType.APPLICATION_JSON)
                         .header(ClearingSignature.TIMESTAMP_HEADER, Long.toString(timestamp))
                         .header(ClearingSignature.SIGNATURE_HEADER, signature.sign(timestamp, body))
                         .header("X-Correlation-ID", row.correlationId())
+                        .header(SimulatorTrace.HEADER, dispatch.traceparent())
                         .body(body).retrieve().toBodilessEntity();
                 callbackStore.markDelivered(row.callbackId());
+                status = "OK";
                 log.info("Simulator callback delivered callbackId={} operationId={}", row.callbackId(), row.operationId());
             }
             catch (RuntimeException exception) {
@@ -64,6 +69,9 @@ public class SimulatorCallbackDispatcher {
                         row.callbackId(), row.operationId(), exception.getClass().getSimpleName());
             }
             finally {
+                SimulatorTrace.record("callback.dispatch", "PRODUCER", dispatch, spanStart, status, java.util.Map.of(
+                        "messaging.message.id", row.callbackId().toString(), "callback.attempt", row.attemptCount()),
+                        row.traceParent() == null ? java.util.List.of() : java.util.List.of(row.traceParent()));
                 if (previousCorrelationId == null) {
                     MDC.remove("correlationId");
                 }
@@ -75,6 +83,6 @@ public class SimulatorCallbackDispatcher {
     }
 
     public record CallbackRow(UUID callbackId, UUID operationId, int attemptCount, String correlationId,
-            String payload) {
+            String payload, String traceParent) {
     }
 }

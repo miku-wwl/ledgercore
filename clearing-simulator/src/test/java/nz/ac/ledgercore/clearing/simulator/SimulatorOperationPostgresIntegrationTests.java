@@ -174,6 +174,46 @@ class SimulatorOperationPostgresIntegrationTests {
                 String.class, callbackId)).isEqualTo("DEAD");
     }
 
+    @Test
+    void inquiryFromABankBehindTheDeliveredSequenceRedeliversOnlyTheLaterCallbacks() {
+        OperationRequest request = request("SIM-ACCEPT");
+        operations.submit(request);
+        operations.inquire(request.operationId());
+        operations.inquire(request.operationId());
+        markAllDelivered(request.operationId());
+
+        OperationResponse current = operations.inquire(request.operationId(), 3L);
+        assertThat(current.sequenceNo()).isEqualTo(3);
+        assertThat(deliveryStates(request.operationId())).isEqualTo("1:DELIVERED:0,2:DELIVERED:0,3:DELIVERED:0");
+
+        OperationResponse restored = operations.inquire(request.operationId(), 1L);
+        assertThat(restored.externalStatus()).isEqualTo("SETTLED");
+        assertThat(deliveryStates(request.operationId())).isEqualTo("1:DELIVERED:0,2:PENDING:1,3:PENDING:1");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM simulator_callback_outbox WHERE operation_id = ?",
+                Integer.class, request.operationId())).isEqualTo(3);
+        assertThatThrownBy(() -> jdbc.update("""
+                UPDATE simulator_callback_outbox SET redelivery_count = 0 WHERE operation_id = ? AND sequence_no = 2
+                """, request.operationId())).hasMessageContaining("redelivery");
+    }
+
+    private void markAllDelivered(UUID operationId) {
+        jdbc.update("""
+                UPDATE simulator_callback_outbox SET delivery_status = 'PROCESSING', attempt_count = attempt_count + 1,
+                    lease_until = clock_timestamp() + interval '30 seconds' WHERE operation_id = ? AND delivery_status = 'PENDING'
+                """, operationId);
+        jdbc.update("""
+                UPDATE simulator_callback_outbox SET delivery_status = 'DELIVERED', delivered_at = clock_timestamp(),
+                    lease_until = NULL WHERE operation_id = ? AND delivery_status = 'PROCESSING'
+                """, operationId);
+    }
+
+    private String deliveryStates(UUID operationId) {
+        return jdbc.queryForObject("""
+                SELECT string_agg(sequence_no || ':' || delivery_status || ':' || redelivery_count, ',' ORDER BY sequence_no)
+                FROM simulator_callback_outbox WHERE operation_id = ?
+                """, String.class, operationId);
+    }
+
     private void exhaustDeliveryBudget(UUID callbackId) {
         jdbc.update("""
                 UPDATE simulator_callback_outbox SET delivery_status = 'PROCESSING', attempt_count = 8,

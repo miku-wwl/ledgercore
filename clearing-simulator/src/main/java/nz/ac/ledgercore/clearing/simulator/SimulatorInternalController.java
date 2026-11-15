@@ -54,7 +54,7 @@ public class SimulatorInternalController {
             if (!operationId.equals(request.operationId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Inquiry operation identity does not match the path.");
             }
-            return operations.inquire(operationId);
+            return operations.inquire(operationId, request.afterSequence());
         }
         catch (JacksonException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Inquiry request is malformed.");

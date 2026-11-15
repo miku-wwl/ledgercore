@@ -1,0 +1,22 @@
+# Round 4 alert rules for clearing financial effects (in addition to the five Round 3 rules in
+# evidence/round3/e9/prometheus-alerts.yml). Gauges come from LedgerCoreObservability; all are bank-wide and carry no
+# customer, payment or organization label.
+groups:
+  - name: ledgercore-round4-clearing
+    rules:
+      - alert: LedgerCoreClearingEffectPending
+        expr: ledgercore_clearing_effects_pending > 0 and ledgercore_clearing_effects_oldest_pending_age_seconds > 60
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: A final external clearing outcome has waited more than a minute for its local settlement or refund journal.
+          runbook: Check the durable work item (outbox) and its last error; fix the cause and use the governed retry. Never post by hand or refund a settled payment.
+      - alert: LedgerCoreClearingReserveShortfall
+        expr: ledgercore_clearing_reserve_shortfall_minor > 0
+        for: 0s
+        labels:
+          severity: critical
+        annotations:
+          summary: Settled payments owed by the bank exceed the simulation reserve; settlements are being refused.
+          runbook: Replenish the reserve through the audited treasury process, then retry the dead-lettered settlement.

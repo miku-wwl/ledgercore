@@ -46,6 +46,14 @@ class LedgerCoreApplicationTests {
 	}
 
 	@Test
+	void reserveLiquidityLabCommandIsAbsentWithoutItsDedicatedProfile() {
+		// Round 4 (R4-02): the only code path that moves reserve liquidity must not exist in an ordinary start.
+		assertThat(applicationContext.getBeansOfType(org.springframework.boot.ApplicationRunner.class).values())
+				.noneSatisfy(runner -> assertThat(runner.getClass().getName()).contains("ReserveLiquidityLabRunner"));
+		assertThat(applicationContext.containsBean("reserveLiquidityLabRunner")).isFalse();
+	}
+
+	@Test
 	void missingCorrelationIdIsGenerated() throws Exception {
 		HttpResponse<String> response = get("/actuator/health", null);
 

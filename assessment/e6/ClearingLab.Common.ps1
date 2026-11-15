@@ -517,3 +517,40 @@ function Stop-All {
     try { Stop-DisposablePostgres } catch { $script:state.stopPostgresError = $_.Exception.Message }
     Save-State
 }
+
+# Guarded R4-02 lab command (profile reserve-lab): moves simulated liquidity between reserve and treasury.
+function Invoke-ReserveLab([string] $Direction, [string] $Amount, [string] $Reason) {
+    $requestId = [guid]::NewGuid().ToString()
+    $stamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')
+    $stdout = Join-Path $script:runDirectory "reserve-lab-$Direction-$stamp.stdout.log"
+    $stderr = Join-Path $script:runDirectory "reserve-lab-$Direction-$stamp.stderr.log"
+    $environment = @{
+        LEDGERCORE_DB_URL = "jdbc:postgresql://127.0.0.1:$postgresPort/$($script:state.bank.database)"
+        LEDGERCORE_DB_USERNAME = $script:state.bank.role
+        LEDGERCORE_DB_PASSWORD = $script:state.bank.password
+        LEDGERCORE_RESERVE_LAB_CONFIRM = 'DISPOSABLE_ONLY'
+        LEDGERCORE_RESERVELAB_ENABLED = 'true'
+        LEDGERCORE_RESERVELAB_DIRECTION = $Direction
+        LEDGERCORE_RESERVELAB_AMOUNT = $Amount
+        LEDGERCORE_RESERVELAB_REQUESTID = $requestId
+        LEDGERCORE_RESERVELAB_REASON = $Reason
+        LEDGERCORE_CLEARING_ENABLED = 'false'
+    }
+    # The command needs the web security configuration, so it starts on an ephemeral loopback port and exits by itself.
+    $arguments = @('-jar', $bankJar, '--spring.profiles.active=reserve-lab', '--server.address=127.0.0.1', '--server.port=0',
+        '--ledgercore.outbox.scheduler.enabled=false')
+    $saved = Set-ChildEnvironment $environment
+    try {
+        $process = Start-Process -FilePath $java -ArgumentList $arguments -WorkingDirectory $repo -WindowStyle Hidden -PassThru `
+            -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    }
+    finally { Restore-ChildEnvironment $saved }
+    if (-not $process.WaitForExit(180000)) { Stop-Process -Id $process.Id -Force; throw 'The reserve lab command did not finish.' }
+    $line = Select-String -LiteralPath $stdout -Pattern '^RESERVE_LAB_RESULT ' | Select-Object -Last 1
+    if ($process.ExitCode -ne 0 -or -not $line) { throw "The reserve lab command failed with exit code $($process.ExitCode)." }
+    $result = $line.Line.Substring('RESERVE_LAB_RESULT '.Length) | ConvertFrom-Json
+    Write-Step "reserve lab $Direction $Amount -> reserve $($result.reserveMinorAfter) treasury $($result.treasuryMinorAfter) (journal $($result.journalEntryId))"
+    $script:state.reserveLab = @($script:state.reserveLab) + @($result)
+    Save-State
+    return $result
+}

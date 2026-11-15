@@ -1052,6 +1052,10 @@ export interface components {
             openExceptions?: number;
             /** Format: date-time */
             oldestPendingEventAt?: string;
+            /** Format: int64 */
+            pendingFinancialEffects?: number;
+            /** Format: date-time */
+            oldestPendingEffectAt?: string;
         };
         AuditEventView: {
             /** Format: uuid */

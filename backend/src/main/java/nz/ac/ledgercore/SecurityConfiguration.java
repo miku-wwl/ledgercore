@@ -35,6 +35,14 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
+	FilterRegistrationBean<TraceContextFilter> traceContextFilterRegistration() {
+		FilterRegistrationBean<TraceContextFilter> registration = new FilterRegistrationBean<>();
+		registration.setFilter(new TraceContextFilter());
+		registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+		return registration;
+	}
+
+	@Bean
 	PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder(12);
 	}

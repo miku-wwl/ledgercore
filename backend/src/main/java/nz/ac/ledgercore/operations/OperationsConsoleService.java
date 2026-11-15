@@ -37,12 +37,18 @@ public class OperationsConsoleService {
                     (SELECT count(*) FROM reconciliation_exceptions
                      WHERE organization_id = ? AND status IN ('OPEN', 'ASSIGNED')) AS open_exceptions,
                     (SELECT min(created_at) FROM outbox_events
-                     WHERE organization_id = ? AND status IN ('PENDING', 'PROCESSING')) AS oldest_pending_event_at
+                     WHERE organization_id = ? AND status IN ('PENDING', 'PROCESSING')) AS oldest_pending_event_at,
+                    (SELECT count(*) FROM corporate_payment_intents
+                     WHERE organization_id = ? AND status IN ('PENDING_CLEARING', 'UNKNOWN') AND ((external_status = 'SETTLED' AND settlement_journal_entry_id IS NULL) OR (external_status = 'REJECTED' AND reversal_journal_entry_id IS NULL AND settlement_journal_entry_id IS NULL))) AS pending_financial_effects,
+                    (SELECT min(updated_at) FROM corporate_payment_intents
+                     WHERE organization_id = ? AND status IN ('PENDING_CLEARING', 'UNKNOWN') AND ((external_status = 'SETTLED' AND settlement_journal_entry_id IS NULL) OR (external_status = 'REJECTED' AND reversal_journal_entry_id IS NULL AND settlement_journal_entry_id IS NULL))) AS oldest_pending_effect_at
                 """, (rs, row) -> new OperationsMetrics(rs.getLong("pending_clearing"),
                 rs.getLong("unknown_clearing"), rs.getLong("pending_events"), rs.getLong("failed_events"),
                 rs.getLong("open_exceptions"), rs.getTimestamp("oldest_pending_event_at") == null ? null
-                        : rs.getTimestamp("oldest_pending_event_at").toInstant()), organizationId, organizationId,
-                organizationId, organizationId, organizationId, organizationId);
+                        : rs.getTimestamp("oldest_pending_event_at").toInstant(), rs.getLong("pending_financial_effects"),
+                rs.getTimestamp("oldest_pending_effect_at") == null ? null
+                        : rs.getTimestamp("oldest_pending_effect_at").toInstant()), organizationId, organizationId,
+                organizationId, organizationId, organizationId, organizationId, organizationId, organizationId);
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +102,8 @@ public class OperationsConsoleService {
     }
 
     public record OperationsMetrics(long pendingClearing, long unknownClearing, long pendingEvents,
-            long failedEvents, long openExceptions, Instant oldestPendingEventAt) {
+            long failedEvents, long openExceptions, Instant oldestPendingEventAt, long pendingFinancialEffects,
+            Instant oldestPendingEffectAt) {
     }
 
     /** Deliberately omits audit details JSON, which may contain sensitive business facts. */

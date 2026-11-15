@@ -50,6 +50,9 @@ public class OutboxDispatcher {
         }
         Timer.Sample sample = Timer.start(meterRegistry);
         String outcome = "success";
+        long spanStart = System.nanoTime();
+        nz.ac.ledgercore.api.TraceContext consumer = nz.ac.ledgercore.api.TraceContext.root();
+        nz.ac.ledgercore.api.TraceContext.Scope traceScope = consumer.open();
         try {
             OutboxEventHandler handler = handlers.stream().filter(candidate -> candidate.supports(event))
                     .findFirst().orElseThrow(() -> new IllegalStateException("No handler accepts the event type."));
@@ -65,6 +68,12 @@ public class OutboxDispatcher {
                     exception.getClass().getSimpleName());
         }
         finally {
+            traceScope.close();
+            nz.ac.ledgercore.api.SpanRecorder.record("outbox.dispatch " + event.eventType(), "CONSUMER", consumer,
+                    spanStart, "success".equals(outcome) ? "OK" : "ERROR", java.util.Map.of(
+                            "messaging.message.id", event.id().toString(), "outbox.event_type", event.eventType(),
+                            "outbox.attempt", event.attemptCount(), "outbox.outcome", outcome),
+                    event.traceParent() == null ? java.util.List.of() : java.util.List.of(event.traceParent()));
             sample.stop(meterRegistry.timer("ledgercore.outbox.delivery.duration", "outcome", outcome));
             if (previousCorrelationId == null) {
                 MDC.remove("correlationId");

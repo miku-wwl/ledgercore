@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] [ValidateSet('inject', 'restore')] [string] $Action,
-    [Parameter(Mandatory)] [ValidateSet('clearing-reserve-shortage', 'clearing-lost-callback')] [string] $Case,
+    [Parameter(Mandatory)] [ValidateSet('clearing-reserve-shortage', 'clearing-lost-callback', 'clearing-simulator-restart')] [string] $Case,
     [string] $RunId,
     [string] $Label = ''
 )
@@ -12,48 +12,15 @@ param(
 #                              settlement; a server restart, an audited replenishment and one governed retry follow.
 #   clearing-lost-callback     R4-04: the bank is down for longer than the simulator's delivery budget, so its later
 #                              callbacks go DEAD; recovery must come from an authenticated inquiry, not a new identity.
+#   clearing-simulator-restart E5: the simulator JVM is killed with an ACCEPTED operation; the bank's inquiry fails and is
+#                              reported, nothing is assumed; after a restart from its own database the same operation
+#                              settles once.
 
 . (Join-Path $PSScriptRoot 'ClearingLab.Common.ps1')
 
 $shortagePaymentAmount = '80.00'
 $shortagePaymentMinor = 8000
 $reserveLeftMinor = 5000
-
-function Invoke-ReserveLab([string] $Direction, [string] $Amount, [string] $Reason) {
-    $requestId = [guid]::NewGuid().ToString()
-    $stamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')
-    $stdout = Join-Path $script:runDirectory "reserve-lab-$Direction-$stamp.stdout.log"
-    $stderr = Join-Path $script:runDirectory "reserve-lab-$Direction-$stamp.stderr.log"
-    $environment = @{
-        LEDGERCORE_DB_URL = "jdbc:postgresql://127.0.0.1:$postgresPort/$($script:state.bank.database)"
-        LEDGERCORE_DB_USERNAME = $script:state.bank.role
-        LEDGERCORE_DB_PASSWORD = $script:state.bank.password
-        LEDGERCORE_RESERVE_LAB_CONFIRM = 'DISPOSABLE_ONLY'
-        LEDGERCORE_RESERVELAB_ENABLED = 'true'
-        LEDGERCORE_RESERVELAB_DIRECTION = $Direction
-        LEDGERCORE_RESERVELAB_AMOUNT = $Amount
-        LEDGERCORE_RESERVELAB_REQUESTID = $requestId
-        LEDGERCORE_RESERVELAB_REASON = $Reason
-        LEDGERCORE_CLEARING_ENABLED = 'false'
-    }
-    # The command needs the web security configuration, so it starts on an ephemeral loopback port and exits by itself.
-    $arguments = @('-jar', $bankJar, '--spring.profiles.active=reserve-lab', '--server.address=127.0.0.1', '--server.port=0',
-        '--ledgercore.outbox.scheduler.enabled=false')
-    $saved = Set-ChildEnvironment $environment
-    try {
-        $process = Start-Process -FilePath $java -ArgumentList $arguments -WorkingDirectory $repo -WindowStyle Hidden -PassThru `
-            -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-    }
-    finally { Restore-ChildEnvironment $saved }
-    if (-not $process.WaitForExit(180000)) { Stop-Process -Id $process.Id -Force; throw 'The reserve lab command did not finish.' }
-    $line = Select-String -LiteralPath $stdout -Pattern '^RESERVE_LAB_RESULT ' | Select-Object -Last 1
-    if ($process.ExitCode -ne 0 -or -not $line) { throw "The reserve lab command failed with exit code $($process.ExitCode)." }
-    $result = $line.Line.Substring('RESERVE_LAB_RESULT '.Length) | ConvertFrom-Json
-    Write-Step "reserve lab $Direction $Amount -> reserve $($result.reserveMinorAfter) treasury $($result.treasuryMinorAfter) (journal $($result.journalEntryId))"
-    $script:state.reserveLab = @($script:state.reserveLab) + @($result)
-    Save-State
-    return $result
-}
 
 function Get-TreasuryAndIdentity {
     $sql = @"
@@ -167,6 +134,34 @@ switch ($Action) {
                     simulator_settled = ($sim.operationStatus -eq 'SETTLED')
                 }
             }
+            elseif ($Case -eq 'clearing-simulator-restart') {
+                $users = New-ClearingFixture '4.44' 'SIM-ACCEPT'
+                Invoke-Api $users.approver.session 'POST' "/api/payments/$($script:state.paymentId)/approve" $null | Out-Null
+                $deadline = [DateTime]::UtcNow.AddSeconds(60)
+                do { $bank = Get-BankSnapshot; Start-Sleep -Seconds 1 } while ([int]$bank.inboxCallbacks -lt 1 -and [DateTime]::UtcNow -lt $deadline)
+                Assert-ExactJavaListener $simPort ([int]$script:state.simPid) $simJar
+                Stop-Process -Id ([int]$script:state.simPid) -Force
+                try { Wait-Process -Id ([int]$script:state.simPid) -Timeout 20 -ErrorAction SilentlyContinue } catch { }
+                $script:state.simulatorKilledAt = [DateTime]::UtcNow.ToString('o')
+                Write-Step 'simulator JVM killed with the operation ACCEPTED'
+                $ops = Login-User $script:state.users.operations
+                $inquiryStatus = try { Invoke-Api $ops 'POST' "/api/operations/clearing/$($script:state.operationId)/inquiry" $null | Out-Null; 200 } catch { [int]$_.Exception.Response.StatusCode }
+                $reconciliation = Invoke-ReconciliationRun
+                $bank = Get-BankSnapshot
+                $sim = [pscustomobject]@{ operationStatus = 'UNREACHABLE'; callbacks = @() }
+                $script:state.injectionObserved = -not (Get-ListenerProcess $simPort)
+                $script:state.inquiryWhileDown = $inquiryStatus
+                $checks = [ordered]@{
+                    simulator_down = [bool]$script:state.injectionObserved
+                    inquiry_failed_not_assumed = ($inquiryStatus -ge 500)
+                    inquiry_failure_reported = (@($reconciliation.paymentFindings | Where-Object { $_.category -eq 'CLEARING_SIMULATOR_INQUIRY_FAILED' }).Count -ge 1)
+                    still_accepted = ($bank.externalStatus -eq 'ACCEPTED' -and $bank.paymentStatus -eq 'PENDING_CLEARING')
+                    obligation_kept = ([long]$bank.payableLedgerMinor -eq 444)
+                    no_settlement_or_refund = ([int]$bank.settlementJournalCount -eq 0 -and [int]$bank.refundJournalCount -eq 0)
+                    no_unbalanced_journals = ([int]$bank.unbalancedJournalCount -eq 0)
+                }
+                $verdict.reconciliationWhileDown = $reconciliation
+            }
             else {
                 $users = New-ClearingFixture '6.54' 'SIM-ACCEPT'
                 Invoke-Api $users.approver.session 'POST' "/api/payments/$($script:state.paymentId)/approve" $null | Out-Null
@@ -251,6 +246,18 @@ switch ($Action) {
                 $result.resolveAfterSettlement = [ordered]@{ reserve = (Invoke-Resolve $ops $reserveException 'Treasury replenished the reserve; settlement posted once.')
                     pending = (Invoke-Resolve $ops $pendingException 'Settlement posted once after the governed retry.') }
             }
+            elseif ($Case -eq 'clearing-simulator-restart') {
+                $result.simulatorRestartedAt = [DateTime]::UtcNow.ToString('o')
+                $result.simulatorAfterRestart = Get-SimSnapshot
+                $result.inquiries = @()
+                foreach ($attempt in 1..2) {
+                    $result.inquiries += Invoke-Api $ops 'POST' "/api/operations/clearing/$($script:state.operationId)/inquiry" $null
+                    Start-Sleep -Seconds 2
+                }
+                $deadline = [DateTime]::UtcNow.AddSeconds(60)
+                do { $bank = Get-BankSnapshot; Start-Sleep -Seconds 1 } while ([int]$bank.settlementJournalCount -lt 1 -and [DateTime]::UtcNow -lt $deadline)
+                Start-Sleep -Seconds 3
+            }
             else {
                 $result.reconciliationBeforeInquiry = Invoke-ReconciliationRun
                 $missingException = Get-OpenException 'CLEARING_CALLBACK_MISSING'
@@ -280,6 +287,13 @@ switch ($Action) {
                 }
                 foreach ($name in @('reserve_debited_once', 'customer_debited_once', 'payable_cleared')) { $checks.PSObject.Properties.Remove($name) }
                 foreach ($entry in $amountChecks.GetEnumerator()) { $checks | Add-Member -NotePropertyName $entry.Key -NotePropertyValue $entry.Value }
+            }
+            elseif ($Case -eq 'clearing-simulator-restart') {
+                foreach ($name in @('reserve_debited_once', 'customer_debited_once')) { $checks.PSObject.Properties.Remove($name) }
+                $checks | Add-Member -NotePropertyName 'same_operation_after_restart' -NotePropertyValue ($result.simulatorAfterRestart.operationStatus -eq 'ACCEPTED')
+                $checks | Add-Member -NotePropertyName 'customer_debited_once' -NotePropertyValue ([long]$bank.sourceDepositLedgerMinor -eq ($openingMinor - 444))
+                $checks | Add-Member -NotePropertyName 'reserve_debited_once' -NotePropertyValue ([long]$bank.reserveLedgerMinor -eq ($openingMinor - 444))
+                $checks | Add-Member -NotePropertyName 'all_callbacks_received_in_order' -NotePropertyValue ([int]$bank.inboxCallbacks -eq @($sim.callbacks).Count)
             }
             else {
                 foreach ($name in @('reserve_debited_once', 'customer_debited_once')) { $checks.PSObject.Properties.Remove($name) }

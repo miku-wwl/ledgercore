@@ -34,11 +34,17 @@ function statusLabel(payment: CorporatePayment): { label: string; detail: string
   if (payment.externalStatus === 'PENDING' || payment.externalStatus === 'ACCEPTED') {
     return { label: payment.externalStatus === 'ACCEPTED' ? 'Accepted by clearing' : 'Pending at clearing', detail: 'Acceptance does not confirm settlement.', tone: 'border-blue-200 bg-blue-50 text-blue-900' }
   }
-  if (payment.externalStatus === 'SETTLED' || payment.status === 'COMPLETED') {
-    return { label: 'Settled', detail: 'The external outcome is confirmed and recorded.', tone: 'border-emerald-200 bg-emerald-50 text-emerald-900' }
+  if (payment.status === 'COMPLETED') {
+    return { label: 'Settled', detail: 'Settled by clearing and posted to the ledger.', tone: 'border-emerald-200 bg-emerald-50 text-emerald-900' }
   }
-  if (payment.externalStatus === 'REJECTED' || payment.status === 'REJECTED') {
-    return { label: 'Rejected', detail: 'No external settlement was recorded.', tone: 'border-rose-200 bg-rose-50 text-rose-900' }
+  if (payment.externalStatus === 'SETTLED') {
+    return { label: 'Settled externally, posting pending', detail: 'Clearing settled; the bank settlement journal is still owed. Do not resend or refund.', tone: 'border-amber-300 bg-amber-50 text-amber-900' }
+  }
+  if (payment.status === 'REJECTED') {
+    return { label: 'Rejected', detail: payment.bookingJournalEntryId ? 'Rejected by clearing; the booking was refunded.' : 'Rejected before booking.', tone: 'border-rose-200 bg-rose-50 text-rose-900' }
+  }
+  if (payment.externalStatus === 'REJECTED') {
+    return { label: 'Rejected externally, refund pending', detail: 'Clearing rejected the payment; the refund journal is still owed.', tone: 'border-amber-300 bg-amber-50 text-amber-900' }
   }
   if (payment.status === 'PENDING_CLEARING') {
     return { label: 'Pending clearing', detail: 'The booking remains payable until a terminal outcome arrives.', tone: 'border-amber-200 bg-amber-50 text-amber-900' }

@@ -1,0 +1,415 @@
+{
+  "schemaVersion": 1,
+  "description": "E12 case catalog. A case passes only if every listed source passed: JUnit/Playwright results (patterns use PowerShell -like), lab verdict files (value at path must equal expect) and, when grader is true, the independent SQL financial hard gates of every included run.",
+  "cases": [
+    {
+      "id": "E12-A01",
+      "category": "A Ledger and internal transfer",
+      "hardGate": true,
+      "grader": true,
+      "title": "Every committed journal balances; amounts are exact NZD minor units; posted history is append-only",
+      "tests": [
+        "nz.ac.ledgercore.ledger.*",
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#transferIsDoubleEntryAtomic*",
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#postgresRejectsTransferRowsThatDoNotMatch*"
+      ]
+    },
+    {
+      "id": "E12-A02",
+      "category": "A Ledger and internal transfer",
+      "hardGate": true,
+      "title": "Identical idempotency key returns the original receipt; a changed payload under the same key is rejected; a lost response recovers with the original key",
+      "tests": [
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentSameKey*",
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#originalKeyRecovers*",
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#successfulReplayRechecks*"
+      ]
+    },
+    {
+      "id": "E12-A03",
+      "category": "A Ledger and internal transfer",
+      "hardGate": true,
+      "title": "Concurrent debits of one hot payer never overdraw; opposing transfers use a deterministic lock order without deadlock",
+      "tests": [
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentDifferentKeysCannotOverdraw*",
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentCrossTransfers*"
+      ]
+    },
+    {
+      "id": "E12-A04",
+      "category": "A Ledger and internal transfer",
+      "hardGate": true,
+      "title": "Any failure inside the transfer transaction rolls back journal, postings, projection, receipt and outbox together; crash before commit leaves nothing",
+      "tests": [
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#*RollsBack*",
+        "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#transferAndItsOutboxFactRollBackTogether"
+      ],
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "transfer-precommit-crash.recovery",
+          "expect": "PASS"
+        },
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "transfer-postcommit-response-crash.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-B01",
+      "category": "B Corporate identity and Policy B",
+      "hardGate": true,
+      "title": "Executed role x route x object matrix: 12 principals x 44 routes, concealment 404, missing role 403, denied mutations without side effects",
+      "tests": [
+        "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#everyRoleRouteAndObjectCombination*"
+      ]
+    },
+    {
+      "id": "E12-B02",
+      "category": "B Corporate identity and Policy B",
+      "hardGate": true,
+      "title": "Maker cannot approve their own payment or payroll even when holding both roles; approval binds the immutable digest and version",
+      "tests": [
+        "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#aMemberHoldingBothMakerAndApprover*",
+        "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#concurrentApprovalRetries*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#itemChangesRacingApproval*"
+      ]
+    },
+    {
+      "id": "E12-B03",
+      "category": "B Corporate identity and Policy B",
+      "hardGate": true,
+      "title": "Generic transfers cannot debit a corporate account; payroll identities cannot be claimed by public transfers",
+      "tests": [
+        "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#receiptRecorderCannotBypass*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#publicTransfersCannotClaimReserved*"
+      ]
+    },
+    {
+      "id": "E12-B04",
+      "category": "B Corporate identity and Policy B",
+      "hardGate": false,
+      "title": "Role revocation, member suspension and organization suspension remove authority; admin self-grant is refused; actions are audited",
+      "tests": [
+        "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#anApproverWhoseRoleIsRevoked*",
+        "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#suspended*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#revokedCreatorRole*"
+      ]
+    },
+    {
+      "id": "E12-B05",
+      "category": "B Corporate identity and Policy B",
+      "hardGate": false,
+      "title": "State changes without or with a forged CSRF token are rejected; sessions rotate on authentication",
+      "tests": [
+        "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#stateChangingRequestsWithoutCsrf*",
+        "nz.ac.ledgercore.FullStackApiPostgresIntegrationTests#*"
+      ]
+    },
+    {
+      "id": "E12-C01",
+      "category": "C Payroll",
+      "hardGate": true,
+      "grader": true,
+      "title": "500 synthetic employees are paid exactly once with deterministic per-item identity and reconciled balances",
+      "tests": [
+        "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#processesAndReconcilesFiveHundred*"
+      ]
+    },
+    {
+      "id": "E12-C02",
+      "category": "C Payroll",
+      "hardGate": true,
+      "title": "Competing executors and batches sharing a payer pay each item once and never overdraw",
+      "tests": [
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#overlappingExecutions*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#concurrentBatchesSharingOnePayer*"
+      ]
+    },
+    {
+      "id": "E12-C03",
+      "category": "C Payroll",
+      "hardGate": true,
+      "title": "Worker crash after a failed item rolled back but before its failure was recorded: restart records it once, pays the rest once",
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "payroll-mark-failure-crash.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-C04",
+      "category": "C Payroll",
+      "hardGate": true,
+      "title": "Transient and terminal item failures are durable; results cannot be forged, deleted or completed early",
+      "tests": [
+        "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#insufficientFunds*",
+        "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#transferAndPayrollResultRollback*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#payrollResultsCannotBeDeleted*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#batchCompletionFailsClosed*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#resultsCannotBeForged*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#unclassifiedTransferFailure*"
+      ]
+    },
+    {
+      "id": "E12-D01",
+      "category": "D Durable events",
+      "hardGate": true,
+      "title": "Business fact and outbox event commit together; concurrent publishers and dispatchers deliver each event once",
+      "tests": [
+        "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#*"
+      ]
+    },
+    {
+      "id": "E12-D02",
+      "category": "D Durable events",
+      "hardGate": true,
+      "title": "Interrupted dispatch: an event persisted before a crash is delivered after restart; expired leases are retried idempotently",
+      "tests": [
+        "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#retriesExpiredLeases*"
+      ],
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "transfer-outbox-before-dispatch.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-D03",
+      "category": "D Durable events",
+      "hardGate": false,
+      "title": "Retry exhaustion dead-letters visibly; a governed retry is role-gated, audited and idempotent; trace context links producer and consumer",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#genuinelyFiniteReserve*",
+        "nz.ac.ledgercore.TracePropagationPostgresIntegrationTests#*",
+        "nz.ac.ledgercore.api.TraceContextTests#*"
+      ]
+    },
+    {
+      "id": "E12-E01",
+      "category": "E Clearing",
+      "hardGate": true,
+      "grader": true,
+      "title": "Settlement, definitive rejection and accepted/pending outcomes post exactly the journals their persisted outcome justifies",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallback*",
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#rejectedCallback*",
+        "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#acceptedOperationMovesThroughPending*"
+      ]
+    },
+    {
+      "id": "E12-E02",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "UNKNOWN outcome is resolved by inquiry under the original operation identity and digest; no refund or new identity",
+      "tests": [
+        "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#unknownOutcome*",
+        "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#operationIdentityCannotBeReused*",
+        "*enterprise-operations.spec.ts#Operations resolves an UNKNOWN*"
+      ]
+    },
+    {
+      "id": "E12-E03",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "Signed callbacks: tampered, missing-header, replayed, reused-id, wrong-digest, colliding, gapped and contradictory callbacks never move money twice",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingCallbackLifecyclePostgresIntegrationTests#*",
+        "nz.ac.ledgercore.clearing.ClearingCallbackSecurityIntegrationTests#*"
+      ]
+    },
+    {
+      "id": "E12-E04",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "Crash after the callback commit, inside the uncommitted settlement, or before the acknowledgement: the original identity settles exactly once after restart without simulator redelivery",
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "clearing-callback-commit-crash.recovery",
+          "expect": "PASS"
+        },
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "clearing-effect-precommit-crash.recovery",
+          "expect": "PASS"
+        },
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "clearing-effect-ack-crash.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-E05",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "A terminated database session during the settlement leaves durable work that completes it once",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingEffectFastPathFailurePostgresIntegrationTests#*"
+      ],
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "clearing-effect-session-kill.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-E06",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "Genuinely insufficient reserve: obligation kept, CRITICAL exception, restart, audited replenishment, one governed retry, exactly one settlement",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#genuinelyFiniteReserve*",
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#reserveLiquidityTransfers*"
+      ],
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "clearing-reserve-shortage.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-E07",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "Callbacks lost beyond the simulator's delivery budget are detected and redelivered in order after an authenticated inquiry",
+      "tests": [
+        "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#authenticatedInquiryRearms*",
+        "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#rearmingCannotRewrite*"
+      ],
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "clearing-lost-callback.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-E08",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "Competing workers, a duplicate callback and a direct retry produce exactly one settlement",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#competingWorkers*"
+      ]
+    },
+    {
+      "id": "E12-E09",
+      "category": "E Clearing",
+      "hardGate": true,
+      "title": "Simulator crash with an ACCEPTED operation: the bank's inquiry fails and is reported, nothing is assumed; after restart the same operation settles once",
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-LAB.json",
+          "path": "clearing-simulator-restart.recovery",
+          "expect": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "E12-F01",
+      "category": "F Reconciliation",
+      "hardGate": false,
+      "title": "Projection drift is detected exactly and repaired from immutable postings only",
+      "tests": [
+        "nz.ac.ledgercore.reconciliation.ReconciliationPostgresIntegrationTests#*"
+      ]
+    },
+    {
+      "id": "E12-F02",
+      "category": "F Reconciliation",
+      "hardGate": true,
+      "title": "A terminal external outcome without its local journal is detected while the payment is not COMPLETED, also after restart and without a new callback",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallback*",
+        "nz.ac.ledgercore.clearing.ClearingEffectFastPathFailurePostgresIntegrationTests#*"
+      ]
+    },
+    {
+      "id": "E12-F03",
+      "category": "F Reconciliation",
+      "hardGate": true,
+      "title": "Negative fixtures: corrupt payment, journal, payroll and event states are refused by PostgreSQL with valid rows unchanged; recoverable dead work is reported",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#approvedItemsCannotBeMoved*",
+        "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#completedPayrollHistoryCannotBeMovedOrErased"
+      ]
+    },
+    {
+      "id": "E12-F04",
+      "category": "F Reconciliation",
+      "hardGate": true,
+      "title": "CRITICAL exceptions close only after an independent recheck; the actor and the recheck are audited; undispatched instructions are reported",
+      "tests": [
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallback*",
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#bookedInstructionAcknowledged*"
+      ]
+    },
+    {
+      "id": "E12-F05",
+      "category": "F Reconciliation",
+      "hardGate": false,
+      "title": "Exceptions and Operations views stay inside the tenant",
+      "tests": [
+        "nz.ac.ledgercore.operations.OperationsConsolePostgresIntegrationTests#*",
+        "*enterprise-operations.spec.ts#Operations endpoints conceal*"
+      ]
+    },
+    {
+      "id": "E12-G01",
+      "category": "G Backup and recovery",
+      "hardGate": false,
+      "title": "Migrations: fresh install, populated V4/V5/V6/V8/V11 upgrades without rewriting history, V7 and V15 refuse inconsistent history; checksums pinned",
+      "tests": [
+        "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#*"
+      ]
+    },
+    {
+      "id": "E12-G02",
+      "category": "G Backup and recovery",
+      "hardGate": false,
+      "title": "Physical backup, verified restore and independent grade of a populated bank database; the simulator's later state is reconciled without duplicate booking",
+      "lab": [
+        {
+          "file": "evidence/round4/e12/lab/E12-RESTORE.json",
+          "path": "verdict",
+          "expect": "PASS"
+        }
+      ],
+      "limitation": "Round 3 E10 holds the only full PITR (one local run, RPO 118.922 s, RTO 670.008 s). Round 4 reruns a representative restore only if listed here as PASS."
+    },
+    {
+      "id": "E12-H01",
+      "category": "H React and operations",
+      "hardGate": false,
+      "grader": true,
+      "title": "Real-API Chromium journeys: personal banking, corporate maker/checker settlement, payroll with lost response, UNKNOWN inquiry, exception, concealment, role denial and revocation",
+      "tests": [
+        "*.spec.ts#*"
+      ]
+    },
+    {
+      "id": "E12-H02",
+      "category": "H React and operations",
+      "hardGate": false,
+      "notRun": true,
+      "title": "Automated accessibility scan (axe/WCAG) and screen-reader review",
+      "limitation": "Not installed; E11 checked semantic roles, keyboard focus and 390 px overflow only."
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "id": "R4-01-A*",
+  "runId": "2896d3f6-7df0-4b70-8804-8ae73ffba01a",
+  "sourceSha": "d185416db2786274516c9eb7cf5cf5e4b6b482ef",
+  "trackedTreeDirty": false,
+  "injection": "PASS",
+  "injectionChecks": {
+    "exactly_one_booking": true,
+    "terminal_callback_recorded_once": true,
+    "external_status_settled": true,
+    "no_refund": true,
+    "at_most_one_settlement": true,
+    "no_unbalanced_journals": true,
+    "projections_match_ledger": true,
+    "no_negative_projection": true,
+    "simulator_settled": true,
+    "settlement_state_matches_fault_window": true,
+    "payable_matches_window": true,
+    "reserve_matches_window": true
+  },
+  "afterInjection": {
+    "database": "ledgercore_e6_2896d3f67df04b70",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T19:30:01.850777+13:00",
+    "paymentStatus": "PENDING_CLEARING",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 0,
+    "refundJournalCount": 0,
+    "settlementLinked": false,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "PENDING",
+        "attempts": 0,
+        "lastError": null,
+        "receipts": []
+      }
+    ],
+    "payableLedgerMinor": 1234,
+    "payableProjectionMinor": 1234,
+    "reserveLedgerMinor": 100000,
+    "reserveProjectionMinor": 100000,
+    "sourceDepositLedgerMinor": 98766,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": []
+  },
+  "simulatorAfterInjection": {
+    "database": "ledgercore_e6sim_2896d3f67df04b70",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T19:30:02.458875+13:00",
+    "operationStatus": "SETTLED",
+    "inquiryCount": 0,
+    "callbacks": [
+      {
+        "sequence": 1,
+        "status": "SETTLED",
+        "delivery": "PENDING",
+        "attempts": 1,
+        "lastError": "ResourceAccessException"
+      }
+    ]
+  },
+  "restore": {
+    "schemaVersion": 1,
+    "runId": "2896d3f6-7df0-4b70-8804-8ae73ffba01a",
+    "caseName": "clearing-callback-commit-crash",
+    "label": "post-fix d529208 (harness d185416) R4-01-A* poll 60s",
+    "sourceSha": "d185416db2786274516c9eb7cf5cf5e4b6b482ef",
+    "restoreMode": "after-dead-letter",
+    "startedAt": "2026-11-15T06:30:02.8170226Z",
+    "simulatorBeforeRestart": {
+      "database": "ledgercore_e6sim_2896d3f67df04b70",
+      "serverPort": 55437,
+      "capturedAt": "2026-11-15T19:34:17.37276+13:00",
+      "operationStatus": "SETTLED",
+      "inquiryCount": 0,
+      "callbacks": [
+        {
+          "sequence": 1,
+          "status": "SETTLED",
+          "delivery": "DEAD",
+          "attempts": 8,
+          "lastError": "ResourceAccessException"
+        }
+      ]
+    },
+    "bankRestartedAt": "2026-11-15T06:34:18.489517Z",
+    "recoveredWithinSeconds": 26.1,
+    "reconciliation": {
+      "runId": "8991ee89-e480-432d-a834-5c683dbe4518",
+      "findingCount": 0,
+      "checkedDomains": [
+        "LEDGER_PROJECTION",
+        "TRANSFER_JOURNAL_RECEIPT",
+        "PAYROLL_RESULTS_AND_TERMINAL_STATES",
+        "CORPORATE_PAYMENT_JOURNALS",
+        "DURABLE_EVENT_COVERAGE",
+        "ORGANIZATION_OWNERSHIP",
+        "INDEPENDENT_CLEARING_SIMULATOR_INQUIRY"
+      ],
+      "skippedDomains": [],
+      "findingCounts": {},
+      "paymentFindings": []
+    },
+    "verdict": "PASS",
+    "finalBank": {
+      "database": "ledgercore_e6_2896d3f67df04b70",
+      "serverPort": 55437,
+      "capturedAt": "2026-11-15T19:34:43.774888+13:00",
+      "paymentStatus": "COMPLETED",
+      "externalStatus": "SETTLED",
+      "bookingJournalCount": 1,
+      "settlementJournalCount": 1,
+      "refundJournalCount": 0,
+      "settlementLinked": true,
+      "instructionStatus": "SETTLED",
+      "inboxCallbacks": 1,
+      "inboxTerminalCallbacks": 1,
+      "callbackEvents": [
+        {
+          "status": "DELIVERED",
+          "attempts": 1,
+          "lastError": null,
+          "receipts": [
+            "clearing-financial-effect-v1"
+          ]
+        }
+      ],
+      "payableLedgerMinor": 0,
+      "payableProjectionMinor": 0,
+      "reserveLedgerMinor": 98766,
+      "reserveProjectionMinor": 98766,
+      "sourceDepositLedgerMinor": 98766,
+      "unbalancedJournalCount": 0,
+      "projectionMismatchCount": 0,
+      "negativeProjectionCount": 0,
+      "exceptions": []
+    },
+    "finalSimulator": {
+      "database": "ledgercore_e6sim_2896d3f67df04b70",
+      "serverPort": 55437,
+      "capturedAt": "2026-11-15T19:34:44.384255+13:00",
+      "operationStatus": "SETTLED",
+      "inquiryCount": 0,
+      "callbacks": [
+        {
+          "sequence": 1,
+          "status": "SETTLED",
+          "delivery": "DEAD",
+          "attempts": 8,
+          "lastError": "ResourceAccessException"
+        }
+      ]
+    },
+    "checks": {
+      "exactly_one_booking": true,
+      "exactly_one_settlement": true,
+      "no_refund": true,
+      "payment_completed": true,
+      "terminal_callback_recorded_once": true,
+      "payable_cleared": true,
+      "reserve_debited_once": true,
+      "customer_debited_once": true,
+      "no_unbalanced_journals": true,
+      "projections_match_ledger": true,
+      "no_negative_projection": true,
+      "simulator_settled": true
+    },
+    "completedAt": "2026-11-15T06:34:57.1333763Z"
+  }
+}

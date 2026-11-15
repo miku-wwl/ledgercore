@@ -22,4 +22,16 @@ Round 1 evidence rules are kept below; the **Round 2 status** column records the
 | INV-14 | Published migrations never change; every supported older schema upgrades without rewriting history | Added in Round 2 | Test pins V1–V6 Flyway checksums and upgrades populated V4, V5, V6 schemas; V7 refuses (never repairs) inconsistent payroll history |
 | INV-15 | A corporate outgoing payment must be backed by an immutable, independently approved persisted intent; payroll must be backed by its approved immutable batch | Round 3 Policy B; generic transfer, payment approval, payroll execution, retry and callback boundaries | E4 PASS for direct transfer, corporate approval, and payroll execution (commit `0dfcb0c`, CI run `43574289360`); clearing callback/reconciliation checks remain E5/E8 |
 
+## Round 4 additions
+
+INV-01 to INV-15 above are unchanged. Round 4 (Claude Opus 5.5) adds the following, each backed by code, PostgreSQL and an
+executed test; the independent mapping of all nineteen invariants is in `ROUND-4-AUDIT.md`.
+
+| ID | Invariant | Enforcement | Round 4 verification |
+|---|---|---|---|
+| INV-16 | Every authenticated terminal clearing outcome has exactly one durable owner of its local financial effect, committed with the outcome; the effect is applied at most once and is retried until applied or visibly escalated | Java: `ClearingCallbackEffectOutboxHandler`, locked-row decision in `ClearingFinancialEffectProcessor`; PG: callback inbox + outbox event in one transaction, V8 journal-link trigger, V12 backfill | `ClearingEffectDurabilityPostgresIntegrationTests`, `ClearingEffectFastPathFailurePostgresIntegrationTests`, E6 lab A*/C/D/E (`evidence/round4/remediation/`) |
+| INV-17 | A corporate payment's terminal status is bound to its justifying journal: COMPLETED ⇔ settlement journal and SETTLED outcome; a booked REJECTED ⇔ refund journal and REJECTED outcome; no state strands booked funds | PG: V15 `ck_corporate_payment_terminal_journals` with fail-closed preflight | `ReconciliationNegativeFixturesPostgresIntegrationTests`, `MigrationCompatibilityPostgresIntegrationTests.v15Refuses…` |
+| INV-18 | The bank's simulated assets equal its liabilities (reserve + treasury = deposits + clearing payable); liquidity moves only asset-to-asset and the settlement reserve never goes negative | PG: V2 balance triggers, V13 liquidity journal trigger, non-negative projection; Java: `LedgerWriter.transferReserveLiquidity` | reserve-shortage test and lab; E12 grader `balanceSheetDifferenceMinor` |
+| INV-19 | A reconciliation exception is closed only after an independent recheck of its anomaly (SQL, authenticated simulator inquiry, or a completed settlement); the actor and the recheck are audited; severity only rises | Java: `ReconciliationService.resolveException`, `ReconciliationExceptionService` | durability tests (409 while owed, 200 after the clean recheck), reserve-shortage lab |
+
 No V2 invariant is marked implemented or accepted until its actual database and application behavior is tested. Financial evidence must report database state, not only HTTP responses.

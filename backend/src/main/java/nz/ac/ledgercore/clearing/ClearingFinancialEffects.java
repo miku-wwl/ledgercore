@@ -40,8 +40,15 @@ public class ClearingFinancialEffects {
      * item, retries it with backoff and escalates it to a dead letter after its attempt limit.
      */
     public EffectResult applyOwedEffect(UUID paymentId, String path) {
-        try {
+        long spanStart = System.nanoTime();
+        nz.ac.ledgercore.api.TraceContext span = nz.ac.ledgercore.api.TraceContext.current()
+                .map(nz.ac.ledgercore.api.TraceContext::child).orElseGet(nz.ac.ledgercore.api.TraceContext::root);
+        String status = "ERROR";
+        String detail = "failure";
+        try (nz.ac.ledgercore.api.TraceContext.Scope scope = span.open()) {
             EffectResult result = processor.apply(paymentId);
+            status = "OK";
+            detail = result.outcome().name();
             if (result.outcome() == Outcome.APPLIED) {
                 meterRegistry.counter("ledgercore.clearing.effect.applied", "effect", result.effect().name(), "path", path)
                         .increment();
@@ -57,12 +64,18 @@ public class ClearingFinancialEffects {
             meterRegistry.counter("ledgercore.clearing.effect.failures", "path", path, "reason", "reserve_insufficient")
                     .increment();
             recordReserveShortage(paymentId);
+            detail = "RESERVE_INSUFFICIENT";
             throw new ClearingEffectDeferredException("The simulation reserve cannot cover the settlement yet.", exception);
         }
         catch (RuntimeException exception) {
             meterRegistry.counter("ledgercore.clearing.effect.failures", "path", path,
                     "reason", exception.getClass().getSimpleName()).increment();
             throw exception;
+        }
+        finally {
+            nz.ac.ledgercore.api.SpanRecorder.record("clearing.financial_effect", "INTERNAL", span, spanStart, status,
+                    java.util.Map.of("payment.id", paymentId.toString(), "effect.path", path, "effect.outcome", detail),
+                    java.util.List.of());
         }
     }
 

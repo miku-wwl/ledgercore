@@ -1,0 +1,327 @@
+{
+  "case": "clearing-reserve-shortage",
+  "runId": "d1bc003c-0510-4856-bac8-bd30cd6ed410",
+  "sourceSha": "d185416db2786274516c9eb7cf5cf5e4b6b482ef",
+  "trackedTreeDirty": false,
+  "bankJarSha256": "5f2882680bb4d01e08f315eee0f5863017ed031ec1ef1d6d0e5eace88a2c2a06",
+  "simJarSha256": "368dd4de76c3e200fe0e9c531e5d70550ce9b890cb9c221070aca39fcacc330d",
+  "injection": "PASS",
+  "injectionChecks": {
+    "external_settled": true,
+    "work_item_dead_letter": true,
+    "no_settlement": true,
+    "no_refund": true,
+    "payment_still_pending": true,
+    "obligation_kept": true,
+    "reserve_untouched": true,
+    "critical_exception": true,
+    "balance_sheet_balances": true,
+    "no_unbalanced_journals": true,
+    "projections_match_ledger": true,
+    "simulator_settled": true
+  },
+  "afterInjection": {
+    "database": "ledgercore_e6_d1bc003c05104856",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T19:20:11.447403+13:00",
+    "paymentStatus": "PENDING_CLEARING",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 0,
+    "refundJournalCount": 0,
+    "settlementLinked": false,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "DEAD",
+        "attempts": 5,
+        "lastError": "ClearingEffectDeferredException",
+        "receipts": []
+      }
+    ],
+    "payableLedgerMinor": 8000,
+    "payableProjectionMinor": 8000,
+    "reserveLedgerMinor": 5000,
+    "reserveProjectionMinor": 5000,
+    "sourceDepositLedgerMinor": 92000,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": [
+      {
+        "category": "CLEARING_RESERVE_INSUFFICIENT",
+        "severity": "CRITICAL",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "simulatorAfterInjection": {
+    "database": "ledgercore_e6sim_d1bc003c05104856",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T19:20:12.047251+13:00",
+    "operationStatus": "SETTLED",
+    "inquiryCount": 0,
+    "callbacks": [
+      {
+        "sequence": 1,
+        "status": "SETTLED",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      }
+    ]
+  },
+  "restore": {
+    "schemaVersion": 1,
+    "runId": "d1bc003c-0510-4856-bac8-bd30cd6ed410",
+    "caseName": "clearing-reserve-shortage",
+    "label": "post-fix d529208 (harness d185416) clearing-reserve-shortage",
+    "sourceSha": "d185416db2786274516c9eb7cf5cf5e4b6b482ef",
+    "startedAt": "2026-11-15T06:20:12.7400839Z",
+    "afterRestart": {
+      "database": "ledgercore_e6_d1bc003c05104856",
+      "serverPort": 55437,
+      "capturedAt": "2026-11-15T19:21:03.567483+13:00",
+      "paymentStatus": "PENDING_CLEARING",
+      "externalStatus": "SETTLED",
+      "bookingJournalCount": 1,
+      "settlementJournalCount": 0,
+      "refundJournalCount": 0,
+      "settlementLinked": false,
+      "instructionStatus": "SETTLED",
+      "inboxCallbacks": 1,
+      "inboxTerminalCallbacks": 1,
+      "callbackEvents": [
+        {
+          "status": "DEAD",
+          "attempts": 5,
+          "lastError": "ClearingEffectDeferredException",
+          "receipts": []
+        }
+      ],
+      "payableLedgerMinor": 8000,
+      "payableProjectionMinor": 8000,
+      "reserveLedgerMinor": 5000,
+      "reserveProjectionMinor": 5000,
+      "sourceDepositLedgerMinor": 92000,
+      "unbalancedJournalCount": 0,
+      "projectionMismatchCount": 0,
+      "negativeProjectionCount": 0,
+      "exceptions": [
+        {
+          "category": "CLEARING_RESERVE_INSUFFICIENT",
+          "severity": "CRITICAL",
+          "status": "OPEN"
+        }
+      ]
+    },
+    "afterRestartReconciliation": {
+      "runId": "28e3495a-87f1-45d0-abe7-7f65c1443724",
+      "findingCount": 2,
+      "checkedDomains": [
+        "LEDGER_PROJECTION",
+        "TRANSFER_JOURNAL_RECEIPT",
+        "PAYROLL_RESULTS_AND_TERMINAL_STATES",
+        "CORPORATE_PAYMENT_JOURNALS",
+        "DURABLE_EVENT_COVERAGE",
+        "ORGANIZATION_OWNERSHIP",
+        "INDEPENDENT_CLEARING_SIMULATOR_INQUIRY"
+      ],
+      "skippedDomains": [],
+      "findingCounts": {
+        "DEAD_OUTBOX_EVENT": 1,
+        "CLEARING_FINANCIAL_EFFECT_PENDING": 1
+      },
+      "paymentFindings": [
+        {
+          "category": "CLEARING_FINANCIAL_EFFECT_PENDING",
+          "severity": "CRITICAL",
+          "resourceType": "PAYMENT_INTENT",
+          "resourceId": "c808e24c-f713-44be-b322-944af8b8035a"
+        },
+        {
+          "category": "DEAD_OUTBOX_EVENT",
+          "severity": "HIGH",
+          "resourceType": "CLEARING_INSTRUCTION",
+          "resourceId": "c808e24c-f713-44be-b322-944af8b8035a"
+        }
+      ]
+    },
+    "resolveBeforeReplenishment": {
+      "reserve": 409,
+      "pending": 409
+    },
+    "replenishment": {
+      "requestId": "ce236702-3abd-433d-b59b-ae7422a72993",
+      "direction": "IN",
+      "amountMinor": 10000,
+      "reason": "R4-02 lab: audited replenishment of the settlement reserve",
+      "journalEntryId": "62fbb108-bf92-439f-8627-13c8492b7046",
+      "replayed": false,
+      "reserveMinorAfter": 15000,
+      "treasuryMinorAfter": 85000
+    },
+    "governedRetryStatuses": [
+      200,
+      400
+    ],
+    "resolveAfterSettlement": {
+      "reserve": 200,
+      "pending": 200
+    },
+    "reconciliation": {
+      "runId": "6cd3b14c-cad7-4410-9c56-b9507b056445",
+      "findingCount": 0,
+      "checkedDomains": [
+        "LEDGER_PROJECTION",
+        "TRANSFER_JOURNAL_RECEIPT",
+        "PAYROLL_RESULTS_AND_TERMINAL_STATES",
+        "CORPORATE_PAYMENT_JOURNALS",
+        "DURABLE_EVENT_COVERAGE",
+        "ORGANIZATION_OWNERSHIP",
+        "INDEPENDENT_CLEARING_SIMULATOR_INQUIRY"
+      ],
+      "skippedDomains": [],
+      "findingCounts": {},
+      "paymentFindings": []
+    },
+    "verdict": "PASS",
+    "finalBank": {
+      "database": "ledgercore_e6_d1bc003c05104856",
+      "serverPort": 55437,
+      "capturedAt": "2026-11-15T19:21:27.233042+13:00",
+      "paymentStatus": "COMPLETED",
+      "externalStatus": "SETTLED",
+      "bookingJournalCount": 1,
+      "settlementJournalCount": 1,
+      "refundJournalCount": 0,
+      "settlementLinked": true,
+      "instructionStatus": "SETTLED",
+      "inboxCallbacks": 1,
+      "inboxTerminalCallbacks": 1,
+      "callbackEvents": [
+        {
+          "status": "DELIVERED",
+          "attempts": 1,
+          "lastError": null,
+          "receipts": [
+            "clearing-financial-effect-v1"
+          ]
+        }
+      ],
+      "payableLedgerMinor": 0,
+      "payableProjectionMinor": 0,
+      "reserveLedgerMinor": 7000,
+      "reserveProjectionMinor": 7000,
+      "sourceDepositLedgerMinor": 92000,
+      "unbalancedJournalCount": 0,
+      "projectionMismatchCount": 0,
+      "negativeProjectionCount": 0,
+      "exceptions": [
+        {
+          "category": "CLEARING_RESERVE_INSUFFICIENT",
+          "severity": "CRITICAL",
+          "status": "RESOLVED"
+        },
+        {
+          "category": "CLEARING_FINANCIAL_EFFECT_PENDING",
+          "severity": "CRITICAL",
+          "status": "RESOLVED"
+        },
+        {
+          "category": "DEAD_OUTBOX_EVENT",
+          "severity": "HIGH",
+          "status": "OPEN"
+        }
+      ]
+    },
+    "finalSimulator": {
+      "database": "ledgercore_e6sim_d1bc003c05104856",
+      "serverPort": 55437,
+      "capturedAt": "2026-11-15T19:21:27.835397+13:00",
+      "operationStatus": "SETTLED",
+      "inquiryCount": 1,
+      "callbacks": [
+        {
+          "sequence": 1,
+          "status": "SETTLED",
+          "delivery": "DELIVERED",
+          "attempts": 1,
+          "lastError": null
+        }
+      ]
+    },
+    "ledgerIdentity": {
+      "treasuryLedgerMinor": 85000,
+      "treasuryProjectionMinor": 85000,
+      "debitNormalTotalMinor": 92000,
+      "creditNormalTotalMinor": 92000,
+      "liquidityJournals": 2,
+      "labAuditRows": 2,
+      "manualRetryAudits": [
+        {
+          "actor": "d0d8bbdc-e75e-4326-a1b0-d5de70751174",
+          "eventId": "9ac6f9e8-a61e-46e2-b6c1-a76bd15734a3"
+        }
+      ],
+      "resolutionAudits": [
+        {
+          "actor": "d0d8bbdc-e75e-4326-a1b0-d5de70751174",
+          "details": {
+            "recheck": {
+              "method": "FINANCIAL_EFFECT_COMPLETED",
+              "result": "CLEAN",
+              "checkedAt": "2026-11-15T06:21:26.776318300Z",
+              "resourceId": "null",
+              "resourceType": "null",
+              "paymentStatus": "COMPLETED"
+            },
+            "category": "CLEARING_RESERVE_INSUFFICIENT",
+            "severity": "CRITICAL",
+            "resolution": "Treasury replenished the reserve; settlement posted once.",
+            "correctionJournalEntryId": "NONE"
+          }
+        },
+        {
+          "actor": "d0d8bbdc-e75e-4326-a1b0-d5de70751174",
+          "details": {
+            "recheck": {
+              "method": "INDEPENDENT_SQL_RECHECK",
+              "result": "CLEAN",
+              "checkedAt": "2026-11-15T06:21:26.835293600Z",
+              "resourceId": "c808e24c-f713-44be-b322-944af8b8035a",
+              "resourceType": "PAYMENT_INTENT"
+            },
+            "category": "CLEARING_FINANCIAL_EFFECT_PENDING",
+            "severity": "CRITICAL",
+            "resolution": "Settlement posted once after the governed retry.",
+            "correctionJournalEntryId": "NONE"
+          }
+        }
+      ]
+    },
+    "checks": {
+      "exactly_one_booking": true,
+      "exactly_one_settlement": true,
+      "no_refund": true,
+      "payment_completed": true,
+      "terminal_callback_recorded_once": true,
+      "no_unbalanced_journals": true,
+      "projections_match_ledger": true,
+      "no_negative_projection": true,
+      "simulator_settled": true,
+      "payable_cleared": true,
+      "reserve_after_one_settlement": true,
+      "customer_debited_once": true,
+      "treasury_projection_matches": true,
+      "balance_sheet_balances": true,
+      "resolution_refused_while_owed": true,
+      "one_governed_retry_accepted": true,
+      "resolution_accepted_after_recheck": true,
+      "no_pending_effect_finding": true
+    },
+    "completedAt": "2026-11-15T06:21:40.1997784Z"
+  }
+}

@@ -35,7 +35,19 @@ public class LedgerCoreObservability {
                 (SELECT count(*) FROM corporate_payment_intents WHERE external_status = 'UNKNOWN'),
                 (SELECT count(*) FROM reconciliation_exceptions WHERE status IN ('OPEN', 'ASSIGNED')),
                 (SELECT count(*) FROM pg_stat_activity
-                 WHERE datname = current_database() AND wait_event_type = 'Lock' AND pid <> pg_backend_pid())
+                 WHERE datname = current_database() AND wait_event_type = 'Lock' AND pid <> pg_backend_pid()),
+                (SELECT count(*) FROM corporate_payment_intents WHERE status IN ('PENDING_CLEARING', 'UNKNOWN') AND ((external_status = 'SETTLED' AND settlement_journal_entry_id IS NULL) OR (external_status = 'REJECTED' AND reversal_journal_entry_id IS NULL AND settlement_journal_entry_id IS NULL))),
+                COALESCE((SELECT extract(epoch FROM clock_timestamp() - min(updated_at)) FROM corporate_payment_intents
+                          WHERE status IN ('PENDING_CLEARING', 'UNKNOWN') AND ((external_status = 'SETTLED' AND settlement_journal_entry_id IS NULL) OR (external_status = 'REJECTED' AND reversal_journal_entry_id IS NULL AND settlement_journal_entry_id IS NULL))), 0),
+                COALESCE((SELECT balance_minor FROM account_balance_projection
+                          WHERE ledger_account_id = '00000000-0000-5000-8000-000000000001'), 0),
+                COALESCE((SELECT balance_minor FROM account_balance_projection
+                          WHERE ledger_account_id = '00000000-0000-5000-8000-000000000002'), 0),
+                GREATEST(0, COALESCE((SELECT sum(amount_minor) FROM corporate_payment_intents
+                                      WHERE status IN ('PENDING_CLEARING', 'UNKNOWN') AND external_status = 'SETTLED'
+                                        AND settlement_journal_entry_id IS NULL), 0)
+                            - COALESCE((SELECT balance_minor FROM account_balance_projection
+                                        WHERE ledger_account_id = '00000000-0000-5000-8000-000000000001'), 0))
             """;
     private static final String OPERATIONS_MEMBERSHIP_SQL = """
             SELECT EXISTS (
@@ -60,6 +72,11 @@ public class LedgerCoreObservability {
     private final AtomicLong openReconciliation = new AtomicLong(-1);
     private final AtomicLong lockWaitSessions = new AtomicLong(-1);
     private final AtomicLong poolPending = new AtomicLong(-1);
+    private final AtomicLong effectsPending = new AtomicLong(-1);
+    private final AtomicLong oldestEffectSeconds = new AtomicLong(-1);
+    private final AtomicLong reserveMinor = new AtomicLong(-1);
+    private final AtomicLong payableMinor = new AtomicLong(-1);
+    private final AtomicLong reserveShortfallMinor = new AtomicLong(-1);
 
     public LedgerCoreObservability(MeterRegistry registry, HikariDataSource applicationDataSource,
             @Value("${spring.datasource.url}") String jdbcUrl,
@@ -77,6 +94,11 @@ public class LedgerCoreObservability {
         gauge(registry, "ledgercore.reconciliation.open.exceptions", openReconciliation);
         gauge(registry, "ledgercore.postgresql.lock.wait.sessions", lockWaitSessions);
         gauge(registry, "ledgercore.hikari.pending.acquisitions", poolPending);
+        gauge(registry, "ledgercore.clearing.effects.pending", effectsPending);
+        gauge(registry, "ledgercore.clearing.effects.oldest.pending.age.seconds", oldestEffectSeconds);
+        gauge(registry, "ledgercore.simulation.reserve.balance.minor", reserveMinor);
+        gauge(registry, "ledgercore.clearing.payable.balance.minor", payableMinor);
+        gauge(registry, "ledgercore.clearing.reserve.shortfall.minor", reserveShortfallMinor);
     }
 
     @Scheduled(fixedDelayString = "${ledgercore.observability.refresh-ms:5000}",
@@ -99,6 +121,11 @@ public class LedgerCoreObservability {
                     unknownClearing.set(row.getLong(4));
                     openReconciliation.set(row.getLong(5));
                     lockWaitSessions.set(row.getLong(6));
+                    effectsPending.set(row.getLong(7));
+                    oldestEffectSeconds.set(Math.round(row.getDouble(8)));
+                    reserveMinor.set(row.getLong(9));
+                    payableMinor.set(row.getLong(10));
+                    reserveShortfallMinor.set(row.getLong(11));
                     databaseAvailable.set(1);
                 }
             }
@@ -111,6 +138,11 @@ public class LedgerCoreObservability {
             unknownClearing.set(-1);
             openReconciliation.set(-1);
             lockWaitSessions.set(-1);
+            effectsPending.set(-1);
+            oldestEffectSeconds.set(-1);
+            reserveMinor.set(-1);
+            payableMinor.set(-1);
+            reserveShortfallMinor.set(-1);
             log.warn("Operational database gauges are unavailable (SQL state {}).", exception.getSQLState());
         }
         var pool = applicationDataSource.getHikariPoolMXBean();
@@ -119,11 +151,14 @@ public class LedgerCoreObservability {
     }
 
     public Snapshot snapshot() {
+        List<String> alerts = new ArrayList<>(evaluateAlerts(databaseAvailable.get(), oldestPendingSeconds.get(),
+                unknownClearing.get(), openReconciliation.get(), poolPending.get(), lockWaitSessions.get()));
+        alerts.addAll(evaluateClearingEffectAlerts(databaseAvailable.get(), effectsPending.get(),
+                oldestEffectSeconds.get(), reserveShortfallMinor.get()));
         return new Snapshot(databaseAvailable.get(), outboxPending.get(), outboxDead.get(),
                 oldestPendingSeconds.get(), unknownClearing.get(), openReconciliation.get(),
-                poolPending.get(), lockWaitSessions.get(), evaluateAlerts(databaseAvailable.get(),
-                        oldestPendingSeconds.get(), unknownClearing.get(), openReconciliation.get(),
-                        poolPending.get(), lockWaitSessions.get()));
+                poolPending.get(), lockWaitSessions.get(), effectsPending.get(), oldestEffectSeconds.get(),
+                reserveMinor.get(), payableMinor.get(), reserveShortfallMinor.get(), List.copyOf(alerts));
     }
 
     public boolean isOperationsMember(java.util.UUID customerId) {
@@ -170,12 +205,27 @@ public class LedgerCoreObservability {
         return List.copyOf(alerts);
     }
 
+    /** Round 4: an owed settlement/refund older than a minute, and settlements the reserve cannot currently cover. */
+    public static List<String> evaluateClearingEffectAlerts(long databaseAvailable, long effectsPending,
+            long oldestEffectSeconds, long reserveShortfallMinor) {
+        List<String> alerts = new ArrayList<>();
+        if (databaseAvailable > 0 && effectsPending > 0 && oldestEffectSeconds > 60) {
+            alerts.add("CLEARING_FINANCIAL_EFFECT_PENDING");
+        }
+        if (databaseAvailable > 0 && reserveShortfallMinor > 0) {
+            alerts.add("CLEARING_RESERVE_SHORTFALL");
+        }
+        return List.copyOf(alerts);
+    }
+
     private void gauge(MeterRegistry registry, String name, AtomicLong value) {
         Gauge.builder(name, value, AtomicLong::get).register(registry);
     }
 
     public record Snapshot(long databaseAvailable, long outboxPending, long outboxDead,
             long oldestPendingAgeSeconds, long unknownClearing, long openReconciliation,
-            long hikariPendingAcquisitions, long postgresqlLockWaitSessions, List<String> alerts) {
+            long hikariPendingAcquisitions, long postgresqlLockWaitSessions, long clearingEffectsPending,
+            long oldestPendingEffectAgeSeconds, long simulationReserveMinor, long clearingPayableMinor,
+            long reserveShortfallMinor, List<String> alerts) {
     }
 }

@@ -46,13 +46,17 @@ public class ClearingSimulatorClient {
         return post("/internal/operations", operation, "submit");
     }
 
-    public OperationResponse inquire(UUID operationId) {
-        return post("/internal/operations/" + operationId + "/inquiry", new InquiryRequest(operationId), "inquiry");
+    public OperationResponse inquire(UUID operationId, long bankSequence) {
+        return post("/internal/operations/" + operationId + "/inquiry", new InquiryRequest(operationId, bankSequence),
+                "inquiry");
     }
 
     private OperationResponse post(String path, Object request, String operation) {
         Timer.Sample sample = Timer.start(meterRegistry);
         String outcome = "success";
+        long spanStart = System.nanoTime();
+        nz.ac.ledgercore.api.TraceContext clientSpan = nz.ac.ledgercore.api.TraceContext.current()
+                .map(nz.ac.ledgercore.api.TraceContext::child).orElseGet(nz.ac.ledgercore.api.TraceContext::root);
         try {
             byte[] body = JSON.writeValueAsBytes(request);
             long timestamp = Instant.now().getEpochSecond();
@@ -62,6 +66,11 @@ public class ClearingSimulatorClient {
             String correlationId = MDC.get("correlationId");
             if (correlationId != null) {
                 call.header("X-Correlation-ID", correlationId);
+            }
+            call.header(nz.ac.ledgercore.api.TraceContext.TRACEPARENT_HEADER, clientSpan.traceparent());
+            String traceState = MDC.get("tracestate");
+            if (traceState != null) {
+                call.header(nz.ac.ledgercore.api.TraceContext.TRACESTATE_HEADER, traceState);
             }
             return call.body(body).retrieve().body(OperationResponse.class);
         }
@@ -74,6 +83,9 @@ public class ClearingSimulatorClient {
             throw exception;
         }
         finally {
+            nz.ac.ledgercore.api.SpanRecorder.record("POST simulator " + operation, "CLIENT", clientSpan, spanStart,
+                    "success".equals(outcome) ? "OK" : "ERROR", java.util.Map.of("clearing.operation", operation,
+                            "outcome", outcome), java.util.List.of());
             sample.stop(meterRegistry.timer("ledgercore.clearing.simulator.request.duration",
                     "operation", operation, "outcome", outcome));
         }

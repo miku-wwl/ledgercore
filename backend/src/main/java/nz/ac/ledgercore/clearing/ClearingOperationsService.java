@@ -48,10 +48,15 @@ public class ClearingOperationsService {
         }
         UUID organizationId = organizations.getFirst();
         authorization.requireCanOperateClearing(actorCustomerId, organizationId);
-        OperationResponse response = simulator.inquire(operationId);
+        // The highest callback sequence the bank holds: after a restore it can be behind what the simulator delivered.
+        Long bankSequence = jdbc.queryForObject(
+                "SELECT COALESCE(max(sequence_no), 0) FROM clearing_callback_inbox WHERE operation_id = ?", Long.class,
+                operationId);
+        long held = bankSequence == null ? 0 : bankSequence;
+        OperationResponse response = simulator.inquire(operationId, held);
         events.recordAudit(actorCustomerId, "CLEARING_STATUS_INQUIRY", "CLEARING_INSTRUCTION", operationId,
                 organizationId, Map.of("externalStatus", response.externalStatus(),
-                        "sequenceNo", response.sequenceNo()));
+                        "sequenceNo", response.sequenceNo(), "bankSequence", held));
         return response;
         }
         catch (RuntimeException exception) {

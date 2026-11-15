@@ -101,7 +101,7 @@ class MigrationCompatibilityPostgresIntegrationTests {
             flyway.validate();
             List<MigrationInfo> applied = versioned(flyway);
             assertThat(applied).extracting(info -> info.getVersion().getVersion())
-                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13");
+                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15");
             assertThat(applied).allSatisfy(info -> assertThat(info.getState().isApplied()).isTrue());
             for (MigrationInfo info : applied) {
                 Integer published = PUBLISHED_CHECKSUMS.get(info.getScript());
@@ -269,7 +269,7 @@ class MigrationCompatibilityPostgresIntegrationTests {
             flyway(schema, MigrationVersion.LATEST).migrate();
 
             assertThat(versioned(flyway(schema, MigrationVersion.LATEST))).extracting(info -> info.getVersion().getVersion())
-                    .last().isEqualTo("13");
+                    .last().isEqualTo("15");
             assertThat(seed.jdbc.queryForObject("SELECT count(*) FROM journal_entries", Integer.class)).isEqualTo(journalsBefore);
             assertThat(seed.jdbc.queryForObject("SELECT COALESCE(sum(amount_minor), 0) FROM postings", Long.class))
                     .isEqualTo(postingsBefore);
@@ -292,6 +292,26 @@ class MigrationCompatibilityPostgresIntegrationTests {
                     WHERE ledger_account_id = '00000000-0000-5000-8000-000000000003'
                     """, Long.class)).isZero();
             assertThat(unvalidatedConstraints(schema)).isZero();
+        });
+    }
+
+    @Test
+    void v15RefusesToMigrateACompletedPaymentThatHasNoSettlementJournal() {
+        withSchema(schema -> {
+            flyway(schema, MigrationVersion.fromVersion("14")).migrate();
+            Seed seed = new Seed(schema);
+            ClearingSeed payment = seed.corporatePaymentAwaitingClearing();
+            // V8-V14 allowed this direct write (R4-06); V15 must refuse to install its rule over the contradiction.
+            seed.jdbc.update("UPDATE corporate_payment_intents SET status = 'COMPLETED', completed_at = clock_timestamp() WHERE id = ?",
+                    payment.paymentId());
+
+            assertThatThrownBy(() -> flyway(schema, MigrationVersion.LATEST).migrate())
+                    .isInstanceOf(FlywayException.class)
+                    .hasStackTraceContaining("V15 preflight refused to migrate: 1 corporate payment(s)");
+            assertThat(versioned(flyway(schema, MigrationVersion.LATEST)))
+                    .extracting(info -> info.getVersion().getVersion()).last().isEqualTo("14");
+            assertThat(seed.jdbc.queryForObject("SELECT status FROM corporate_payment_intents WHERE id = ?", String.class,
+                    payment.paymentId())).isEqualTo("COMPLETED");
         });
     }
 

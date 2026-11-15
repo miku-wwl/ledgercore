@@ -60,11 +60,11 @@ public class SimulatorOperationService {
         jdbc.update("""
                 INSERT INTO simulator_operations (operation_id, payment_id, intent_digest, amount_minor, currency,
                     beneficiary_reference, routing_code, outcome_policy, external_status, simulator_reference,
-                    correlation_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    correlation_id, trace_parent)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, request.operationId(), request.paymentId(), request.intentDigest(), request.amountMinor(),
                 request.currency(), request.beneficiaryReference(), request.routingCode(), route.policy(),
-                route.initialStatus(), reference, correlationId);
+                route.initialStatus(), reference, correlationId, SimulatorTrace.currentTraceparent().orElse(null));
         OperationResponse response = new OperationResponse(request.operationId(), request.paymentId(),
                 request.intentDigest(), route.initialStatus(), reference, 1);
         enqueueCallback(response);
@@ -74,6 +74,15 @@ public class SimulatorOperationService {
 
     @Transactional
     public OperationResponse inquire(UUID operationId) {
+        return inquire(operationId, null);
+    }
+
+    /**
+     * Authenticated status inquiry. Callbacks the bank cannot have (DEAD, or DELIVERED after the sequence the bank reports
+     * holding, for example after a bank restore) are re-armed with their original identity (R4-04, R4-07).
+     */
+    @Transactional
+    public OperationResponse inquire(UUID operationId, Long afterSequence) {
         List<OperationRow> rows = jdbc.query("""
                 SELECT operation_id, payment_id, intent_digest, external_status, simulator_reference, inquiry_count,
                        outcome_policy, correlation_id
@@ -92,9 +101,13 @@ public class SimulatorOperationService {
         int rearmed = jdbc.update("""
                 UPDATE simulator_callback_outbox
                 SET delivery_status = 'PENDING', attempt_count = 0, next_attempt_at = clock_timestamp(), lease_until = NULL,
-                    last_error = 'Re-armed by an authenticated inquiry after the delivery budget was exhausted.'
-                WHERE operation_id = ? AND delivery_status = 'DEAD'
-                """, operationId);
+                    delivered_at = NULL, redelivery_count = redelivery_count + 1, last_rearmed_at = clock_timestamp(),
+                    last_error = CASE WHEN delivery_status = 'DEAD'
+                        THEN 'Re-armed by an authenticated inquiry after the delivery budget was exhausted.'
+                        ELSE 'Re-armed by an authenticated inquiry: the bank reports an earlier sequence.' END
+                WHERE operation_id = ? AND (delivery_status = 'DEAD'
+                    OR (delivery_status = 'DELIVERED' AND CAST(? AS BIGINT) IS NOT NULL AND sequence_no > CAST(? AS BIGINT)))
+                """, operationId, afterSequence, afterSequence);
         if (rearmed > 0) {
             log.info("Simulator inquiry re-armed dead callbacks operationId={} count={}", operationId, rearmed);
         }
@@ -131,9 +144,11 @@ public class SimulatorOperationService {
         try {
             String payload = JSON.writeValueAsString(callback);
             jdbc.update("""
-                    INSERT INTO simulator_callback_outbox (callback_id, operation_id, sequence_no, external_status, payload)
-                    VALUES (?, ?, ?, ?, ?::jsonb)
-                    """, callbackId, operation.operationId(), operation.sequenceNo(), operation.externalStatus(), payload);
+                    INSERT INTO simulator_callback_outbox (callback_id, operation_id, sequence_no, external_status, payload,
+                        trace_parent)
+                    VALUES (?, ?, ?, ?, ?::jsonb, ?)
+                    """, callbackId, operation.operationId(), operation.sequenceNo(), operation.externalStatus(), payload,
+                    SimulatorTrace.currentTraceparent().orElse(null));
         }
         catch (JacksonException exception) {
             throw new IllegalStateException("Simulator callback could not be serialized.", exception);

@@ -38,10 +38,11 @@ public class DurableEventStore {
         UUID eventId = UUID.randomUUID();
         jdbcTemplate.update("""
                 INSERT INTO outbox_events (id, event_key, event_type, aggregate_type, aggregate_id,
-                    actor_customer_id, organization_id, correlation_id, payload)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+                    actor_customer_id, organization_id, correlation_id, payload, trace_parent)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?)
                 """, eventId, eventKey, eventType, aggregateType, aggregateId, actorCustomerId, organizationId,
-                correlationId(), json(payload));
+                correlationId(), json(payload),
+                nz.ac.ledgercore.api.TraceContext.current().map(nz.ac.ledgercore.api.TraceContext::traceparent).orElse(null));
         return eventId;
     }
 
@@ -85,11 +86,12 @@ public class DurableEventStore {
                 WHERE event.id = candidate.id
                 RETURNING event.id, event.event_key, event.event_type, event.aggregate_type, event.aggregate_id,
                     event.actor_customer_id, event.organization_id, event.correlation_id, event.payload::text,
-                    event.attempt_count
+                    event.attempt_count, event.trace_parent
                 """, (rs, row) -> new OutboxEvent(rs.getObject("id", UUID.class), rs.getString("event_key"),
                 rs.getString("event_type"), rs.getString("aggregate_type"), rs.getObject("aggregate_id", UUID.class),
                 rs.getObject("actor_customer_id", UUID.class), rs.getObject("organization_id", UUID.class),
-                rs.getString("correlation_id"), rs.getString("payload"), rs.getInt("attempt_count")), MAX_ATTEMPTS);
+                rs.getString("correlation_id"), rs.getString("payload"), rs.getInt("attempt_count"),
+                rs.getString("trace_parent")), MAX_ATTEMPTS);
         return rows.stream().findFirst().orElse(null);
     }
 

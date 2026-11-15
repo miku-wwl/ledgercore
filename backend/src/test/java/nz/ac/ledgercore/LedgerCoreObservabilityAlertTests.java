@@ -15,6 +15,15 @@ class LedgerCoreObservabilityAlertTests {
     }
 
     @Test
+    void clearingEffectAndReserveShortfallAlertsFireOnRealThresholdsAndClear() {
+        assertThat(LedgerCoreObservability.evaluateClearingEffectAlerts(1, 1, 61, 3_000))
+                .containsExactly("CLEARING_FINANCIAL_EFFECT_PENDING", "CLEARING_RESERVE_SHORTFALL");
+        assertThat(LedgerCoreObservability.evaluateClearingEffectAlerts(1, 1, 10, 0)).isEmpty();
+        assertThat(LedgerCoreObservability.evaluateClearingEffectAlerts(1, 0, 0, 0)).isEmpty();
+        assertThat(LedgerCoreObservability.evaluateClearingEffectAlerts(0, -1, -1, -1)).isEmpty();
+    }
+
+    @Test
     void unavailableMonitorDoesNotMisreportDatabaseBacklogOrLockAlerts() {
         assertThat(LedgerCoreObservability.evaluateAlerts(0, -1, -1, -1, 0, -1))
                 .containsExactly("MONITORING_DATABASE_UNAVAILABLE");
