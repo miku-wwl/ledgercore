@@ -5,7 +5,10 @@ param(
         'clearing-effect-ack-crash', 'clearing-effect-session-kill')] [string] $Case,
     [string] $RunId,
     [ValidateSet('prompt', 'after-dead-letter')] [string] $RestoreMode = 'prompt',
-    [string] $Label = ''
+    [string] $Label = '',
+    # Optional dispatcher poll interval for the fault run only. A long interval keeps the durable worker from completing
+    # the effect in the instant between the checkpoint and the kill, so the restart-recovery path is exercised.
+    [int] $OutboxPollMs = 0
 )
 
 # Round 4 two-process clearing fault lab. It extends the E6 conventions (assessment/e6/README.md): one GUID run,
@@ -14,6 +17,7 @@ param(
 # checkpoint was never observed. Secrets (database passwords, the run's HMAC key) stay in the ignored run.json.
 
 . (Join-Path $PSScriptRoot 'ClearingLab.Common.ps1')
+$script:outboxPollMs = if ($OutboxPollMs -gt 0) { $OutboxPollMs } else { $null }
 
 Assert-MainAndArtifacts
 
@@ -30,6 +34,7 @@ switch ($Action) {
             schemaVersion = 1; runId = $RunId; caseName = $Case; label = $Label; createdAt = [DateTime]::UtcNow.ToString('o')
             sourceSha = $head; trackedTreeDirty = $dirty; bankJarSha256 = (Get-FileSha256 $bankJar); simJarSha256 = (Get-FileSha256 $simJar)
             expectedFault = $faultByCase[$Case]; status = 'INITIALIZING'; injectionObserved = $false; bankStarts = @()
+            faultRunOutboxPollMs = $script:outboxPollMs
         }
         Save-State
         Write-Step "starting $Case run $RunId at $head (label '$Label')"

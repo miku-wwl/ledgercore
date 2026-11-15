@@ -36,7 +36,8 @@ function Invoke-ReserveLab([string] $Direction, [string] $Amount, [string] $Reas
         LEDGERCORE_RESERVELAB_REASON = $Reason
         LEDGERCORE_CLEARING_ENABLED = 'false'
     }
-    $arguments = @('-jar', $bankJar, '--spring.profiles.active=reserve-lab', '--spring.main.web-application-type=none',
+    # The command needs the web security configuration, so it starts on an ephemeral loopback port and exits by itself.
+    $arguments = @('-jar', $bankJar, '--spring.profiles.active=reserve-lab', '--server.address=127.0.0.1', '--server.port=0',
         '--ledgercore.outbox.scheduler.enabled=false')
     $saved = Set-ChildEnvironment $environment
     try {

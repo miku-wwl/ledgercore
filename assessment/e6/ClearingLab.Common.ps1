@@ -234,6 +234,7 @@ function Start-Bank([bool] $FaultProfile) {
         LEDGERCORE_E6_FAULT = if ($FaultProfile) { $script:state.expectedFault } else { '' }
     }
     $arguments = @('-jar', $bankJar, '--server.address=127.0.0.1', "--server.port=$bankPort", '--ledgercore.outbox.scheduler.enabled=true')
+    if ($FaultProfile -and $script:outboxPollMs) { $arguments += "--ledgercore.outbox.poll-ms=$($script:outboxPollMs)" }
     if ($FaultProfile) { $arguments += @('--spring.profiles.active=e6-lab', '--ledgercore.e6.enabled=true') }
     $saved = Set-ChildEnvironment $environment
     try {
