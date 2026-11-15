@@ -40,7 +40,10 @@ public class E6FaultLabConfiguration {
 			"precommit-crash", E6FaultInjectionHook.TRANSFER_PRE_COMMIT,
 			"postcommit-response-crash", E6FaultInjectionHook.TRANSFER_AFTER_COMMIT_BEFORE_RESPONSE,
 			"outbox-before-dispatch", E6FaultInjectionHook.OUTBOX_PERSISTED_BEFORE_DISPATCH,
-			"payroll-mark-failure-crash", E6FaultInjectionHook.PAYROLL_AFTER_ROLLBACK_BEFORE_FAILURE_MARK);
+			"payroll-mark-failure-crash", E6FaultInjectionHook.PAYROLL_AFTER_ROLLBACK_BEFORE_FAILURE_MARK,
+			"clearing-callback-commit-crash", E6FaultInjectionHook.CLEARING_CALLBACK_COMMITTED_BEFORE_EFFECT,
+			"clearing-effect-precommit-crash", E6FaultInjectionHook.CLEARING_EFFECT_POSTED_BEFORE_COMMIT,
+			"clearing-effect-ack-crash", E6FaultInjectionHook.CLEARING_EFFECT_COMMITTED_BEFORE_ACK);
 	private static final JsonMapper JSON = JsonMapper.builder().build();
 
 	@Bean

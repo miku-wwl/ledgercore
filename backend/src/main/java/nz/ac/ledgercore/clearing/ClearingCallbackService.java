@@ -76,7 +76,7 @@ public class ClearingCallbackService {
             if (callbackDigests.getFirst().equals(digest)) {
                 meterRegistry.counter("ledgercore.clearing.duplicate.callbacks").increment();
                 applicationEvents.publishEvent(new ClearingOutcomeRecorded(payment.paymentId(),
-                        payment.operationId(), payment.organizationId()));
+                        payment.operationId(), payment.organizationId(), callback.externalStatus()));
                 return new CallbackAck(callback.callbackId(), "DUPLICATE");
             }
             recordException(callback.operationId(), payment.organizationId(), "CLEARING_CALLBACK_ID_REUSE", "CRITICAL",
@@ -91,7 +91,7 @@ public class ClearingCallbackService {
             if (sequenceDigests.getFirst().equals(digest)) {
                 meterRegistry.counter("ledgercore.clearing.duplicate.callbacks").increment();
                 applicationEvents.publishEvent(new ClearingOutcomeRecorded(payment.paymentId(),
-                        payment.operationId(), payment.organizationId()));
+                        payment.operationId(), payment.organizationId(), callback.externalStatus()));
                 return new CallbackAck(callback.callbackId(), "DUPLICATE");
             }
             recordException(callback.operationId(), payment.organizationId(), "CLEARING_SEQUENCE_CONFLICT", "CRITICAL",
@@ -166,7 +166,7 @@ public class ClearingCallbackService {
                 Map.of("callbackId", callback.callbackId().toString(), "sequenceNo", callback.sequenceNo(),
                         "externalStatus", callback.externalStatus()));
         applicationEvents.publishEvent(new ClearingOutcomeRecorded(payment.paymentId(),
-                payment.operationId(), payment.organizationId()));
+                payment.operationId(), payment.organizationId(), callback.externalStatus()));
         org.slf4j.LoggerFactory.getLogger(ClearingCallbackService.class).info(
                 "Clearing callback accepted status={} operationId={} callbackId={}", callback.externalStatus(),
                 callback.operationId(), callback.callbackId());

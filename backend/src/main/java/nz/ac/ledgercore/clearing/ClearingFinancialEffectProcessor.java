@@ -1,9 +1,12 @@
 package nz.ac.ledgercore.clearing;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import nz.ac.ledgercore.api.E6FaultInjectionHook;
 import nz.ac.ledgercore.ledger.LedgerWriter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -14,10 +17,13 @@ public class ClearingFinancialEffectProcessor {
 
     private final JdbcTemplate jdbc;
     private final LedgerWriter ledgerWriter;
+    private final ObjectProvider<E6FaultInjectionHook> faultLab;
 
-    public ClearingFinancialEffectProcessor(JdbcTemplate jdbc, LedgerWriter ledgerWriter) {
+    public ClearingFinancialEffectProcessor(JdbcTemplate jdbc, LedgerWriter ledgerWriter,
+            ObjectProvider<E6FaultInjectionHook> faultLab) {
         this.jdbc = jdbc;
         this.ledgerWriter = ledgerWriter;
+        this.faultLab = faultLab;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -34,11 +40,21 @@ public class ClearingFinancialEffectProcessor {
         EffectState state = states.getFirst();
         if ("SETTLED".equals(state.externalStatus()) && state.settlementEntryId() == null
                 && List.of("PENDING_CLEARING", "UNKNOWN").contains(state.status())) {
-            ledgerWriter.settleClearingPayment(paymentId);
+            UUID journalEntryId = ledgerWriter.settleClearingPayment(paymentId);
+            checkpointBeforeCommit(paymentId, "SETTLEMENT", journalEntryId);
         }
         else if ("REJECTED".equals(state.externalStatus()) && state.reversalEntryId() == null
                 && List.of("PENDING_CLEARING", "UNKNOWN").contains(state.status())) {
-            ledgerWriter.refundRejectedCorporatePayment(paymentId);
+            UUID journalEntryId = ledgerWriter.refundRejectedCorporatePayment(paymentId);
+            checkpointBeforeCommit(paymentId, "REFUND", journalEntryId);
+        }
+    }
+
+    private void checkpointBeforeCommit(UUID paymentId, String effect, UUID journalEntryId) {
+        E6FaultInjectionHook hook = faultLab.getIfAvailable();
+        if (hook != null) {
+            hook.checkpoint(E6FaultInjectionHook.CLEARING_EFFECT_POSTED_BEFORE_COMMIT, Map.of(
+                    "paymentId", paymentId.toString(), "effect", effect, "journalEntryId", journalEntryId.toString()));
         }
     }
 
