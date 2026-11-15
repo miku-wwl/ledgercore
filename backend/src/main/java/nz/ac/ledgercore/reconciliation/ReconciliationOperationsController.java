@@ -64,7 +64,7 @@ public class ReconciliationOperationsController {
 	ReconciliationExceptionView resolve(@AuthenticationPrincipal CustomerPrincipal principal,
 			@PathVariable UUID organizationId, @PathVariable UUID exceptionId,
 			@Valid @RequestBody ResolveExceptionRequest request) {
-		return exceptionService.resolve(principal.customerId(), organizationId, exceptionId,
+		return reconciliationService.resolveException(principal.customerId(), organizationId, exceptionId,
 				request.resolution(), request.correctionJournalEntryId());
 	}
 

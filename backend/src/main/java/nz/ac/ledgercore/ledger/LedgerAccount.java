@@ -18,5 +18,9 @@ public record LedgerAccount(UUID id, UUID customerAccountId, LedgerAccountKind k
 				&& (customerAccountId != null || normalSide != PostingSide.DEBIT || !systemAccount)) {
 			throw new IllegalArgumentException("The simulation reserve is a debit-normal system asset.");
 		}
+		if (kind == LedgerAccountKind.SIMULATION_TREASURY
+				&& (customerAccountId != null || normalSide != PostingSide.DEBIT || !systemAccount)) {
+			throw new IllegalArgumentException("The simulation treasury is a debit-normal system asset.");
+		}
 	}
 }

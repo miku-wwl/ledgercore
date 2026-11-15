@@ -14,6 +14,8 @@ public class LedgerWriter {
 
 	public static final UUID SIMULATION_RESERVE_ID = UUID.fromString("00000000-0000-5000-8000-000000000001");
 	public static final UUID CLEARING_PAYABLE_ID = UUID.fromString("00000000-0000-5000-8000-000000000002");
+	/** Round 4 (R4-02): simulated bank liquidity outside the settlement reserve; only liquidity transfers post to it. */
+	public static final UUID SIMULATION_TREASURY_ID = UUID.fromString("00000000-0000-5000-8000-000000000003");
 
 	private final JdbcTemplate jdbcTemplate;
 	private final LedgerBalanceReader balanceReader;
@@ -165,6 +167,42 @@ public class LedgerWriter {
 		return entry.id();
 	}
 
+	/**
+	 * Round 4 (R4-02), lab only: moves simulated liquidity between the bank's two simulated assets. OUT moves it from the
+	 * settlement reserve to the treasury (the reserve becomes genuinely finite); IN replenishes the reserve from the
+	 * treasury. The journal is balanced, creates no money and cannot overdraw either asset. A repeated request id with the
+	 * same direction and amount replays the original journal; different facts under the same id are refused.
+	 */
+	@Transactional
+	public LiquidityTransfer transferReserveLiquidity(UUID requestId, LiquidityDirection direction, Money amount) {
+		requirePositive(amount);
+		String reference = "reserve-liquidity:" + requestId + ":" + direction.name();
+		lockLedgerAccounts(List.of(SIMULATION_RESERVE_ID, SIMULATION_TREASURY_ID));
+		List<Long> replayed = jdbcTemplate.query("""
+				SELECT p.amount_minor FROM journal_entries je JOIN postings p ON p.journal_entry_id = je.id
+				WHERE je.entry_type = 'RESERVE_LIQUIDITY_TRANSFER' AND je.reference = ? AND p.side = 'DEBIT'
+				""", (rs, row) -> rs.getLong(1), reference);
+		if (!replayed.isEmpty()) {
+			if (replayed.getFirst() != amount.minorUnits()) {
+				throw new IllegalStateException("The liquidity request id was already used for a different amount.");
+			}
+			UUID existing = jdbcTemplate.queryForObject(
+					"SELECT id FROM journal_entries WHERE entry_type = 'RESERVE_LIQUIDITY_TRANSFER' AND reference = ?",
+					UUID.class, reference);
+			return new LiquidityTransfer(existing, true, balanceReader.ledgerBalanceForLedgerAccount(SIMULATION_RESERVE_ID),
+					balanceReader.ledgerBalanceForLedgerAccount(SIMULATION_TREASURY_ID));
+		}
+		UUID giving = direction == LiquidityDirection.OUT ? SIMULATION_RESERVE_ID : SIMULATION_TREASURY_ID;
+		UUID receiving = direction == LiquidityDirection.OUT ? SIMULATION_TREASURY_ID : SIMULATION_RESERVE_ID;
+		if (balanceReader.ledgerBalanceForLedgerAccount(giving).minorUnits() < amount.minorUnits()) {
+			throw new InsufficientLedgerBalanceException();
+		}
+		JournalEntry entry = JournalEntry.reserveLiquidityTransfer(receiving, giving, amount);
+		writeEntryAndRefreshProjections(entry, reference);
+		return new LiquidityTransfer(entry.id(), false, balanceReader.ledgerBalanceForLedgerAccount(SIMULATION_RESERVE_ID),
+				balanceReader.ledgerBalanceForLedgerAccount(SIMULATION_TREASURY_ID));
+	}
+
 	@Transactional
 	public UUID reverseJournalEntry(UUID journalEntryId) {
 		JournalEntry original = loadJournalEntry(journalEntryId);
@@ -172,6 +210,9 @@ public class LedgerWriter {
 				|| original.type() == JournalEntryType.CLEARING_SETTLEMENT
 				|| original.type() == JournalEntryType.CORPORATE_PAYMENT_REFUND) {
 			throw new IllegalArgumentException("Corporate payment entries require their controlled recovery workflow.");
+		}
+		if (original.type() == JournalEntryType.RESERVE_LIQUIDITY_TRANSFER) {
+			throw new IllegalArgumentException("A liquidity transfer is undone by an opposite liquidity transfer.");
 		}
 		JournalEntry reversal = JournalEntry.reversalOf(original);
 		List<UUID> ledgerAccountIds = reversal.postings().stream().map(Posting::ledgerAccountId).toList();
@@ -312,6 +353,16 @@ public class LedgerWriter {
 		if (amount == null || amount.minorUnits() <= 0) {
 			throw new IllegalArgumentException("Amount must be greater than zero.");
 		}
+	}
+
+	public enum LiquidityDirection {
+		/** Reserve to treasury: the settlement reserve shrinks. */
+		OUT,
+		/** Treasury to reserve: the settlement reserve is replenished. */
+		IN
+	}
+
+	public record LiquidityTransfer(UUID journalEntryId, boolean replayed, Money reserveBalance, Money treasuryBalance) {
 	}
 
 	private record ApprovedPayment(UUID sourceAccountId, long amountMinor) {

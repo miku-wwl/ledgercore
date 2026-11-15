@@ -83,6 +83,13 @@ public record JournalEntry(UUID id, JournalEntryType type, UUID reversesEntryId,
 				PostingSide.DEBIT, customerDepositLedgerAccountId, PostingSide.CREDIT, amount);
 	}
 
+	/** Debits the asset that receives simulated liquidity and credits the asset that gives it up. */
+	public static JournalEntry reserveLiquidityTransfer(UUID receivingAssetLedgerAccountId,
+			UUID givingAssetLedgerAccountId, Money amount) {
+		return corporateEntry(JournalEntryType.RESERVE_LIQUIDITY_TRANSFER, receivingAssetLedgerAccountId,
+				PostingSide.DEBIT, givingAssetLedgerAccountId, PostingSide.CREDIT, amount);
+	}
+
 	public static JournalEntry reversalOf(JournalEntry original) {
 		Objects.requireNonNull(original, "original");
 		if (original.type() == JournalEntryType.REVERSAL) {

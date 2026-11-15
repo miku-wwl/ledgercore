@@ -16,6 +16,8 @@ class ReconciliationQueryService {
 
 	private static final UUID CLEARING_PAYABLE_LEDGER = UUID.fromString("00000000-0000-5000-8000-000000000002");
 	private static final UUID SIMULATION_RESERVE_LEDGER = UUID.fromString("00000000-0000-5000-8000-000000000001");
+	/** A terminal outcome whose local effect is older than this is CRITICAL even while a retry is still scheduled. */
+	static final long EFFECT_GRACE_SECONDS = 60;
 
 	private final JdbcTemplate jdbc;
 
@@ -30,6 +32,8 @@ class ReconciliationQueryService {
 		findings.addAll(payrollItemMismatches(organizationId));
 		findings.addAll(payrollBatchMismatches(organizationId));
 		findings.addAll(paymentMismatches(organizationId));
+		findings.addAll(clearingEffectsPending(organizationId));
+		findings.addAll(clearingInstructionsNotDispatched(organizationId));
 		findings.addAll(missingBusinessEvents(organizationId));
 		findings.addAll(outboxOperationalFindings(organizationId));
 		findings.addAll(organizationOwnershipMismatches(organizationId));
@@ -57,6 +61,11 @@ class ReconciliationQueryService {
 				rs.getString("instruction_status"), rs.getString("instruction_digest"),
 				rs.getString("simulator_reference"), nullableLong(rs, "callback_sequence"),
 				rs.getString("callback_status")), organizationId, limit);
+	}
+
+	java.util.Optional<ClearingOperationSnapshot> clearingOperation(UUID organizationId, UUID operationId) {
+		return clearingOperations(organizationId, 500).stream()
+				.filter(operation -> operation.operationId().equals(operationId)).findFirst();
 	}
 
 	long countClearingOperations(UUID organizationId) {
@@ -366,6 +375,102 @@ class ReconciliationQueryService {
 				&& java.util.Objects.equals(nullableLong(rs, secondCountColumn), secondCount);
 	}
 
+	/**
+	 * Round 4 (R4-03): a persisted terminal external outcome whose local settlement or refund journal is absent. The
+	 * payment can still show PENDING_CLEARING/UNKNOWN, so the journal matcher above (which only requires a settlement for
+	 * COMPLETED payments) cannot see it. Severity is CRITICAL when nothing will retry the effect automatically (no
+	 * pending work item, or only dead or already-delivered ones) or when the effect is older than the grace period.
+	 */
+	private List<ReconciliationFinding> clearingEffectsPending(UUID organizationId) {
+		return jdbc.query("""
+				SELECT p.id AS payment_id, p.operation_id, p.status, p.external_status, p.amount_minor,
+				       terminal.callback_id, terminal.sequence_no, terminal.received_at,
+				       extract(epoch FROM clock_timestamp() - COALESCE(terminal.received_at, p.updated_at)) AS age_seconds,
+				       work.retrying_count, work.dead_count, work.delivered_count, work.latest_status,
+				       work.latest_attempts, work.latest_error, work.latest_event_id,
+				       (SELECT balance_minor FROM account_balance_projection
+				        WHERE ledger_account_id = '00000000-0000-5000-8000-000000000001') AS reserve_projection_minor
+				FROM corporate_payment_intents p
+				LEFT JOIN LATERAL (
+				    SELECT i.callback_id, i.sequence_no, i.received_at FROM clearing_callback_inbox i
+				    WHERE i.operation_id = p.operation_id AND i.external_status = p.external_status
+				    ORDER BY i.sequence_no DESC LIMIT 1
+				) terminal ON TRUE
+				LEFT JOIN LATERAL (
+				    SELECT count(*) FILTER (WHERE e.status IN ('PENDING', 'PROCESSING')) AS retrying_count,
+				           count(*) FILTER (WHERE e.status = 'DEAD') AS dead_count,
+				           count(*) FILTER (WHERE e.status = 'DELIVERED') AS delivered_count,
+				           (array_agg(e.status ORDER BY e.created_at DESC, e.id DESC))[1] AS latest_status,
+				           (array_agg(e.attempt_count ORDER BY e.created_at DESC, e.id DESC))[1] AS latest_attempts,
+				           (array_agg(e.last_error ORDER BY e.created_at DESC, e.id DESC))[1] AS latest_error,
+				           (array_agg(e.id ORDER BY e.created_at DESC, e.id DESC))[1] AS latest_event_id
+				    FROM outbox_events e
+				    WHERE e.aggregate_id = p.operation_id
+				      AND e.event_type IN ('clearing.callback.accepted', 'clearing.financial-effect.backfill')
+				) work ON TRUE
+				WHERE p.organization_id = ? AND p.status IN ('PENDING_CLEARING', 'UNKNOWN')
+				  AND ((p.external_status = 'SETTLED' AND p.settlement_journal_entry_id IS NULL)
+				    OR (p.external_status = 'REJECTED' AND p.reversal_journal_entry_id IS NULL
+				        AND p.settlement_journal_entry_id IS NULL))
+				ORDER BY p.id
+				""", (rs, row) -> {
+			UUID paymentId = rs.getObject("payment_id", UUID.class);
+			String externalStatus = rs.getString("external_status");
+			long retrying = rs.getLong("retrying_count");
+			double ageSeconds = rs.getDouble("age_seconds");
+			boolean automaticRetryPending = retrying > 0;
+			String severity = !automaticRetryPending || ageSeconds >= EFFECT_GRACE_SECONDS ? "CRITICAL" : "HIGH";
+			return finding("CLEARING_FINANCIAL_EFFECT_PENDING", severity, "PAYMENT_INTENT", paymentId,
+					rs.getObject("operation_id", UUID.class),
+					facts("externalStatus", externalStatus, "requiredEffect",
+							"SETTLED".equals(externalStatus) ? "CLEARING_SETTLEMENT" : "CORPORATE_PAYMENT_REFUND",
+							"amountMinor", rs.getLong("amount_minor"), "graceSeconds", EFFECT_GRACE_SECONDS),
+					facts("paymentStatus", rs.getString("status"), "localEffectJournalPresent", false,
+							"terminalCallbackId", stringUuid(rs, "callback_id"),
+							"terminalCallbackSequence", nullableLong(rs, "sequence_no"),
+							"terminalCallbackRecorded", rs.getObject("callback_id") != null,
+							"ageSeconds", Math.round(ageSeconds),
+							"automaticRetryPending", automaticRetryPending,
+							"retryingWorkItems", retrying, "deadWorkItems", rs.getLong("dead_count"),
+							"deliveredWorkItems", rs.getLong("delivered_count"),
+							"latestWorkStatus", rs.getString("latest_status"),
+							"latestWorkAttempts", nullableLong(rs, "latest_attempts"),
+							"latestWorkError", rs.getString("latest_error"),
+							"latestWorkEventId", stringUuid(rs, "latest_event_id"),
+							"reserveProjectionMinor", nullableLong(rs, "reserve_projection_minor")));
+		}, organizationId);
+	}
+
+	/**
+	 * Round 4 (R4-05): a booked payment whose instruction is still READY although its dispatch event was consumed or dead
+	 * lettered. With the clearing integration disabled, the receipt-only fact observer acknowledges
+	 * clearing.instruction.ready, so the customer's funds sit in the payable while nothing was ever sent.
+	 */
+	private List<ReconciliationFinding> clearingInstructionsNotDispatched(UUID organizationId) {
+		return jdbc.query("""
+				SELECT p.id AS payment_id, p.operation_id, p.amount_minor, c.status AS instruction_status,
+				       c.attempt_count AS instruction_attempts, e.id AS event_id, e.status AS event_status,
+				       e.attempt_count AS event_attempts, e.last_error,
+				       extract(epoch FROM clock_timestamp() - c.created_at) AS age_seconds
+				FROM clearing_instructions c
+				JOIN corporate_payment_intents p ON p.operation_id = c.operation_id
+				LEFT JOIN outbox_events e ON e.event_key = 'clearing.instruction.ready:' || c.operation_id::text
+				WHERE p.organization_id = ? AND c.status = 'READY' AND p.status IN ('PENDING_CLEARING', 'UNKNOWN')
+				  AND (e.id IS NULL OR e.status IN ('DELIVERED', 'DEAD'))
+				ORDER BY p.id
+				""", (rs, row) -> {
+			UUID paymentId = rs.getObject("payment_id", UUID.class);
+			return finding("CLEARING_INSTRUCTION_NOT_DISPATCHED", "CRITICAL", "PAYMENT_INTENT", paymentId,
+					rs.getObject("operation_id", UUID.class),
+					facts("instructionStatus", "SENT or later", "amountMinor", rs.getLong("amount_minor")),
+					facts("instructionStatus", rs.getString("instruction_status"),
+							"instructionAttempts", rs.getLong("instruction_attempts"),
+							"dispatchEventId", stringUuid(rs, "event_id"), "dispatchEventStatus", rs.getString("event_status"),
+							"dispatchEventAttempts", nullableLong(rs, "event_attempts"), "lastError", rs.getString("last_error"),
+							"ageSeconds", Math.round(rs.getDouble("age_seconds"))));
+		}, organizationId);
+	}
+
 	private List<ReconciliationFinding> missingBusinessEvents(UUID organizationId) {
 		List<ReconciliationFinding> findings = new ArrayList<>();
 		findings.addAll(missingEvents("""
@@ -513,6 +618,13 @@ class ReconciliationQueryService {
 				"Recompute the batch from durable item results; do not force a terminal status.";
 			case "CORPORATE_PAYMENT_JOURNAL_MISMATCH" ->
 				"Hold settlement follow-up for independent review; use a new balanced reversal only if justified.";
+			case "CLEARING_INSTRUCTION_NOT_DISPATCHED" ->
+				"The booked instruction never left the bank. Restore the clearing integration and re-send the persisted "
+						+ "instruction under its original operation id; do not refund or create a new payment.";
+			case "CLEARING_FINANCIAL_EFFECT_PENDING" ->
+				"The authenticated external outcome is final but its local journal is still owed. Let the durable effect "
+						+ "work item retry, or fix the cause (for example reserve liquidity) and retry its dead letter through the "
+						+ "governed outbox operation. Never post the journal by hand and never refund a settled payment.";
 			case "CLEARING_CALLBACK_MISSING", "CLEARING_SEQUENCE_MISMATCH", "CLEARING_BANK_SIMULATOR_STATE_MISMATCH",
 				"CLEARING_SIMULATOR_IDENTITY_MISMATCH", "CLEARING_SIMULATOR_REFERENCE_MISMATCH",
 				"CLEARING_SIMULATOR_INQUIRY_FAILED" ->

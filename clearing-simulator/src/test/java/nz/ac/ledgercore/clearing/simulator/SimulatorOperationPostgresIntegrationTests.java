@@ -25,6 +25,7 @@ class SimulatorOperationPostgresIntegrationTests {
     @Autowired
     JdbcTemplate jdbc;
 
+
     @Test
     void submissionIsDurableAndSameOperationIdentityIsIdempotent() {
         OperationRequest request = request("SIM-SETTLE");
@@ -119,6 +120,69 @@ class SimulatorOperationPostgresIntegrationTests {
                 JOIN simulator_operations o ON o.operation_id = c.operation_id
                 WHERE c.operation_id = ? AND o.correlation_id = ?
                 """, Integer.class, request.operationId(), correlationId)).isEqualTo(2);
+    }
+
+    @Test
+    void authenticatedInquiryRearmsDeadCallbacksWithTheirOriginalIdentity() {
+        OperationRequest request = request("SIM-SETTLE");
+        operations.submit(request);
+        UUID callbackId = jdbc.queryForObject("SELECT callback_id FROM simulator_callback_outbox WHERE operation_id = ?",
+                UUID.class, request.operationId());
+        String payload = jdbc.queryForObject("SELECT payload::text FROM simulator_callback_outbox WHERE callback_id = ?",
+                String.class, callbackId);
+        exhaustDeliveryBudget(callbackId);
+
+        OperationResponse inquiry = operations.inquire(request.operationId());
+
+        assertThat(inquiry.externalStatus()).isEqualTo("SETTLED");
+        assertThat(inquiry.sequenceNo()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM simulator_callback_outbox WHERE operation_id = ?",
+                Integer.class, request.operationId())).isEqualTo(1);
+        assertThat(jdbc.queryForObject("""
+                SELECT delivery_status || ':' || attempt_count || ':' || sequence_no || ':' || external_status
+                FROM simulator_callback_outbox WHERE callback_id = ?
+                """, String.class, callbackId)).isEqualTo("PENDING:0:1:SETTLED");
+        assertThat(jdbc.queryForObject("SELECT payload::text FROM simulator_callback_outbox WHERE callback_id = ?",
+                String.class, callbackId)).isEqualTo(payload);
+        // The same eligibility predicate the dispatcher's claim uses: due now, budget left, no earlier undelivered sequence.
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM simulator_callback_outbox c
+                WHERE c.callback_id = ? AND c.delivery_status = 'PENDING' AND c.next_attempt_at <= clock_timestamp()
+                  AND c.attempt_count < 8 AND NOT EXISTS (
+                      SELECT 1 FROM simulator_callback_outbox earlier WHERE earlier.operation_id = c.operation_id
+                        AND earlier.sequence_no < c.sequence_no AND earlier.delivery_status <> 'DELIVERED')
+                """, Integer.class, callbackId)).isEqualTo(1);
+    }
+
+    @Test
+    void rearmingCannotRewriteCallbackFactsOrKeepTheSpentBudget() {
+        OperationRequest request = request("SIM-SETTLE");
+        operations.submit(request);
+        UUID callbackId = jdbc.queryForObject("SELECT callback_id FROM simulator_callback_outbox WHERE operation_id = ?",
+                UUID.class, request.operationId());
+        exhaustDeliveryBudget(callbackId);
+        assertThatThrownBy(() -> jdbc.update("""
+                UPDATE simulator_callback_outbox SET delivery_status = 'PENDING', attempt_count = 3 WHERE callback_id = ?
+                """, callbackId)).hasMessageContaining("restarts its delivery budget");
+        assertThatThrownBy(() -> jdbc.update("""
+                UPDATE simulator_callback_outbox SET delivery_status = 'PENDING', attempt_count = 0, sequence_no = 9
+                WHERE callback_id = ?
+                """, callbackId)).hasMessageContaining("immutable");
+        assertThatThrownBy(() -> jdbc.update("DELETE FROM simulator_callback_outbox WHERE callback_id = ?", callbackId))
+                .hasMessageContaining("immutable");
+        assertThat(jdbc.queryForObject("SELECT delivery_status FROM simulator_callback_outbox WHERE callback_id = ?",
+                String.class, callbackId)).isEqualTo("DEAD");
+    }
+
+    private void exhaustDeliveryBudget(UUID callbackId) {
+        jdbc.update("""
+                UPDATE simulator_callback_outbox SET delivery_status = 'PROCESSING', attempt_count = 8,
+                    lease_until = clock_timestamp() + interval '30 seconds' WHERE callback_id = ?
+                """, callbackId);
+        jdbc.update("""
+                UPDATE simulator_callback_outbox SET delivery_status = 'DEAD', lease_until = NULL,
+                    last_error = 'test exhausted the delivery budget' WHERE callback_id = ?
+                """, callbackId);
     }
 
     private OperationRequest request(String routingCode) {

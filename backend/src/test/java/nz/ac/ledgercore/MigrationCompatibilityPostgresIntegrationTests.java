@@ -54,6 +54,12 @@ class MigrationCompatibilityPostgresIntegrationTests {
         PUBLISHED_CHECKSUMS.put("V4__enforce_idempotency_receipt_lifecycle.sql", 512865030);
         PUBLISHED_CHECKSUMS.put("V5__add_organizations_and_corporate_account_ownership.sql", -1572619169);
         PUBLISHED_CHECKSUMS.put("V6__add_durable_payroll_batches_and_items.sql", -371991565);
+        // Round 4: V7-V11 were published by Rounds 2 and 3 and are pinned to the checksums in every V11 database.
+        PUBLISHED_CHECKSUMS.put("V7__harden_payroll_intent_and_result_integrity.sql", 638694306);
+        PUBLISHED_CHECKSUMS.put("V8__add_policy_b_payments_and_durable_events.sql", -1628563391);
+        PUBLISHED_CHECKSUMS.put("V9__harden_clearing_callback_lifecycle.sql", -1866598791);
+        PUBLISHED_CHECKSUMS.put("V10__index_pending_payroll_results_by_batch.sql", 794183703);
+        PUBLISHED_CHECKSUMS.put("V11__drop_unhelpful_pending_payroll_index.sql", 1670107448);
     }
 
     private static final UUID RESERVE = UUID.fromString("00000000-0000-5000-8000-000000000001");
@@ -95,7 +101,7 @@ class MigrationCompatibilityPostgresIntegrationTests {
             flyway.validate();
             List<MigrationInfo> applied = versioned(flyway);
             assertThat(applied).extracting(info -> info.getVersion().getVersion())
-                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11");
+                    .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13");
             assertThat(applied).allSatisfy(info -> assertThat(info.getState().isApplied()).isTrue());
             for (MigrationInfo info : applied) {
                 Integer published = PUBLISHED_CHECKSUMS.get(info.getScript());
@@ -242,6 +248,50 @@ class MigrationCompatibilityPostgresIntegrationTests {
                     payment.operationId());
             assertThat(seed.jdbc.queryForObject("SELECT external_status FROM corporate_payment_intents WHERE id = ?",
                     String.class, payment.paymentId())).isEqualTo("SETTLED");
+        });
+    }
+
+    @Test
+    void populatedV11WithAStrandedSettlementUpgradesToDurableWorkWithoutPostingMoney() {
+        withSchema(schema -> {
+            flyway(schema, MigrationVersion.fromVersion("11")).migrate();
+            Seed seed = new Seed(schema);
+            ClearingSeed stranded = seed.corporatePaymentAwaitingClearing();
+            ClearingSeed untouched = seed.corporatePaymentAwaitingClearing();
+            // The pre-Round-4 failure state: an authenticated SETTLED outcome recorded, its settlement never posted.
+            seed.jdbc.update("UPDATE clearing_instructions SET status = 'SETTLED' WHERE operation_id = ?",
+                    stranded.operationId());
+            seed.jdbc.update("UPDATE corporate_payment_intents SET external_status = 'SETTLED' WHERE id = ?",
+                    stranded.paymentId());
+            int journalsBefore = seed.jdbc.queryForObject("SELECT count(*) FROM journal_entries", Integer.class);
+            long postingsBefore = seed.jdbc.queryForObject("SELECT COALESCE(sum(amount_minor), 0) FROM postings", Long.class);
+
+            flyway(schema, MigrationVersion.LATEST).migrate();
+
+            assertThat(versioned(flyway(schema, MigrationVersion.LATEST))).extracting(info -> info.getVersion().getVersion())
+                    .last().isEqualTo("13");
+            assertThat(seed.jdbc.queryForObject("SELECT count(*) FROM journal_entries", Integer.class)).isEqualTo(journalsBefore);
+            assertThat(seed.jdbc.queryForObject("SELECT COALESCE(sum(amount_minor), 0) FROM postings", Long.class))
+                    .isEqualTo(postingsBefore);
+            assertThat(seed.jdbc.queryForObject("SELECT status || '/' || external_status FROM corporate_payment_intents WHERE id = ?",
+                    String.class, stranded.paymentId())).isEqualTo("PENDING_CLEARING/SETTLED");
+            assertThat(seed.jdbc.queryForObject("""
+                    SELECT count(*) FROM outbox_events
+                    WHERE event_key = ? AND event_type = 'clearing.financial-effect.backfill' AND status = 'PENDING'
+                      AND aggregate_id = ? AND attempt_count = 0
+                    """, Integer.class, "clearing.financial-effect.backfill:" + stranded.paymentId(),
+                    stranded.operationId())).isEqualTo(1);
+            assertThat(seed.jdbc.queryForObject("SELECT count(*) FROM outbox_events WHERE aggregate_id = ?",
+                    Integer.class, untouched.operationId())).isZero();
+            assertThat(seed.jdbc.queryForObject("""
+                    SELECT kind || ':' || normal_side || ':' || is_system FROM ledger_accounts
+                    WHERE id = '00000000-0000-5000-8000-000000000003'
+                    """, String.class)).isEqualTo("SIMULATION_TREASURY:DEBIT:true");
+            assertThat(seed.jdbc.queryForObject("""
+                    SELECT balance_minor FROM account_balance_projection
+                    WHERE ledger_account_id = '00000000-0000-5000-8000-000000000003'
+                    """, Long.class)).isZero();
+            assertThat(unvalidatedConstraints(schema)).isZero();
         });
     }
 
@@ -625,7 +675,8 @@ class MigrationCompatibilityPostgresIntegrationTests {
                            FROM idempotency_records),
                         (SELECT string_agg(p.ledger_account_id || ':' || p.balance_minor, ',' ORDER BY p.ledger_account_id)
                            FROM account_balance_projection p JOIN ledger_accounts a ON a.id = p.ledger_account_id
-                           WHERE a.kind <> 'CLEARING_PAYABLE')))
+                           -- System accounts added later with a zero balance (V8 payable, V13 treasury) are not history.
+                           WHERE a.kind NOT IN ('CLEARING_PAYABLE', 'SIMULATION_TREASURY'))))
                     """, String.class);
         }
     }

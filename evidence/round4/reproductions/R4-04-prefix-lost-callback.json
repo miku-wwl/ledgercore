@@ -1,0 +1,198 @@
+{
+  "id": "R4-04",
+  "runId": "ecf5a9ab-72dd-4dbf-9653-ebd3527c5d6b",
+  "injection": "PASS",
+  "injectionChecks": {
+    "delivery_budget_exhausted": true,
+    "simulator_settled": true,
+    "bank_missed_later_callbacks": true,
+    "no_settlement_yet": true,
+    "obligation_kept": true,
+    "no_unbalanced_journals": true,
+    "projections_match_ledger": true
+  },
+  "afterInjection": {
+    "database": "ledgercore_e6_ecf5a9ab72dd4dbf",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T18:49:03.896977+13:00",
+    "paymentStatus": "PENDING_CLEARING",
+    "externalStatus": "ACCEPTED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 0,
+    "refundJournalCount": 0,
+    "settlementLinked": false,
+    "instructionStatus": "ACCEPTED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 0,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "durable-fact-observer-v1"
+        ]
+      }
+    ],
+    "payableLedgerMinor": 654,
+    "payableProjectionMinor": 654,
+    "reserveLedgerMinor": 100000,
+    "reserveProjectionMinor": 100000,
+    "sourceDepositLedgerMinor": 99346,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": []
+  },
+  "simulatorAfterInjection": {
+    "database": "ledgercore_e6sim_ecf5a9ab72dd4dbf",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T18:49:04.518725+13:00",
+    "operationStatus": "SETTLED",
+    "inquiryCount": 2,
+    "callbacks": [
+      {
+        "sequence": 1,
+        "status": "ACCEPTED",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      },
+      {
+        "sequence": 2,
+        "status": "PENDING",
+        "delivery": "DEAD",
+        "attempts": 8,
+        "lastError": "ResourceAccessException"
+      },
+      {
+        "sequence": 3,
+        "status": "SETTLED",
+        "delivery": "PENDING",
+        "attempts": 0,
+        "lastError": null
+      }
+    ]
+  },
+  "recovery": "FAIL",
+  "reconciliationBeforeInquiry": {
+    "runId": "78ca8f9f-45c2-42ab-9f53-535334893cb3",
+    "findingCount": 1,
+    "checkedDomains": [
+      "LEDGER_PROJECTION",
+      "TRANSFER_JOURNAL_RECEIPT",
+      "PAYROLL_RESULTS_AND_TERMINAL_STATES",
+      "CORPORATE_PAYMENT_JOURNALS",
+      "DURABLE_EVENT_COVERAGE",
+      "ORGANIZATION_OWNERSHIP",
+      "INDEPENDENT_CLEARING_SIMULATOR_INQUIRY"
+    ],
+    "skippedDomains": [],
+    "findingCounts": {
+      "CLEARING_CALLBACK_MISSING": 1
+    },
+    "paymentFindings": [
+      {
+        "category": "CLEARING_CALLBACK_MISSING",
+        "severity": "HIGH",
+        "resourceType": "CLEARING_INSTRUCTION",
+        "resourceId": "69243f22-6a0d-454c-9be1-25abb6f83b21"
+      }
+    ]
+  },
+  "inquiry": {
+    "operationId": "69243f22-6a0d-454c-9be1-25abb6f83b21",
+    "paymentId": "69243f22-6a0d-454c-9be1-25abb6f83b21",
+    "intentDigest": "f0a70c0321f3e0ae1a1a1a4f2014a61e9cea0fdde12ab2938aa5013c4d9510c8",
+    "externalStatus": "SETTLED",
+    "simulatorReference": "SIM-69243F226A0D454C9BE1",
+    "sequenceNo": 3
+  },
+  "final": {
+    "database": "ledgercore_e6_ecf5a9ab72dd4dbf",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T18:51:13.461343+13:00",
+    "paymentStatus": "PENDING_CLEARING",
+    "externalStatus": "ACCEPTED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 0,
+    "refundJournalCount": 0,
+    "settlementLinked": false,
+    "instructionStatus": "ACCEPTED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 0,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "durable-fact-observer-v1"
+        ]
+      }
+    ],
+    "payableLedgerMinor": 654,
+    "payableProjectionMinor": 654,
+    "reserveLedgerMinor": 100000,
+    "reserveProjectionMinor": 100000,
+    "sourceDepositLedgerMinor": 99346,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": [
+      {
+        "category": "CLEARING_CALLBACK_MISSING",
+        "severity": "HIGH",
+        "status": "RESOLVED"
+      }
+    ]
+  },
+  "finalSimulator": {
+    "database": "ledgercore_e6sim_ecf5a9ab72dd4dbf",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T18:51:14.110278+13:00",
+    "operationStatus": "SETTLED",
+    "inquiryCount": 4,
+    "callbacks": [
+      {
+        "sequence": 1,
+        "status": "ACCEPTED",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      },
+      {
+        "sequence": 2,
+        "status": "PENDING",
+        "delivery": "DEAD",
+        "attempts": 8,
+        "lastError": "ResourceAccessException"
+      },
+      {
+        "sequence": 3,
+        "status": "SETTLED",
+        "delivery": "PENDING",
+        "attempts": 0,
+        "lastError": null
+      }
+    ]
+  },
+  "resolveMissingCallback": 200,
+  "checks": {
+    "exactly_one_booking": true,
+    "exactly_one_settlement": false,
+    "no_refund": true,
+    "payment_completed": false,
+    "terminal_callback_recorded_once": false,
+    "payable_cleared": false,
+    "no_unbalanced_journals": true,
+    "projections_match_ledger": true,
+    "no_negative_projection": true,
+    "simulator_settled": true,
+    "callback_missing_detected_before_recovery": true,
+    "all_callbacks_delivered_in_order": false,
+    "customer_debited_once": true,
+    "reserve_debited_once": false
+  },
+  "failure": null
+}

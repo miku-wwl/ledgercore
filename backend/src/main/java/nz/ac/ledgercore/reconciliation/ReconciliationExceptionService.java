@@ -120,6 +120,16 @@ public class ReconciliationExceptionService {
 	@Transactional
 	public ReconciliationExceptionView resolve(UUID actorCustomerId, UUID organizationId, UUID exceptionId,
 			String resolution, UUID correctionJournalEntryId) {
+		return resolve(actorCustomerId, organizationId, exceptionId, resolution, correctionJournalEntryId, Map.of());
+	}
+
+	/**
+	 * Resolves an exception after the caller verified that the anomaly is gone (Round 4, R4-03). The recheck evidence
+	 * is written into the resolution audit together with the actor, so a closure is attributable and reproducible.
+	 */
+	@Transactional
+	public ReconciliationExceptionView resolve(UUID actorCustomerId, UUID organizationId, UUID exceptionId,
+			String resolution, UUID correctionJournalEntryId, Map<String, ?> recheckEvidence) {
 		authorization.requireRole(actorCustomerId, organizationId, OrganizationRole.OPERATIONS);
 		String note = resolution == null ? "" : resolution.trim();
 		if (note.isEmpty() || note.length() > 500) {
@@ -145,25 +155,44 @@ public class ReconciliationExceptionService {
 		if (updated != 1) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "The reconciliation exception changed before resolution.");
 		}
+		Map<String, Object> details = new LinkedHashMap<>();
+		details.put("resolution", note);
+		details.put("correctionJournalEntryId", correctionJournalEntryId == null ? "NONE" : correctionJournalEntryId.toString());
+		details.put("category", exception.category());
+		details.put("severity", exception.severity());
+		details.put("recheck", recheckEvidence == null ? Map.of() : recheckEvidence);
 		events.recordAudit(actorCustomerId, "RECONCILIATION_EXCEPTION_RESOLVED", "RECONCILIATION_EXCEPTION",
-				exceptionId, organizationId, Map.of("resolution", note,
-						"correctionJournalEntryId", correctionJournalEntryId == null ? "NONE"
-								: correctionJournalEntryId.toString()));
+				exceptionId, organizationId, details);
 		return lockException(organizationId, exceptionId);
 	}
 
+	@Transactional(readOnly = true)
+	public ReconciliationExceptionView find(UUID actorCustomerId, UUID organizationId, UUID exceptionId) {
+		authorization.requireRole(actorCustomerId, organizationId, OrganizationRole.OPERATIONS);
+		return lockFree(organizationId, exceptionId);
+	}
+
 	private UUID upsertFinding(UUID organizationId, ReconciliationFinding finding) {
-		List<UUID> existing = jdbc.query("""
-				SELECT id FROM reconciliation_exceptions
+		List<OpenException> existing = jdbc.query("""
+				SELECT id, severity FROM reconciliation_exceptions
 				WHERE organization_id = ? AND category = ? AND status <> 'RESOLVED'
 				  AND expected_facts ->> 'resourceType' = ? AND expected_facts ->> 'resourceId' = ?
 				ORDER BY detected_at DESC, id DESC LIMIT 1 FOR UPDATE
-				""", (rs, row) -> rs.getObject(1, UUID.class), organizationId, finding.category(),
-				finding.resourceType(), finding.resourceId().toString());
+				""", (rs, row) -> new OpenException(rs.getObject(1, UUID.class), rs.getString(2)), organizationId,
+				finding.category(), finding.resourceType(), finding.resourceId().toString());
 		try {
 			if (!existing.isEmpty()) {
 				// Keep the original exception facts immutable. Later run-specific observations remain in its audit row.
-				return existing.getFirst();
+				// Severity may only rise (Round 4): a queued effect that later dead-letters must surface as CRITICAL.
+				OpenException open = existing.getFirst();
+				if (rank(finding.severity()) > rank(open.severity())) {
+					jdbc.update("UPDATE reconciliation_exceptions SET severity = ? WHERE id = ? AND status <> 'RESOLVED'",
+							finding.severity(), open.id());
+					events.recordAudit(null, "RECONCILIATION_EXCEPTION_ESCALATED", "RECONCILIATION_EXCEPTION", open.id(),
+							organizationId, Map.of("fromSeverity", open.severity(), "toSeverity", finding.severity(),
+									"category", finding.category()));
+				}
+				return open.id();
 			}
 			String expected = JSON.writeValueAsString(finding.expectedFacts());
 			String observed = JSON.writeValueAsString(finding.observedFacts());
@@ -201,6 +230,40 @@ public class ReconciliationExceptionService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
 					"A correction must be a new, balanced reversal journal entry not linked to another exception.");
 		}
+	}
+
+	private static int rank(String severity) {
+		return switch (severity) {
+			case "CRITICAL" -> 4;
+			case "HIGH" -> 3;
+			case "MEDIUM" -> 2;
+			default -> 1;
+		};
+	}
+
+	private record OpenException(UUID id, String severity) {
+	}
+
+	private ReconciliationExceptionView lockFree(UUID organizationId, UUID exceptionId) {
+		List<ReconciliationExceptionView> rows = jdbc.query("""
+				SELECT id, category, severity, operation_id, organization_id, expected_facts::text AS expected_facts_json,
+				       observed_facts::text AS observed_facts_json, status, assigned_to_customer_id,
+				       resolved_by_customer_id, resolution, correction_journal_entry_id, detected_at, resolved_at
+				FROM reconciliation_exceptions
+				WHERE id = ? AND organization_id = ?
+				""", (rs, row) -> new ReconciliationExceptionView(rs.getObject("id", UUID.class),
+				rs.getString("category"), rs.getString("severity"), rs.getObject("operation_id", UUID.class),
+				rs.getObject("organization_id", UUID.class), rs.getString("expected_facts_json"),
+				rs.getString("observed_facts_json"), rs.getString("status"),
+				rs.getObject("assigned_to_customer_id", UUID.class), rs.getObject("resolved_by_customer_id", UUID.class),
+				rs.getString("resolution"), rs.getObject("correction_journal_entry_id", UUID.class),
+				rs.getTimestamp("detected_at").toInstant(),
+				rs.getTimestamp("resolved_at") == null ? null : rs.getTimestamp("resolved_at").toInstant()),
+				exceptionId, organizationId);
+		if (rows.isEmpty()) {
+			throw new ApiNotFoundException("Reconciliation exception was not found.");
+		}
+		return rows.getFirst();
 	}
 
 	private ReconciliationExceptionView lockException(UUID organizationId, UUID exceptionId) {

@@ -1,0 +1,11 @@
+-------------------------------------------------------------------------------
+Test set: nz.ac.ledgercore.clearing.ClearingEffectFastPathFailureVariantBTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 4.315 s <<< FAILURE! -- in nz.ac.ledgercore.clearing.ClearingEffectFastPathFailureVariantBTests
+nz.ac.ledgercore.clearing.ClearingEffectFastPathFailureVariantBTests.terminatedSettlementSessionStillAcknowledgesButLeavesDurableWorkThatCompletesOnce -- Time elapsed: 4.295 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+
+expected: 1
+ but was: 0
+	at nz.ac.ledgercore.clearing.ClearingEffectFastPathFailureVariantBTests.terminatedSettlementSessionStillAcknowledgesButLeavesDurableWorkThatCompletesOnce(ClearingEffectFastPathFailureVariantBTests.java:102)
+

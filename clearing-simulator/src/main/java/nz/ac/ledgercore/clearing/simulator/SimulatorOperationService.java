@@ -86,6 +86,18 @@ public class SimulatorOperationService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Simulator operation was not found.");
         }
         OperationRow current = rows.getFirst();
+        // Round 4 (R4-04): an authenticated inquiry asks for every signed callback of this operation to be redelivered
+        // if its delivery budget ran out (for example during a bank outage longer than the retry window). The same
+        // callback ids, sequence numbers and payloads are re-armed in order; nothing is recreated with a new identity.
+        int rearmed = jdbc.update("""
+                UPDATE simulator_callback_outbox
+                SET delivery_status = 'PENDING', attempt_count = 0, next_attempt_at = clock_timestamp(), lease_until = NULL,
+                    last_error = 'Re-armed by an authenticated inquiry after the delivery budget was exhausted.'
+                WHERE operation_id = ? AND delivery_status = 'DEAD'
+                """, operationId);
+        if (rearmed > 0) {
+            log.info("Simulator inquiry re-armed dead callbacks operationId={} count={}", operationId, rearmed);
+        }
         String next = current.status();
         if ("ACCEPTED".equals(next)) {
             next = "PENDING";
