@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 262" width="640" height="262" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">E3 实测：历史增长与跨组织扫描（本地笔记本，单次计划观测）</text>
+<text x="14.0" y="46.0" font-size="10.2" fill="#1b2430" text-anchor="start" font-weight="600">H01：源账户过账数 → 余额聚合与转账 p50 中位数（ms），数据见 evidence/e3/verdicts/H01</text>
+<text x="14.0" y="74.0" font-size="10" fill="#5b6776" text-anchor="start" font-weight="normal">100</text>
+<rect x="80.0" y="60.0" width="2.0" height="11.0" fill="#1f6fb2" stroke="none" stroke-width="1" rx="2"/>
+<text x="85.8" y="70.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">SQL 0.8354</text>
+<rect x="80.0" y="73.0" width="23.4" height="11.0" fill="#d9730d" stroke="none" stroke-width="1" rx="2"/>
+<text x="107.4" y="83.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">服务 10.9683</text>
+<text x="14.0" y="106.0" font-size="10" fill="#5b6776" text-anchor="start" font-weight="normal">1,000</text>
+<rect x="80.0" y="92.0" width="2.0" height="11.0" fill="#1f6fb2" stroke="none" stroke-width="1" rx="2"/>
+<text x="85.9" y="102.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">SQL 0.8769</text>
+<rect x="80.0" y="105.0" width="21.2" height="11.0" fill="#d9730d" stroke="none" stroke-width="1" rx="2"/>
+<text x="105.2" y="115.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">服务 9.9432</text>
+<text x="14.0" y="138.0" font-size="10" fill="#5b6776" text-anchor="start" font-weight="normal">10,000</text>
+<rect x="80.0" y="124.0" width="10.6" height="11.0" fill="#1f6fb2" stroke="none" stroke-width="1" rx="2"/>
+<text x="94.6" y="134.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">SQL 4.9721</text>
+<rect x="80.0" y="137.0" width="36.9" height="11.0" fill="#d9730d" stroke="none" stroke-width="1" rx="2"/>
+<text x="120.9" y="147.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">服务 17.2608</text>
+<text x="14.0" y="170.0" font-size="10" fill="#5b6776" text-anchor="start" font-weight="normal">100,000</text>
+<rect x="80.0" y="156.0" width="225.6" height="11.0" fill="#1f6fb2" stroke="none" stroke-width="1" rx="2"/>
+<text x="309.6" y="166.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">SQL 105.5857</text>
+<rect x="80.0" y="169.0" width="470.0" height="11.0" fill="#d9730d" stroke="none" stroke-width="1" rx="2"/>
+<text x="554.0" y="179.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">服务 219.9671</text>
+<text x="14.0" y="198.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">100→100,000：SQL 126.4×、服务 20.1×；重复间差异 &gt; 2×、计划在重复间变化 ⇒ 按预注册规则判 INCONCLUSIVE。</text>
+<text x="14.0" y="214.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">H04：无关组织增加 50,000 行后，目标批次进度查询扫描 71,500 → 121,500 行（返回仍是 5,000 行），</text>
+<text x="14.0" y="230.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">计划时间 16.135 → 28.207 ms。R2-P3 的 V10 索引候选未被计划选用、未降低 p50/p95 ⇒ 被否决，V11 向前移除。</text>
+</svg>

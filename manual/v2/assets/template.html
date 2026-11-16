@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>$title$</title>
+<style>
+$highlighting-css$
+</style>
+<link rel="stylesheet" href="assets/book.css">
+</head>
+<body class="book">
+<section class="cover">
+  <div class="cover-band"></div>
+  <div class="cover-edition">$edition$</div>
+  <div class="cover-kicker">$cover-kicker$</div>
+  <div class="cover-title">$cover-title$</div>
+  <div class="cover-subtitle">$subtitle$</div>
+  <div class="cover-flow">$cover-flow$</div>
+  <div class="cover-grid">
+$for(cover-stats)$
+    <div><b>$cover-stats.n$</b><span>$cover-stats.t$</span></div>
+$endfor$
+  </div>
+  <div class="cover-meta">
+$for(cover-lines)$
+    <div>$cover-lines$</div>
+$endfor$
+  </div>
+</section>
+<nav id="TOC" class="toc">
+  <div class="toc-title">目录</div>
+$table-of-contents$
+</nav>
+<main>
+$body$
+</main>
+<script src="assets/render.js"></script>
+</body>
+</html>

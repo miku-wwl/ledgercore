@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "runId": "7fa27bf0-28e6-4c0b-a38c-0ec58b296a68",
+  "sourceSha": "719a75829689d068fa4e54a8ca3a8452fdee7856",
+  "trackedTreeDirty": false,
+  "bankJarSha256": "b76031d679f87fe5471ea52c4b16f66d49b0cc6556e68776b767d038e6a77c87",
+  "simJarSha256": "7aa70c06a4c6f80284343d6e45e422e7ca3c3647fa86bd3aea81e18998872384",
+  "startedAt": "2026-11-16T07:17:08.3454110Z",
+  "application": "LedgerCore bank and clearing simulator JARs built from sourceSha + Vite dev server from the same commit",
+  "database": "Disposable PostgreSQL 18.7 cluster 127.0.0.1:55437 (ledgercore_e6_* run databases); synthetic example.test identities",
+  "browser": "Playwright Chromium (frontend/node_modules), headless, 1440 x 1000",
+  "files": [
+    {
+      "file": "operations-incident.png",
+      "phase": "incident",
+      "description": "Operations console during a genuine reserve shortage: owed settlement, reserve-blocked settlement, unresolved payable, dead-letter delivery",
+      "sha256": "64bd522075572e177dfe5dabfc7869f34ebb3562cf25a95d9eb00b44a62f3826"
+    },
+    {
+      "file": "operations-exceptions-incident.png",
+      "phase": "incident",
+      "description": "Reconciliation exceptions card (incident)",
+      "sha256": "cc7f7010ec4b6fde588ca7533f85271c323c22c74202b4ae3a2b15d7a6d3b92a"
+    },
+    {
+      "file": "payments-incident.png",
+      "phase": "incident",
+      "description": "Payments page: an externally settled payment whose settlement journal is still owed, and an UNKNOWN outcome",
+      "sha256": "44999be1f40f6fa1a8ed5d8a4f38ed41f670494234fadbb95392fc6c8fe6ac4c"
+    },
+    {
+      "file": "operations-recovered.png",
+      "phase": "recovered",
+      "description": "Operations console after the audited replenishment, one governed retry and resolution after recheck",
+      "sha256": "649dd55cccf77b1856a163881adadc171c3ef349dbcc9e85c98e1ceafd00b08d"
+    },
+    {
+      "file": "operations-exceptions-recovered.png",
+      "phase": "recovered",
+      "description": "Reconciliation exceptions card (recovered)",
+      "sha256": "d6769cc4aceea08f84c1824a16b877bc55cb623ea75f034cda12ecc56d84aa9e"
+    },
+    {
+      "file": "payments-recovered.png",
+      "phase": "recovered",
+      "description": "Payments page after recovery: the payment is settled and posted to the ledger",
+      "sha256": "0ca298c3d8b1894830b548ac67ce708ea202d77aab9f2bef89b980a9168f39d7"
+    }
+  ],
+  "incidentState": {
+    "database": "ledgercore_e6_7fa27bf028e64c0b",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T20:18:47.659501+13:00",
+    "paymentStatus": "PENDING_CLEARING",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 0,
+    "refundJournalCount": 0,
+    "settlementLinked": false,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "DEAD",
+        "attempts": 5,
+        "lastError": "ClearingEffectDeferredException",
+        "receipts": []
+      }
+    ],
+    "payableLedgerMinor": 9240,
+    "payableProjectionMinor": 9240,
+    "reserveLedgerMinor": 5000,
+    "reserveProjectionMinor": 5000,
+    "sourceDepositLedgerMinor": 90760,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": [
+      {
+        "category": "CLEARING_RESERVE_INSUFFICIENT",
+        "severity": "CRITICAL",
+        "status": "OPEN"
+      },
+      {
+        "category": "CLEARING_FINANCIAL_EFFECT_PENDING",
+        "severity": "CRITICAL",
+        "status": "OPEN"
+      },
+      {
+        "category": "DEAD_OUTBOX_EVENT",
+        "severity": "HIGH",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "recoveredState": {
+    "database": "ledgercore_e6_7fa27bf028e64c0b",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T20:19:17.427841+13:00",
+    "paymentStatus": "COMPLETED",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 1,
+    "refundJournalCount": 0,
+    "settlementLinked": true,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      }
+    ],
+    "payableLedgerMinor": 0,
+    "payableProjectionMinor": 0,
+    "reserveLedgerMinor": 5760,
+    "reserveProjectionMinor": 5760,
+    "sourceDepositLedgerMinor": 90760,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": [
+      {
+        "category": "CLEARING_RESERVE_INSUFFICIENT",
+        "severity": "CRITICAL",
+        "status": "RESOLVED"
+      },
+      {
+        "category": "CLEARING_FINANCIAL_EFFECT_PENDING",
+        "severity": "CRITICAL",
+        "status": "RESOLVED"
+      },
+      {
+        "category": "DEAD_OUTBOX_EVENT",
+        "severity": "HIGH",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "verdict": "CAPTURED",
+  "completedAt": "2026-11-16T07:19:31.8804537Z",
+  "note": "Genuine screens of the running application on synthetic data; nothing was edited after capture. Run directory: work/e6-lab/runs/7fa27bf0-28e6-4c0b-a38c-0ec58b296a68"
+}

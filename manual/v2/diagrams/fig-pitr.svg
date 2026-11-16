@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 226" width="640" height="226" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">E10（Round 3）PITR：一次本地运行的时间线与实测 RPO/RTO</text>
+<line x1="30.0" y1="92.0" x2="610.0" y2="92.0" stroke="#9aa5b1" stroke-width="1.4"/>
+<line x1="60.0" y1="64.0" x2="60.0" y2="100.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="60.0" y="54.0" font-size="9.8" fill="#1b2430" text-anchor="start" font-weight="600">pg_basebackup 3.958 s</text>
+<text x="60.0" y="118.0" font-size="9.4" fill="#5b6776" text-anchor="start" font-weight="normal">1,379 文件，清单 SHA-256</text>
+<line x1="250.0" y1="64.0" x2="250.0" y2="100.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="250.0" y="54.0" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="600">命名恢复点</text>
+<text x="250.0" y="118.0" font-size="9.4" fill="#5b6776" text-anchor="middle" font-weight="normal">之后的 3.11 转账将丢失</text>
+<line x1="400.0" y1="64.0" x2="400.0" y2="100.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="400.0" y="54.0" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="600">模拟失败边界</text>
+<text x="400.0" y="118.0" font-size="9.4" fill="#5b6776" text-anchor="middle" font-weight="normal">RPO = 118.922 s</text>
+<line x1="590.0" y1="64.0" x2="590.0" y2="100.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="590.0" y="54.0" font-size="9.8" fill="#1b2430" text-anchor="end" font-weight="600">恢复后首次就绪</text>
+<text x="590.0" y="118.0" font-size="9.4" fill="#5b6776" text-anchor="end" font-weight="normal">RTO = 670.008 s</text>
+<rect x="250.0" y="84.0" width="150.0" height="16.0" fill="#f6d3cf" stroke="none" stroke-width="1" rx="2"/>
+<rect x="400.0" y="84.0" width="190.0" height="16.0" fill="#f9e1c4" stroke="none" stroke-width="1" rx="2"/>
+<text x="30.0" y="152.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">期间模拟器保持在线：签名询价把付款推进到 SETTLED 并保存第二个回调；恢复后的银行重放该回调，结算一次。</text>
+<text x="30.0" y="168.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">这是 Windows + PostgreSQL 18.7 的一次本地运行：不代表生产 RPO/RTO、多主机备份持久性或重复恢复的方差。</text>
+<text x="30.0" y="184.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">Round 4 的 E12-G02 另做了一次逻辑备份恢复（第 23 章），两者不混为一谈。</text>
+</svg>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 352" width="640" height="352" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">持久化 Outbox：事实与事件同一次提交，派发至少一次，消费者自己去重</text>
+<rect x="10.0" y="30.0" width="300.0" height="150.0" rx="7" fill="#f0f8f6" stroke="#a9d6cd" stroke-width="1"/>
+<text x="19.0" y="45.0" font-size="10" fill="#0b4f48" text-anchor="start" font-weight="600">业务事务（例如批准并记账）</text>
+<rect x="22.0" y="56.0" width="276.0" height="34.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="160.0" y="76.6" font-size="10" fill="#1d5c38" text-anchor="middle" font-weight="600">业务事实：分录、状态、审计</text>
+<rect x="22.0" y="98.0" width="276.0" height="34.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="160.0" y="118.6" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">outbox_events 行：PENDING（event_key 唯一）</text>
+<text x="22.0" y="158.0" font-size="9.3" fill="#1b2430" text-anchor="start" font-weight="normal">同一个 COMMIT：要么都在，要么都不在（E4、E6）</text>
+<rect x="330.0" y="30.0" width="300.0" height="150.0" rx="7" fill="#f7f9fc" stroke="#b9c6d4" stroke-width="1"/>
+<text x="339.0" y="45.0" font-size="10" fill="#46525f" text-anchor="start" font-weight="600">派发器（每个实例都可运行）</text>
+<rect x="342.0" y="56.0" width="276.0" height="34.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="480.0" y="76.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">claimNext：FOR UPDATE SKIP LOCKED，租约 30 s</text>
+<rect x="342.0" y="98.0" width="276.0" height="34.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="480.0" y="118.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">处理器 → markDelivered（校验租约）</text>
+<text x="342.0" y="158.0" font-size="9.3" fill="#1b2430" text-anchor="start" font-weight="normal">崩溃后租约过期，另一实例重新认领</text>
+<polyline points="310.0,115.0 320.0,115.0 320.0,73.0 337.0,73.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="342.0,73.0 333.1,69.0 333.1,77.0" fill="#5b6776"/>
+<polyline points="480.0,90.0 480.0,93.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="480.0,98.0 484.0,89.1 476.0,89.1" fill="#5b6776"/>
+<rect x="22.0" y="214.0" width="120.0" height="34.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="82.0" y="234.8" font-size="10.5" fill="#0b4f48" text-anchor="middle" font-weight="600">PENDING</text>
+<rect x="214.0" y="214.0" width="120.0" height="34.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="274.0" y="234.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="600">PROCESSING</text>
+<rect x="406.0" y="214.0" width="100.0" height="34.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="456.0" y="234.8" font-size="10.5" fill="#1d5c38" text-anchor="middle" font-weight="600">DELIVERED</text>
+<rect x="528.0" y="214.0" width="100.0" height="34.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="578.0" y="234.8" font-size="10.5" fill="#7a1f16" text-anchor="middle" font-weight="600">DEAD</text>
+<polyline points="142.0,231.0 209.0,231.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="214.0,231.0 205.1,227.0 205.1,235.0" fill="#5b6776"/>
+<rect x="165.5" y="217.5" width="25.0" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="178.0" y="226.0" font-size="9.5" fill="#5b6776" text-anchor="middle" font-weight="normal">认领</text>
+<polyline points="334.0,231.0 401.0,231.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="406.0,231.0 397.1,227.0 397.1,235.0" fill="#5b6776"/>
+<rect x="357.5" y="217.5" width="25.0" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="370.0" y="226.0" font-size="9.5" fill="#5b6776" text-anchor="middle" font-weight="normal">成功</text>
+<polyline points="274.0,248.0 274.0,268.0 82.0,268.0 82.0,253.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>
+<polygon points="82.0,248.0 78.0,256.9 86.0,256.9" fill="#5b6776"/>
+<rect x="117.8" y="254.5" width="120.5" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="178.0" y="263.0" font-size="9.5" fill="#5b6776" text-anchor="middle" font-weight="normal">失败：按 1/2/4/8 s 退避</text>
+<polyline points="274.0,214.0 274.0,198.0 578.0,198.0 578.0,209.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 4"/>
+<polygon points="578.0,214.0 582.0,205.1 574.0,205.1" fill="#c0392b"/>
+<rect x="396.2" y="184.5" width="59.7" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="426.0" y="193.0" font-size="9.5" fill="#5b6776" text-anchor="middle" font-weight="normal">第 5 次失败</text>
+<rect x="12.0" y="284.0" width="616.0" height="58.0" rx="5.0" fill="#fffbe6" stroke="#d4b106" stroke-width="1.2"/>
+<text x="320.0" y="309.8" font-size="10" fill="#5c4a00" text-anchor="middle" font-weight="600">受治理的重试：只有 OPERATIONS 能把 DEAD 重新置为 PENDING（attempt_count 归零、审计 OUTBOX_MANUAL_RETRY）</text>
+<text x="320.0" y="323.4" font-size="9.5" fill="#5c4a00" text-anchor="middle" font-weight="normal">消费者收据（outbox_consumer_receipts）按 (event, consumer) 去重；资金效果另有行锁 + 唯一约束保证只发生一次</text>
+</svg>

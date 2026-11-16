@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 371" width="640" height="371" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">R4-04/R4-07：回调丢失（或银行回到备份时点）后的重投</text>
+<rect x="10" y="164.0" width="620" height="189.0" rx="6" fill="#f0f8f6" stroke="#a9d6cd" stroke-width="1"/>
+<text x="19.0" y="179.0" font-size="10" fill="#0b4f48" text-anchor="start" font-weight="600">银行恢复</text>
+<line x1="64.0" y1="58.0" x2="64.0" y2="361.0" stroke="#9aa5b1" stroke-width="1.0" stroke-dasharray="4 4"/>
+<line x1="320.0" y1="58.0" x2="320.0" y2="361.0" stroke="#9aa5b1" stroke-width="1.0" stroke-dasharray="4 4"/>
+<line x1="576.0" y1="58.0" x2="576.0" y2="361.0" stroke="#9aa5b1" stroke-width="1.0" stroke-dasharray="4 4"/>
+<rect x="5.0" y="30.0" width="118.0" height="28.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="64.0" y="47.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="normal">模拟器</text>
+<rect x="261.0" y="30.0" width="118.0" height="28.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="320.0" y="47.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="normal">银行</text>
+<rect x="517.0" y="30.0" width="118.0" height="28.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="576.0" y="47.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="normal">运营</text>
+<polyline points="64.0,91.0 315.0,91.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,91.0 311.2,87.0 311.2,95.0" fill="#3a4553"/>
+<rect x="82.0" y="76.5" width="130.0" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="85.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">回调 1 ACCEPTED（已收到）</text>
+<circle cx="75.0" cy="91.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="94.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">1</text>
+<rect x="202.0" y="104.0" width="236.0" height="23.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="320.0" y="118.9" font-size="9.5" fill="#7a1f16" text-anchor="middle" font-weight="normal">银行停机，超过模拟器 8 次投递预算（约 254 s）</text>
+<polyline points="64.0,155.0 315.0,155.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,155.0 311.2,151.0 311.2,159.0" fill="#3a4553"/>
+<rect x="82.0" y="140.5" width="217.9" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="149.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">回调 2 PENDING、3 SETTLED：投递失败 → DEAD</text>
+<circle cx="75.0" cy="155.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="158.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">2</text>
+<polyline points="576.0,204.0 325.0,204.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,204.0 328.8,208.0 328.8,200.0" fill="#3a4553"/>
+<rect x="392.9" y="189.5" width="165.1" height="13.5" fill="#f0f8f6" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="555.0" y="198.0" font-size="9.5" fill="#1b2430" text-anchor="end" font-weight="normal">对账：CLEARING_CALLBACK_MISSING</text>
+<circle cx="565.0" cy="204.0" r="7" fill="#1f6fb2"/>
+<text x="565.0" y="207.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">3</text>
+<polyline points="320.0,234.0 69.0,234.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="64.0,234.0 72.8,238.0 72.8,230.0" fill="#3a4553"/>
+<rect x="69.9" y="219.5" width="232.1" height="13.5" fill="#f0f8f6" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="299.0" y="228.0" font-size="9.5" fill="#1b2430" text-anchor="end" font-weight="normal">签名询价（afterSequence = 银行持有的最大序号）</text>
+<circle cx="309.0" cy="234.0" r="7" fill="#1f6fb2"/>
+<text x="309.0" y="237.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">4</text>
+<polyline points="64.0,247.0 90.0,247.0 90.0,263.0 69.0,263.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="64.0,263.0 72.8,267.0 72.8,259.0" fill="#3a4553"/>
+<rect x="94.0" y="249.5" width="226.9" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="97.0" y="258.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">重新武装 DEAD（或序号更大的 DELIVERED）回调：</text>
+<rect x="94.0" y="262.5" width="201.2" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="97.0" y="271.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">同一 id、序号、载荷；redelivery_count+1</text>
+<polyline points="64.0,302.0 315.0,302.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,302.0 311.2,298.0 311.2,306.0" fill="#3a4553"/>
+<rect x="82.0" y="287.5" width="69.2" height="13.5" fill="#f0f8f6" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="296.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">按序重投 2、3</text>
+<circle cx="75.0" cy="302.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="305.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">5</text>
+<rect x="254.0" y="315.0" width="132.0" height="23.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="320.0" y="329.9" font-size="9.5" fill="#1d5c38" text-anchor="middle" font-weight="normal">结算一次；关闭例外需复核</text>
+</svg>

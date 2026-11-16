@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 232" width="640" height="232" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">E12-G02（2c25ef4）：银行回到备份时点，模拟器已经向前；如何恢复而不重复记账</text>
+<line x1="30.0" y1="112.0" x2="610.0" y2="112.0" stroke="#9aa5b1" stroke-width="1.4"/>
+<line x1="50.0" y1="86.0" x2="50.0" y2="120.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="50.0" y="76.0" font-size="9.8" fill="#1b2430" text-anchor="start" font-weight="600">pg_dump -Fc</text>
+<text x="50.0" y="138.0" font-size="9.3" fill="#5b6776" text-anchor="start" font-weight="normal">付款仅 ACCEPTED</text>
+<line x1="190.0" y1="86.0" x2="190.0" y2="120.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="190.0" y="76.0" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="600">活银行结算</text>
+<text x="190.0" y="138.0" font-size="9.3" fill="#5b6776" text-anchor="middle" font-weight="normal">回调 2、3 已 DELIVERED</text>
+<line x1="310.0" y1="86.0" x2="310.0" y2="120.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="310.0" y="76.0" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="600">银行库丢失</text>
+<text x="310.0" y="138.0" font-size="9.3" fill="#5b6776" text-anchor="middle" font-weight="normal">RPO 5.274 s</text>
+<line x1="450.0" y1="86.0" x2="450.0" y2="120.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="450.0" y="76.0" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="600">恢复到新库并重启</text>
+<text x="450.0" y="138.0" font-size="9.3" fill="#5b6776" text-anchor="middle" font-weight="normal">服务 RTO 22.963 s</text>
+<line x1="590.0" y1="86.0" x2="590.0" y2="120.0" stroke="#1b2430" stroke-width="1.2"/>
+<text x="590.0" y="76.0" font-size="9.8" fill="#1b2430" text-anchor="end" font-weight="600">对账询价 → 重投</text>
+<text x="590.0" y="138.0" font-size="9.3" fill="#5b6776" text-anchor="end" font-weight="normal">结算 RTO 26.201 s</text>
+<text x="30.0" y="172.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">恢复后的银行只看到 ACCEPTED：对账发现 CLEARING_CALLBACK_MISSING，并在签名询价中报告自己持有的最大序号；</text>
+<text x="30.0" y="188.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">模拟器把序号更大的 DELIVERED 回调重新武装（R4-07，V5 记录 redelivery_count），按序重投；结算恰好一次、记账仍只一次，</text>
+<text x="30.0" y="204.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">独立评分器的硬门槛字段全部为 0。逻辑备份：不是 PITR、不是异地备份；数值只属于这一次运行。</text>
+</svg>

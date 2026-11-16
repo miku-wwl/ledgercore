@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 466" width="640" height="466" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">一笔结算的真实追踪链（E9 实验运行，仅通过记录的父 ID 与链接拼接）</text>
+<rect x="12.0" y="40.0" width="300.0" height="36.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="162.0" y="55.0" font-size="9.6" fill="#1b2430" text-anchor="middle" font-weight="600">POST /api/payments/{paymentId}/approve</text>
+<text x="162.0" y="68.0" font-size="9.1" fill="#1b2430" text-anchor="middle" font-weight="normal">bank · SERVER · OK</text>
+<rect x="320.0" y="40.0" width="308.0" height="36.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="474.0" y="54.8" font-size="9.2" fill="#1b2430" text-anchor="middle" font-weight="normal">trace 0a25200a435a…  span 97a472fe</text>
+<text x="474.0" y="67.8" font-size="8.7" fill="#1b2430" text-anchor="middle" font-weight="normal">parent — · 37483 µs</text>
+<polyline points="162.0,76.0 162.0,87.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="162.0,92.0 166.0,83.1 158.0,83.1" fill="#5b6776"/>
+<text x="172.0" y="88.0" font-size="8.6" fill="#c0392b" text-anchor="start" font-weight="600">新 trace（span link）</text>
+<rect x="12.0" y="92.0" width="300.0" height="36.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="162.0" y="107.0" font-size="9.6" fill="#6b3b05" text-anchor="middle" font-weight="600">outbox.dispatch clearing.instruction.ready</text>
+<text x="162.0" y="120.0" font-size="9.1" fill="#6b3b05" text-anchor="middle" font-weight="normal">bank · CONSUMER · OK</text>
+<rect x="320.0" y="92.0" width="308.0" height="36.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="474.0" y="106.8" font-size="9.2" fill="#1b2430" text-anchor="middle" font-weight="normal">trace ca9f35f5cf9b…  span 3430c302</text>
+<text x="474.0" y="119.8" font-size="8.7" fill="#1b2430" text-anchor="middle" font-weight="normal">parent — · 324383 µs</text>
+<polyline points="162.0,128.0 162.0,139.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="162.0,144.0 166.0,135.1 158.0,135.1" fill="#5b6776"/>
+<text x="172.0" y="140.0" font-size="8.6" fill="#1b2430" text-anchor="start" font-weight="600">父子</text>
+<rect x="12.0" y="144.0" width="300.0" height="36.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="162.0" y="159.0" font-size="9.6" fill="#6b3b05" text-anchor="middle" font-weight="600">POST simulator submit</text>
+<text x="162.0" y="172.0" font-size="9.1" fill="#6b3b05" text-anchor="middle" font-weight="normal">bank · CLIENT · OK</text>
+<rect x="320.0" y="144.0" width="308.0" height="36.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="474.0" y="158.8" font-size="9.2" fill="#1b2430" text-anchor="middle" font-weight="normal">trace ca9f35f5cf9b…  span cf1daa68</text>
+<text x="474.0" y="171.8" font-size="8.7" fill="#1b2430" text-anchor="middle" font-weight="normal">parent 3430c302 · 315113 µs</text>
+<polyline points="162.0,180.0 162.0,191.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="162.0,196.0 166.0,187.1 158.0,187.1" fill="#5b6776"/>
+<text x="172.0" y="192.0" font-size="8.6" fill="#1b2430" text-anchor="start" font-weight="600">父子</text>
+<rect x="12.0" y="196.0" width="300.0" height="36.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="162.0" y="211.0" font-size="9.6" fill="#6b3b05" text-anchor="middle" font-weight="600">POST /internal/operations</text>
+<text x="162.0" y="224.0" font-size="9.1" fill="#6b3b05" text-anchor="middle" font-weight="normal">simulator · SERVER · OK</text>
+<rect x="320.0" y="196.0" width="308.0" height="36.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="474.0" y="210.8" font-size="9.2" fill="#1b2430" text-anchor="middle" font-weight="normal">trace ca9f35f5cf9b…  span a7766902</text>
+<text x="474.0" y="223.8" font-size="8.7" fill="#1b2430" text-anchor="middle" font-weight="normal">parent cf1daa68 · 208745 µs</text>
+<polyline points="162.0,232.0 162.0,243.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="162.0,248.0 166.0,239.1 158.0,239.1" fill="#5b6776"/>
+<text x="172.0" y="244.0" font-size="8.6" fill="#c0392b" text-anchor="start" font-weight="600">新 trace（span link）</text>
+<rect x="12.0" y="248.0" width="300.0" height="36.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="162.0" y="263.0" font-size="9.6" fill="#0b4f48" text-anchor="middle" font-weight="600">callback.dispatch</text>
+<text x="162.0" y="276.0" font-size="9.1" fill="#0b4f48" text-anchor="middle" font-weight="normal">simulator · PRODUCER · OK</text>
+<rect x="320.0" y="248.0" width="308.0" height="36.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="474.0" y="262.8" font-size="9.2" fill="#1b2430" text-anchor="middle" font-weight="normal">trace 31c1b52e3925…  span 778eafed</text>
+<text x="474.0" y="275.8" font-size="8.7" fill="#1b2430" text-anchor="middle" font-weight="normal">parent — · 186041 µs</text>
+<polyline points="162.0,284.0 162.0,295.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="162.0,300.0 166.0,291.1 158.0,291.1" fill="#5b6776"/>
+<text x="172.0" y="296.0" font-size="8.6" fill="#1b2430" text-anchor="start" font-weight="600">父子</text>
+<rect x="12.0" y="300.0" width="300.0" height="36.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="162.0" y="315.0" font-size="9.6" fill="#0b4f48" text-anchor="middle" font-weight="600">POST /api/clearing/callbacks</text>
+<text x="162.0" y="328.0" font-size="9.1" fill="#0b4f48" text-anchor="middle" font-weight="normal">bank · SERVER · OK</text>
+<rect x="320.0" y="300.0" width="308.0" height="36.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="474.0" y="314.8" font-size="9.2" fill="#1b2430" text-anchor="middle" font-weight="normal">trace 31c1b52e3925…  span aa99cb37</text>
+<text x="474.0" y="327.8" font-size="8.7" fill="#1b2430" text-anchor="middle" font-weight="normal">parent 778eafed · 78640 µs</text>
+<polyline points="162.0,336.0 162.0,347.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="162.0,352.0 166.0,343.1 158.0,343.1" fill="#5b6776"/>
+<text x="172.0" y="348.0" font-size="8.6" fill="#1b2430" text-anchor="start" font-weight="600">父子</text>
+<rect x="12.0" y="352.0" width="300.0" height="36.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="162.0" y="367.0" font-size="9.6" fill="#0b4f48" text-anchor="middle" font-weight="600">clearing.financial_effect</text>
+<text x="162.0" y="380.0" font-size="9.1" fill="#0b4f48" text-anchor="middle" font-weight="normal">bank · INTERNAL · OK</text>
+<rect x="320.0" y="352.0" width="308.0" height="36.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="474.0" y="366.8" font-size="9.2" fill="#1b2430" text-anchor="middle" font-weight="normal">trace 31c1b52e3925…  span a3c04b84</text>
+<text x="474.0" y="379.8" font-size="8.7" fill="#1b2430" text-anchor="middle" font-weight="normal">parent aa99cb37 · 27957 µs</text>
+<text x="14.0" y="412.0" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">框的颜色区分 trace（共 3 个）；“父子”是同一 trace 内的父 span 关系，“新 trace”处由 span link 关联上一段。</text>
+<text x="14.0" y="424.7" font-size="9.2" fill="#1b2430" text-anchor="start" font-weight="normal">运行目录 130ced54…，付款 1ee65052…；客户端提供的 trace id 从不参与授权。</text>
+</svg>

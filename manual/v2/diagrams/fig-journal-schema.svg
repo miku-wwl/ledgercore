@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" width="640" height="330" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">分录、过账与余额投影：哪些写入被数据库拒绝</text>
+<rect x="12.0" y="40.0" width="190.0" height="92.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="107.0" y="69.2" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">journal_entries</text>
+<text x="107.0" y="82.8" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">id · entry_type · reference</text>
+<text x="107.0" y="96.4" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">reference 唯一（按类型）</text>
+<text x="107.0" y="110.0" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">只增，不可更新/删除</text>
+<rect x="226.0" y="40.0" width="190.0" height="92.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="321.0" y="69.2" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">postings</text>
+<text x="321.0" y="82.8" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">journal_entry_id · ledger_account_id</text>
+<text x="321.0" y="96.4" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">side DEBIT/CREDIT · amount_minor &gt; 0</text>
+<text x="321.0" y="110.0" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">只增；每张分录 ≥ 2 行</text>
+<rect x="440.0" y="40.0" width="188.0" height="92.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="534.0" y="69.2" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">ledger_accounts</text>
+<text x="534.0" y="82.8" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">kind · normal_side</text>
+<text x="534.0" y="96.4" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">customer_account_id</text>
+<text x="534.0" y="110.0" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">系统账户固定 UUID</text>
+<rect x="440.0" y="168.0" width="188.0" height="70.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="534.0" y="193.0" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">account_balance_projection</text>
+<text x="534.0" y="206.6" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">balance_minor（读模型）</text>
+<text x="534.0" y="220.2" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">与过账同事务更新</text>
+<polyline points="226.0,86.0 207.0,86.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="202.0,86.0 210.9,90.0 210.9,82.0" fill="#5b6776"/>
+<rect x="203.2" y="72.5" width="21.7" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="214.0" y="81.0" font-size="9.5" fill="#5b6776" text-anchor="middle" font-weight="normal">N:1</text>
+<polyline points="416.0,86.0 435.0,86.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="440.0,86.0 431.1,82.0 431.1,90.0" fill="#5b6776"/>
+<rect x="417.2" y="72.5" width="21.7" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="428.0" y="81.0" font-size="9.5" fill="#5b6776" text-anchor="middle" font-weight="normal">N:1</text>
+<polyline points="534.0,168.0 534.0,137.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="534.0,132.0 530.0,140.9 538.0,140.9" fill="#5b6776"/>
+<rect x="537.0" y="144.5" width="21.7" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="540.0" y="153.0" font-size="9.5" fill="#5b6776" text-anchor="start" font-weight="normal">1:1</text>
+<rect x="12.0" y="160.0" width="404.0" height="160.0" rx="7" fill="#fdecea" stroke="#c0392b" stroke-width="1"/>
+<text x="21.0" y="175.0" font-size="10" fill="#7a1f16" text-anchor="start" font-weight="600">被拒绝的写入（第 6 章、第 20 章的负例逐条执行）</text>
+<text x="26.0" y="196.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">• 借贷不等的分录在提交时被延迟约束触发器拒绝</text>
+<text x="26.0" y="215.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">• UPDATE/DELETE 历史过账：append-only 触发器拒绝</text>
+<text x="26.0" y="234.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">• 金额 ≤ 0、币种非 NZD：CHECK 拒绝</text>
+<text x="26.0" y="253.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">• 同一付款的第二张结算/退款：唯一约束拒绝</text>
+<text x="26.0" y="272.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">• V15：COMPLETED 却没有结算分录：ck_corporate_payment_terminal_journals</text>
+<text x="26.0" y="291.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">• 只有 RESERVE_LIQUIDITY_TRANSFER 可以触碰 TREASURY（V13 触发器）</text>
+<text x="446.0" y="262.0" font-size="9.2" fill="#5b6776" text-anchor="start" font-weight="normal">投影可以由过账重算；</text>
+<text x="446.0" y="274.7" font-size="9.2" fill="#5b6776" text-anchor="start" font-weight="normal">对账发现漂移时按不可变</text>
+<text x="446.0" y="287.4" font-size="9.2" fill="#5b6776" text-anchor="start" font-weight="normal">过账修复，绝不反向改写。</text>
+</svg>

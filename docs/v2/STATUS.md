@@ -7,11 +7,11 @@
 | 1 | GPT-6 Luna | E0–E3 | **FINISHED** (`b584b95`, CI run 43553101864) |
 | 2 | Claude Opus 5.5 | Independent audit and remediation of E0–E3 | **ACCEPTED_WITH_NONBLOCKING_RISKS** — `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md` |
 | 3 | GPT-6 Luna | E4–E11 | **COMPLETE — E4, E10, and E11 VALIDATED; E5–E9 PARTIAL; handoff ready** |
-| 4 | Claude Opus 5.5 | E12, final audit, V2 PDF | **COMPLETE — E12 ACCEPTED_WITH_NONBLOCKING_LIMITATIONS at `2c25ef4`; E5–E9 VALIDATED (Round 4 section); V2 textbook: `manual/v2/PUBLICATION-MANIFEST.md`** |
+| 4 | Claude Opus 5.5 | E12, final audit, V2 PDF | **COMPLETE — E12 ACCEPTED_WITH_NONBLOCKING_LIMITATIONS at `2c25ef4`; E5–E9 VALIDATED (Round 4 section); V2 textbook PUBLISHED (180 pages, `manual/v2/PUBLICATION-MANIFEST.md`)** |
 
 - Next owner: none. Round 4 was the final round (no Round 5); see `ROUND-4-HANDOFF.md`.
 - Branch policy: direct work on main only; no branch, worktree, or PR.
-- Final V2 PDF: produced in Round 4 from the frozen source `2c25ef4`; see `manual/v2/PUBLICATION-MANIFEST.md`.
+- Final V2 PDF: `manual/dist/LedgerCore-V2-Enterprise-Banking-Reliability-Engineering.pdf` (180 pages), built in Round 4 from the frozen source `2c25ef4`; see `manual/v2/PUBLICATION-MANIFEST.md`.
 
 ## Round 3 execution
 
@@ -118,4 +118,4 @@ Architecture and remediations: `ROUND-4-AUDIT.md`. Acceptance: `E12-ACCEPTANCE.m
 | E8 security | **VALIDATED** | Executed matrix 12 principals × 44 routes = 528 cells, 243 denied mutations side-effect free; CSRF for every principal; maker-checker with both roles; revocation after submission. Not a penetration test; P3 shared HMAC key noted. |
 | E9 observability | **VALIDATED** | W3C Trace Context with retained spans across bank, outbox and simulator (ADR 0007; E12-H04); owed-effect and reserve-shortfall gauges; two Prometheus rules fired on a genuine shortage and cleared after recovery (E12-H03). No tracing backend or notification delivery. |
 | E12 | **ACCEPTED_WITH_NONBLOCKING_LIMITATIONS** | 36/36 cases PASS, 25/25 hard gates, at `2c25ef4`; CI [43786857336](https://github.com/miku-wwl/ledgercore/actions/runs/43786857336). Attempt 1 at `6119274` superseded (harness defect). |
-| V2 textbook | see `manual/v2/PUBLICATION-MANIFEST.md` | Built from the frozen source only. |
+| V2 textbook | **PUBLISHED** — 180 pages | Built from the frozen source only: automated QA PASS, every page inspected, code text searchable, fonts embedded, an independent second build identical (`manual/v2/PUBLICATION-MANIFEST.md`). 180 is the lower bound of the 180–260 target and was reached through layout, not added text (manifest § 4). |

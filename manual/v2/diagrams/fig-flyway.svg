@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 352" width="640" height="352" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">Flyway 只向前演进：V1–V11 校验和固定，Round 4 只新增 V12–V15</text>
+<rect x="12.0" y="34.0" width="90.0" height="30.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="57.0" y="52.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="600">V1–V4</text>
+<rect x="112.0" y="34.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="52.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">客户、账户、账本、转账与幂等回执生命周期</text>
+<rect x="12.0" y="70.0" width="90.0" height="30.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="57.0" y="88.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="600">V5–V7</text>
+<rect x="112.0" y="70.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="88.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">组织与企业账户；工资批次；R2 加固（意图与结果完整性）</text>
+<rect x="12.0" y="106.0" width="90.0" height="30.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="57.0" y="124.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="600">V8–V9</text>
+<rect x="112.0" y="106.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="124.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">Policy B 付款、持久事件、清算回调生命周期</text>
+<rect x="12.0" y="142.0" width="90.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#b9c6d4" stroke-width="1.2" stroke-dasharray="3 3"/>
+<text x="57.0" y="160.8" font-size="10.5" fill="#5b6776" text-anchor="middle" font-weight="600">V10–V11</text>
+<rect x="112.0" y="142.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="160.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">被否决的索引候选及其向前移除</text>
+<rect x="12.0" y="178.0" width="90.0" height="30.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="57.0" y="196.8" font-size="10.5" fill="#1d5c38" text-anchor="middle" font-weight="600">V12</text>
+<rect x="112.0" y="178.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="196.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">为“已结算未记账”的历史付款补登持久工作项（不过账）</text>
+<rect x="12.0" y="214.0" width="90.0" height="30.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="57.0" y="232.8" font-size="10.5" fill="#1d5c38" text-anchor="middle" font-weight="600">V13</text>
+<rect x="112.0" y="214.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="232.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">SIMULATION_TREASURY 与受限的流动性划转分录</text>
+<rect x="12.0" y="250.0" width="90.0" height="30.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="57.0" y="268.8" font-size="10.5" fill="#1d5c38" text-anchor="middle" font-weight="600">V14</text>
+<rect x="112.0" y="250.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="268.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">outbox_events.trace_parent（不可变事实）</text>
+<rect x="12.0" y="286.0" width="90.0" height="30.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="57.0" y="304.8" font-size="10.5" fill="#1d5c38" text-anchor="middle" font-weight="600">V15</text>
+<rect x="112.0" y="286.0" width="516.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="370.0" y="304.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">终态付款必须绑定分录（含迁移前预检）</text>
+<text x="14.0" y="344.0" font-size="9.2" fill="#5b6776" text-anchor="start" font-weight="normal">模拟器库独立演进：V1–V3 已发布；V4 追踪上下文、V5 银行恢复后的重投（Round 4）。</text>
+</svg>

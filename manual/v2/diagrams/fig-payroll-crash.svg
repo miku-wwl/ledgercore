@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 419" width="640" height="419" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">工资崩溃窗口：失败项回滚之后、FAILED 记录之前</text>
+<rect x="10" y="254.0" width="620" height="117.0" rx="6" fill="#f0f8f6" stroke="#a9d6cd" stroke-width="1"/>
+<text x="19.0" y="269.0" font-size="10" fill="#0b4f48" text-anchor="start" font-weight="600">重启（无故障配置）后由同一批准人再次执行</text>
+<line x1="64.0" y1="58.0" x2="64.0" y2="409.0" stroke="#9aa5b1" stroke-width="1.0" stroke-dasharray="4 4"/>
+<line x1="320.0" y1="58.0" x2="320.0" y2="409.0" stroke="#9aa5b1" stroke-width="1.0" stroke-dasharray="4 4"/>
+<line x1="576.0" y1="58.0" x2="576.0" y2="409.0" stroke="#9aa5b1" stroke-width="1.0" stroke-dasharray="4 4"/>
+<rect x="5.0" y="30.0" width="118.0" height="28.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="64.0" y="47.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="normal">执行器 JVM</text>
+<rect x="261.0" y="30.0" width="118.0" height="28.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="320.0" y="47.8" font-size="10.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">PostgreSQL</text>
+<rect x="517.0" y="30.0" width="118.0" height="28.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="576.0" y="47.8" font-size="10.5" fill="#1b2430" text-anchor="middle" font-weight="normal">实验 harness</text>
+<polyline points="64.0,91.0 315.0,91.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,91.0 311.2,87.0 311.2,95.0" fill="#3a4553"/>
+<rect x="82.0" y="76.5" width="170.8" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="85.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">第 1 项 1.00：转账提交，SUCCEEDED</text>
+<circle cx="75.0" cy="91.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="94.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">1</text>
+<polyline points="64.0,121.0 315.0,121.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,121.0 311.2,117.0 311.2,125.0" fill="#3a4553"/>
+<rect x="82.0" y="106.5" width="182.7" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="115.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">第 2 项 2,000.00：余额不足，事务回滚</text>
+<circle cx="75.0" cy="121.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="124.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">2</text>
+<rect x="8.0" y="134.0" width="237.5" height="36.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="126.7" y="148.9" font-size="9.5" fill="#7a1f16" text-anchor="middle" font-weight="normal">PAYROLL_AFTER_ROLLBACK_BEFORE_FAILURE_MARK</text>
+<text x="126.7" y="161.9" font-size="9.5" fill="#7a1f16" text-anchor="middle" font-weight="normal">写 checkpoint.json 并阻塞</text>
+<polyline points="576.0,198.0 69.0,198.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="64.0,198.0 72.8,202.0 72.8,194.0" fill="#3a4553"/>
+<rect x="357.2" y="183.5" width="200.8" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="555.0" y="192.0" font-size="9.5" fill="#1b2430" text-anchor="end" font-weight="normal">核对 PID 与 JAR 后 Stop-Process -Force</text>
+<circle cx="565.0" cy="198.0" r="7" fill="#1f6fb2"/>
+<text x="565.0" y="201.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">3</text>
+<rect x="202.9" y="211.0" width="234.1" height="36.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="320.0" y="225.9" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">此刻：第 1 项 SUCCEEDED，第 2、3 项 PENDING</text>
+<text x="320.0" y="238.9" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">批次 PROCESSING，付款方 999.00</text>
+<polyline points="64.0,294.0 315.0,294.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,294.0 311.2,290.0 311.2,298.0" fill="#3a4553"/>
+<rect x="82.0" y="279.5" width="237.3" height="13.5" fill="#f0f8f6" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="288.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">第 2 项重新认领 → 再次余额不足 → FAILED（1 次）</text>
+<circle cx="75.0" cy="294.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="297.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">4</text>
+<polyline points="64.0,324.0 315.0,324.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,324.0 311.2,320.0 311.2,328.0" fill="#3a4553"/>
+<rect x="82.0" y="309.5" width="129.5" height="13.5" fill="#f0f8f6" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="318.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">第 3 项 3.00 → SUCCEEDED</text>
+<circle cx="75.0" cy="324.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="327.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">5</text>
+<polyline points="64.0,354.0 315.0,354.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,354.0 311.2,350.0 311.2,358.0" fill="#3a4553"/>
+<rect x="82.0" y="339.5" width="188.9" height="13.5" fill="#f0f8f6" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="85.0" y="348.0" font-size="9.5" fill="#1b2430" text-anchor="start" font-weight="normal">finishIfReady → PARTIALLY_COMPLETED</text>
+<circle cx="75.0" cy="354.0" r="7" fill="#1f6fb2"/>
+<text x="75.0" y="357.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">6</text>
+<polyline points="576.0,396.0 325.0,396.0" fill="none" stroke="#3a4553" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="320.0,396.0 328.8,400.0 328.8,392.0" fill="#3a4553"/>
+<rect x="323.5" y="381.5" width="234.5" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="555.0" y="390.0" font-size="9.5" fill="#1b2430" text-anchor="end" font-weight="normal">独立 SQL 评分：2 笔转账、2 个回执、0 不平衡分录</text>
+<circle cx="565.0" cy="396.0" r="7" fill="#1f6fb2"/>
+<text x="565.0" y="399.4" font-size="9.5" fill="#ffffff" text-anchor="middle" font-weight="700">7</text>
+</svg>

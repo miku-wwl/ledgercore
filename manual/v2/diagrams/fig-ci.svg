@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" width="640" height="300" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">CI：每次推送 main 的精确 SHA 都跑完整验收（.github/workflows/ci.yml）</text>
+<rect x="10.0" y="26.0" width="400.0" height="266.0" rx="7" fill="#f0f8f6" stroke="#a9d6cd" stroke-width="1"/>
+<text x="19.0" y="41.0" font-size="10" fill="#0b4f48" text-anchor="start" font-weight="600">job: Build, security, and full-stack acceptance</text>
+<rect x="22.0" y="44.0" width="376.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="210.0" y="61.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">npm ci · npm audit（high）</text>
+<rect x="22.0" y="80.0" width="376.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="210.0" y="97.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">前端 lint + build</text>
+<rect x="22.0" y="116.0" width="376.0" height="28.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="210.0" y="133.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">后端 clean verify（PostgreSQL 服务）</text>
+<rect x="22.0" y="152.0" width="376.0" height="28.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="210.0" y="169.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">模拟器 clean verify（独立库）</text>
+<rect x="22.0" y="188.0" width="376.0" height="28.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="210.0" y="205.6" font-size="10" fill="#6b3b05" text-anchor="middle" font-weight="600">启动模拟器与银行</text>
+<rect x="22.0" y="224.0" width="376.0" height="28.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="210.0" y="241.6" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">OpenAPI TypeScript 契约比对</text>
+<rect x="22.0" y="260.0" width="376.0" height="28.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="210.0" y="277.6" font-size="10" fill="#1d5c38" text-anchor="middle" font-weight="600">Playwright：真实 API 的浏览器旅程</text>
+<rect x="424.0" y="26.0" width="206.0" height="120.0" rx="7" fill="#f7f9fc" stroke="#b9c6d4" stroke-width="1"/>
+<text x="433.0" y="41.0" font-size="10" fill="#46525f" text-anchor="start" font-weight="600">job: dependency-scan</text>
+<rect x="436.0" y="58.0" width="182.0" height="50.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="527.0" y="79.8" font-size="10" fill="#7a1f16" text-anchor="middle" font-weight="600">OSV 扫描 Maven 依赖</text>
+<text x="527.0" y="93.4" font-size="9.5" fill="#7a1f16" text-anchor="middle" font-weight="normal">漏洞即失败</text>
+<rect x="424.0" y="160.0" width="206.0" height="132.0" rx="5.0" fill="#fffbe6" stroke="#d4b106" stroke-width="1.2"/>
+<text x="527.0" y="209.2" font-size="10" fill="#5c4a00" text-anchor="middle" font-weight="600">规则</text>
+<text x="527.0" y="222.8" font-size="9.5" fill="#5c4a00" text-anchor="middle" font-weight="normal">绿色的旧 SHA 不能证明新代码</text>
+<text x="527.0" y="236.4" font-size="9.5" fill="#5c4a00" text-anchor="middle" font-weight="normal">冻结时记录 run URL 与 head SHA</text>
+<text x="527.0" y="250.0" font-size="9.5" fill="#5c4a00" text-anchor="middle" font-weight="normal">任何跳过的必需步骤 = 不验收</text>
+</svg>

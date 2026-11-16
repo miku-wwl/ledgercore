@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 352" width="640" height="352" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">回调的认证、去重与排序：每一种异常都有确定的处理</text>
+<rect x="12.0" y="36.0" width="616.0" height="44.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="320.0" y="61.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">签名：HMAC-SHA256(key, X-Clearing-Timestamp + "." + 原始请求体)；时间偏差 &gt; 300 s 拒绝；常量时间比较</text>
+<rect x="12.0" y="92.0" width="280.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="152.0" y="109.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">篡改、缺头、过期签名</text>
+<rect x="302.0" y="92.0" width="326.0" height="28.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="465.0" y="109.5" font-size="9.8" fill="#7a1f16" text-anchor="middle" font-weight="normal">401，什么都不记录</text>
+<rect x="12.0" y="124.0" width="280.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="152.0" y="141.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">同一 callback_id 原样重放</text>
+<rect x="302.0" y="124.0" width="326.0" height="28.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="465.0" y="141.5" font-size="9.8" fill="#1d5c38" text-anchor="middle" font-weight="normal">200 DUPLICATE，无新效果</text>
+<rect x="12.0" y="156.0" width="280.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="152.0" y="173.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">同一 callback_id、内容不同</text>
+<rect x="302.0" y="156.0" width="326.0" height="28.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="465.0" y="173.5" font-size="9.8" fill="#7a1f16" text-anchor="middle" font-weight="normal">CLEARING_CALLBACK_ID_REUSE · CRITICAL</text>
+<rect x="12.0" y="188.0" width="280.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="152.0" y="205.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">同一 (operation, sequence)、不同回调</text>
+<rect x="302.0" y="188.0" width="326.0" height="28.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="465.0" y="205.5" font-size="9.8" fill="#7a1f16" text-anchor="middle" font-weight="normal">CLEARING_SEQUENCE_CONFLICT · CRITICAL</text>
+<rect x="12.0" y="220.0" width="280.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="152.0" y="237.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">序号跳号（先到 3，缺 2）</text>
+<rect x="302.0" y="220.0" width="326.0" height="28.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="465.0" y="237.5" font-size="9.8" fill="#6b3b05" text-anchor="middle" font-weight="normal">CLEARING_CALLBACK_OUT_OF_ORDER · HIGH</text>
+<rect x="12.0" y="252.0" width="280.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="152.0" y="269.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">摘要与批准意图不符</text>
+<rect x="302.0" y="252.0" width="326.0" height="28.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="465.0" y="269.5" font-size="9.8" fill="#7a1f16" text-anchor="middle" font-weight="normal">CLEARING_INTENT_MISMATCH · CRITICAL</text>
+<rect x="12.0" y="284.0" width="280.0" height="28.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="152.0" y="301.5" font-size="9.8" fill="#1b2430" text-anchor="middle" font-weight="normal">SETTLED 之后又来 REJECTED</text>
+<rect x="302.0" y="284.0" width="326.0" height="28.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="465.0" y="301.5" font-size="9.8" fill="#7a1f16" text-anchor="middle" font-weight="normal">ILLEGAL_CLEARING_TRANSITION · CRITICAL</text>
+<text x="14.0" y="344.0" font-size="9.2" fill="#5b6776" text-anchor="start" font-weight="normal">ClearingCallbackLifecyclePostgresIntegrationTests 在真实 PostgreSQL 上逐条执行并断言恰好这五类例外。</text>
+</svg>

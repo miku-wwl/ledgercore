@@ -1,0 +1,220 @@
+/* LedgerCore V2 textbook, printed by Edge/Chromium. Self-contained (V1's manual/assets is not used).
+   Fonts are the installed Windows fonts, referenced by name and embedded by the PDF printer; no font file is shipped. */
+@page { size: A4; margin: 19mm 17mm 18mm 17mm; }
+body.mode-body .cover { display: none; }
+body.mode-cover #TOC, body.mode-cover main { display: none; }
+
+:root {
+  --ink: #1b2430; --muted: #5b6776; --accent: #0b5cad; --accent-2: #0f766e; --rule: #d7dee6;
+  --code-bg: #f5f7fa; --head-bg: #eaf1f8; --navy: #0b2545; --mint: #2ec4b6; --gold: #b8751c; --red: #b42318;
+}
+html {
+  font-family: "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: 10.3pt; line-height: 1.8; color: var(--ink);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+body { margin: 0; }
+p { margin: 0 0 2.7mm; text-align: justify; orphans: 2; widows: 2; }
+a { color: var(--accent); text-decoration: none; }
+strong { color: #10202f; }
+hr { border: none; border-top: 1px solid var(--rule); margin: 5mm 0; }
+blockquote { margin: 3mm 0; padding: 2mm 4mm; color: #3a4553; border-left: 3px solid var(--rule); background: #fafbfc; }
+ul, ol { margin: 0 0 2.7mm; padding-left: 6mm; }
+li { margin: .6mm 0; }
+li > p { margin-bottom: 1mm; }
+
+/* ---------- cover ---------- */
+.cover {
+  width: 210mm; height: 296mm; box-sizing: border-box; position: relative; overflow: hidden;
+  padding: 52mm 22mm 0; color: #fff; break-after: page;
+  background: linear-gradient(155deg, #0b2545 0%, #13315c 55%, #134074 100%);
+}
+.cover-band { position: absolute; top: 0; left: 0; right: 0; height: 9mm; background: var(--mint); }
+.cover-edition {
+  position: absolute; top: 20mm; left: 22mm; font-size: 8.6pt; letter-spacing: 2px; color: #0b2545;
+  background: var(--mint); padding: 1.2mm 4mm; border-radius: 1mm; font-weight: 700;
+}
+.cover-kicker { font-size: 12pt; color: #a8c5e8; letter-spacing: .5px; }
+.cover-title { font-size: 29pt; font-weight: 700; line-height: 1.36; margin: 6mm 0 5mm; }
+.cover-subtitle { font-size: 13pt; color: #d6e4f5; line-height: 1.6; margin-bottom: 9mm; }
+.cover-flow {
+  font-family: "Cascadia Mono", Consolas, "Microsoft YaHei", monospace; font-size: 9pt; color: #d6e4f5; line-height: 1.8;
+  border-top: 1px solid rgba(255,255,255,.28); border-bottom: 1px solid rgba(255,255,255,.28); padding: 3.5mm 0;
+}
+.cover-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin-top: 11mm; }
+.cover-grid div { border-top: 2px solid var(--mint); padding-top: 3mm; }
+.cover-grid b { display: block; font-size: 20pt; line-height: 1.15; color: #fff; }
+.cover-grid span { font-size: 8.6pt; color: #b9cde6; line-height: 1.5; display: block; margin-top: 1mm; }
+.cover-meta { position: absolute; left: 22mm; right: 22mm; bottom: 20mm; font-size: 9pt; color: #cfdcec; line-height: 1.85; }
+
+/* ---------- table of contents ---------- */
+.toc { break-after: page; }
+.toc-title { font-size: 21pt; font-weight: 700; color: var(--accent); margin: 2mm 0 5mm; letter-spacing: 3px; }
+#TOC ul { list-style: none; margin: 0; padding-left: 0; }
+#TOC ul ul { padding-left: 7mm; }
+#TOC li { margin: 0; }
+#TOC a { display: flex; align-items: baseline; color: var(--ink); line-height: 1.62; }
+#TOC > ul > li > a { font-weight: 700; margin-top: 2mm; font-size: 10.6pt; color: var(--navy); }
+#TOC ul ul a { font-size: 9pt; color: #3a4553; }
+#TOC a .fill { flex: 1 1 auto; min-width: 6mm; border-bottom: 1px dotted #9aa4ae; margin: 0 1.5mm; transform: translateY(-1.2mm); }
+#TOC a::after { content: attr(data-page); flex: 0 0 9mm; text-align: right; }
+#TOC .toc-section-number { margin-right: 1.8mm; }
+#TOC > ul > li > a .toc-section-number::before { content: "第 "; }
+#TOC > ul > li > a .toc-section-number::after { content: " 章"; }
+
+/* ---------- headings ---------- */
+h1, h2, h3, h4 { line-height: 1.4; break-after: avoid; page-break-after: avoid; text-wrap: balance; }
+.nobr { white-space: nowrap; }
+p.lead { break-after: avoid; }
+/* appendix I: one E12 case per block */
+div.e12-case { break-inside: avoid; margin: 0 0 2.4mm; padding: .6mm 0 .6mm 3mm; border-left: 2px solid #c5d6ea; font-size: 9pt; line-height: 1.6; }
+div.e12-case p { margin: 0; text-align: left; }
+main h1 {
+  break-before: page; font-size: 23pt; color: var(--navy); line-height: 1.32; margin: 0 0 6mm; padding-bottom: 4mm;
+  border-bottom: 3px solid var(--accent);
+  border-image: linear-gradient(90deg, var(--accent) 0 26%, var(--mint) 26% 32%, var(--rule) 32%) 1;
+}
+main h1 .header-section-number {
+  display: inline-block; width: 100%; font-size: 10.5pt; letter-spacing: 3px; color: var(--accent-2); margin: 0 0 1.5mm;
+}
+main h1 .header-section-number::before { content: "第 "; }
+main h1 .header-section-number::after { content: " 章"; }
+main h1.unnumbered { font-size: 21pt; }
+main h2 { font-size: 14.2pt; color: var(--navy); margin: 8.5mm 0 3mm; padding-left: 3mm; border-left: 5px solid var(--accent); }
+main h3 { font-size: 11.8pt; color: var(--accent-2); margin: 6mm 0 2.4mm; }
+main h4 { font-size: 10.6pt; margin: 4.5mm 0 2mm; }
+.header-section-number { color: inherit; margin-right: 2mm; }
+/* part dividers: an H1 with class .part starts a part of the book */
+main h1.part { font-size: 26pt; border: none; border-image: none; margin-top: 60mm; color: var(--accent); }
+.lead { font-size: 10.8pt; line-height: 1.86; color: #2a3848; margin: 0 0 5mm; }
+
+/* chapter opener: the business question (left) and what the chapter proves with which evidence (right) */
+div.opener {
+  display: grid; grid-template-columns: 1fr 1.25fr; border-radius: 6px; overflow: hidden; margin: 3mm 0 7mm;
+  break-inside: avoid; font-size: 9.3pt; line-height: 1.68; border: 1px solid #c9d6e4;
+}
+div.opener > div { padding: 4mm 5mm 2.5mm; }
+div.opener > .q { background: var(--navy); color: #e6eef8; }
+div.opener > .q strong { color: #fff; }
+div.opener > .k { background: #f5f8fc; }
+div.opener > div > p:first-child { font-size: 8.2pt; letter-spacing: 2.5px; font-weight: 700; margin-bottom: 1.6mm; }
+div.opener > .q > p:first-child { color: var(--mint); }
+div.opener > .k > p:first-child { color: var(--accent); }
+div.opener ul { padding-left: 4.4mm; margin-bottom: 1mm; }
+div.opener li { margin: .8mm 0; }
+div.opener p { text-align: left; margin-bottom: 1.8mm; }
+div.opener code { background: rgba(255,255,255,.12); color: inherit; }
+
+/* ---------- code ---------- */
+code, pre { font-family: "Cascadia Mono", Consolas, "Microsoft YaHei", monospace; }
+code { font-size: .86em; background: #eef2f6; padding: .08em .32em; border-radius: 3px; }
+p code, li code, dd code { overflow-wrap: anywhere; }
+pre {
+  background: var(--code-bg); border: 1px solid #e1e7ee; border-left: 3px solid #9db4cc; border-radius: 4px;
+  padding: 2.6mm 3.4mm; margin: 2.6mm 0 3.4mm; font-size: 8pt; line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all;
+}
+pre code { background: none; padding: 0; font-size: inherit; border-radius: 0; }
+div.sourceCode { margin: 2.6mm 0 3.4mm; background: none; }
+div.sourceCode pre { margin: 0; }
+pre > code.sourceCode > span { line-height: 1.5; }
+pre.numberSource { margin-left: 0; border-left: 3px solid #9db4cc; padding-left: 3.4mm; }
+pre.numberSource code > span { left: 0; }
+pre.numberSource code > span > a:first-child::before { color: #9aa5b1; width: 2.6em; padding-left: 0; margin-right: 1.2em; }
+pre.numberSource code { padding-left: 0; }
+pre.console, div.sourceCode pre.console { background: #0d1117; color: #e6edf3; border-color: #0d1117; border-left-color: var(--mint); }
+pre.console .prompt { color: #7ee787; font-weight: 600; }
+pre.console .exit { color: #ff7b72; font-weight: 600; }
+pre.console .comment { color: #8b949e; }
+
+/* focused source excerpt from the frozen commit */
+div.excerpt { margin: 4mm 0 4.6mm; break-inside: auto; }
+div.excerpt-head { break-inside: avoid; break-after: avoid; }
+div.excerpt pre { orphans: 4; widows: 3; }
+div.excerpt-head > p { margin: 0; text-align: left; line-height: 1.5; }
+div.excerpt-head > p:first-child { font-size: 9pt; color: var(--ink); }
+div.excerpt .code-no { font-weight: 700; color: var(--accent); margin-right: 1.5mm; }
+div.excerpt-head > p:nth-child(2) { font-size: 7.6pt; color: var(--muted); margin: .6mm 0 1mm; }
+div.excerpt-head > p:nth-child(2) code { background: none; padding: 0; font-size: 7.4pt; }
+div.excerpt div.sourceCode { margin-top: 0; }
+
+/* ---------- tables ---------- */
+table { border-collapse: collapse; width: 100%; margin: 3mm 0 4mm; font-size: 8.9pt; line-height: 1.55;
+  border-top: 1.6px solid #2a3f55; border-bottom: 1.2px solid #2a3f55; }
+caption { caption-side: top; text-align: left; font-size: 8.8pt; color: #46525f; padding-bottom: 1.4mm; }
+th, td { border: none; border-bottom: 1px solid #e3e9ef; padding: 1.5mm 2.4mm; vertical-align: top; text-align: left; }
+thead th { background: var(--head-bg); border-bottom: 1px solid #9db4cc; color: #12263a; font-weight: 700; }
+tbody tr:nth-child(even) td { background: #fafbfd; }
+tbody tr:last-child td { border-bottom: none; }
+tr { break-inside: avoid; }
+table.keep { break-inside: avoid; }
+td code, th code { font-size: .84em; word-break: normal; overflow-wrap: anywhere; }
+td p, th p { margin: 0; text-align: left; }
+
+/* ---------- figures ---------- */
+figure {
+  margin: 5mm 0 6mm; padding: 8mm 4mm 2.6mm; border: 1px solid var(--rule); border-radius: 6px; background: #fdfefe;
+  position: relative; text-align: center; break-inside: avoid;
+}
+figure img { max-width: 100%; max-height: 150mm; border: none; border-radius: 3px; }
+figure.shot img { border: 1px solid var(--rule); max-height: 118mm; }
+figure.shot.narrow img { max-height: 150mm; max-width: 62%; }
+figcaption {
+  text-align: left; font-size: 8.8pt; line-height: 1.62; color: #46525f; border-top: 1px solid var(--rule);
+  margin-top: 3mm; padding-top: 2mm;
+}
+figure::before {
+  content: "机制图"; position: absolute; top: 0; left: 0; font-size: 7.3pt; font-weight: 700; letter-spacing: 1px;
+  padding: .3mm 3mm; border-radius: 5px 0 5px 0; background: #eaf1f8; color: #0b5cad; border: 1px solid #c5d6ea;
+  border-top: none; border-left: none; line-height: 1.6;
+}
+figure.shot::before { content: "真实截图"; background: #fff1dc; color: #8a4b08; border-color: #f0d3a6; }
+figure.data::before { content: "实测数据"; background: #e4f3f0; color: #0b6b62; border-color: #b5dcd5; }
+figure.h70 img { max-height: 70mm; } figure.h80 img { max-height: 80mm; } figure.h90 img { max-height: 90mm; }
+figure.h100 img { max-height: 100mm; } figure.h110 img { max-height: 110mm; } figure.h120 img { max-height: 120mm; }
+figure.h130 img { max-height: 130mm; } figure.h170 img { max-height: 170mm; }
+/* two genuine screenshots compared side by side (each keeps its own number and caption) */
+div.figpair { display: flex; gap: 4mm; align-items: stretch; break-inside: avoid; margin: 5mm 0 6mm; }
+div.figpair figure { flex: 1 1 0; margin: 0; }
+
+/* ---------- callouts ---------- */
+div.tip, div.note, div.warning, div.danger, div.principle, div.why, div.takeaway, div.limit, div.evidence {
+  border-left: 3px solid; border-radius: 0 5px 5px 0; padding: 2.4mm 4mm 1mm; margin: 3.4mm 0 4mm;
+  break-inside: avoid; font-size: 9.5pt;
+}
+div.tip::before, div.note::before, div.warning::before, div.danger::before, div.principle::before, div.why::before,
+div.takeaway::before, div.limit::before, div.evidence::before {
+  display: block; font-weight: 700; margin-bottom: 1mm; font-size: 8.3pt; letter-spacing: 2px;
+}
+div.tip { background: #e9f7ef; border-color: #2da44e; } div.tip::before { content: "提示"; color: #1a7f37; }
+div.note { background: #eef5ff; border-color: #2f81f7; } div.note::before { content: "说明"; color: #0b5cad; }
+div.warning { background: #fff6e5; border-color: #d4a72c; } div.warning::before { content: "注意"; color: #9a6700; }
+div.danger { background: #ffefee; border-color: #cf222e; } div.danger::before { content: "警告"; color: #cf222e; }
+div.principle { background: #f3f0ff; border-color: #8250df; } div.principle::before { content: "原理"; color: #6639ba; }
+div.why { background: #f3f7fc; border-color: var(--accent); } div.why::before { content: "为什么会这样"; color: var(--accent); }
+div.takeaway { background: #eef8f6; border-color: var(--accent-2); } div.takeaway::before { content: "工程启示"; color: var(--accent-2); }
+div.limit { background: #fbf7f0; border-color: var(--gold); } div.limit::before { content: "边界与限制"; color: #8a4b08; }
+div.evidence { background: #f6f8fa; border-color: #8a94a3; font-size: 8.9pt; } div.evidence::before { content: "证据"; color: #424a53; }
+div[title]::before { content: attr(title) !important; }
+div.tip p, div.note p, div.warning p, div.danger p, div.principle p, div.why p, div.takeaway p, div.limit p,
+div.evidence p { text-align: left; }
+
+/* exercises and answers */
+div.exercise { background: #fff8f1; border-left: 3px solid #e36209; border-radius: 0 5px 5px 0; padding: 2.4mm 4mm 1mm;
+  margin: 4mm 0; font-size: 9.5pt; }
+div.exercise::before { content: "练习"; display: block; font-weight: 700; color: #bc4c00; font-size: 8.3pt; letter-spacing: 2px; margin-bottom: 1mm; }
+div.exercise > :first-child, div.exercise li:first-child { break-before: avoid; }
+div.exercise li { break-inside: avoid; }
+div.exercise p { text-align: left; }
+div.answer { border-top: 1px solid var(--rule); padding-top: 2mm; margin: 3mm 0 4mm; }
+div.answer > p:first-child { font-weight: 700; color: var(--accent-2); break-after: avoid; }
+
+/* ---------- misc ---------- */
+.small { font-size: 8.6pt; color: var(--muted); }
+kbd { font-family: "Cascadia Mono", Consolas, monospace; font-size: .85em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; padding: 0 .3em; }
+.glossary-cols { columns: 2; column-gap: 9mm; font-size: 8.7pt; line-height: 1.52; }
+.glossary-cols p { margin: 0 0 1.3mm; break-inside: avoid; text-align: left; }
+.glossary-cols strong { color: var(--navy); }
+.tbl-fixed table { table-layout: fixed; }
+.tbl-wide table { font-size: 8.2pt; }
+.tbl-wide td, .tbl-wide th { padding: 1.2mm 1.8mm; }

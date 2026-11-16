@@ -1,0 +1,21 @@
+title: "企业级银行交易系统：Java 全栈、金融一致性与可靠性工程实战"
+subtitle: "LedgerCore V2 — 企业工资支付、异步清算、故障恢复与生产式验证"
+source-sha: "2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd"
+lang: zh-CN
+edition: "V2 · E12 冻结源码 2c25ef4"
+cover-kicker: "LedgerCore V2 · 一个可复现的银行交易实验室"
+cover-title: "企业级银行交易系统<br>Java 全栈、金融一致性<br>与可靠性工程实战"
+cover-flow: "批准 → 记账（应付）→ Outbox → 清算模拟器 → 签名回调 → 结算分录 → 独立对账<br>崩溃 · 会话被杀 · 准备金不足 · 回调丢失 · 银行回到备份时点 —— 每一种都真实执行并独立评分"
+cover-stats:
+  - n: "26"
+    t: "章，另附 9 个附录"
+  - n: "36"
+    t: "个 E12 评估用例（25 个硬门槛）"
+  - n: "11"
+    t: "个真实进程崩溃/恢复实验"
+  - n: "528"
+    t: "格执行过的授权矩阵"
+cover-lines:
+  - "Weilai Wang（miku-wwl）著 · 与 Claude Code 协作完成"
+  - "源码：github.com/miku-wwl/ledgercore，书中每段代码都链接到冻结提交 2c25ef4"
+  - "所有资金、人员与机构均为虚构；本实验室不是经认证的生产银行，也不代表符合新西兰金融监管要求"

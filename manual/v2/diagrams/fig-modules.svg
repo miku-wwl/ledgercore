@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 372" width="640" height="372" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">模块化单体：每个模块真实依赖的模块（来自源码 import，省略人人都用的 api/identity）</text>
+<rect x="10.0" y="30.0" width="474.0" height="334.0" rx="7" fill="#f7f9fc" stroke="#b9c6d4" stroke-width="1"/>
+<text x="19.0" y="45.0" font-size="10" fill="#46525f" text-anchor="start" font-weight="600">LedgerCore 银行进程（Spring Boot 4 · Spring Modulith 2）</text>
+<rect x="22.0" y="54.0" width="450.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="247.0" y="72.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">api：REST 控制器、问题响应（RFC 9457）、关联 ID、W3C Trace Context</text>
+<rect x="22.0" y="94.0" width="142.0" height="60.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="93.0" y="121.1" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">organizations</text>
+<text x="93.0" y="134.1" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">依赖：accounts · events</text>
+<rect x="172.0" y="94.0" width="142.0" height="60.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="243.0" y="114.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">payments</text>
+<text x="243.0" y="127.6" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">依赖：accounts · events</text>
+<text x="243.0" y="140.6" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">ledger · organizations</text>
+<rect x="322.0" y="94.0" width="150.0" height="60.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="397.0" y="108.1" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">payroll</text>
+<text x="397.0" y="121.1" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">依赖：accounts · events</text>
+<text x="397.0" y="134.1" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">ledger · organizations</text>
+<text x="397.0" y="147.1" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">transfers</text>
+<rect x="22.0" y="162.0" width="142.0" height="60.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="93.0" y="182.6" font-size="10" fill="#6b3b05" text-anchor="middle" font-weight="600">reconciliation</text>
+<text x="93.0" y="195.6" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">依赖：clearing · events</text>
+<text x="93.0" y="208.6" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">ledger · organizations</text>
+<rect x="172.0" y="162.0" width="142.0" height="60.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="243.0" y="182.6" font-size="10" fill="#6b3b05" text-anchor="middle" font-weight="600">clearing</text>
+<text x="243.0" y="195.6" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">依赖：events · ledger</text>
+<text x="243.0" y="208.6" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">organizations</text>
+<rect x="322.0" y="162.0" width="150.0" height="60.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="397.0" y="182.6" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">transfers</text>
+<text x="397.0" y="195.6" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">依赖：accounts · events</text>
+<text x="397.0" y="208.6" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">ledger · organizations</text>
+<rect x="22.0" y="230.0" width="142.0" height="52.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="93.0" y="253.1" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">operations</text>
+<text x="93.0" y="266.1" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">依赖：events · organizations</text>
+<rect x="172.0" y="230.0" width="142.0" height="52.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="243.0" y="253.1" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">accounts</text>
+<text x="243.0" y="266.1" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">依赖：ledger</text>
+<rect x="322.0" y="230.0" width="150.0" height="52.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="397.0" y="253.1" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">transactionhistory</text>
+<text x="397.0" y="266.1" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">依赖：ledger</text>
+<rect x="22.0" y="292.0" width="222.0" height="58.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="133.0" y="311.0" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">events</text>
+<text x="133.0" y="324.6" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">Outbox 写入、派发、消费收据</text>
+<text x="133.0" y="338.2" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">不依赖任何业务模块</text>
+<rect x="252.0" y="292.0" width="220.0" height="58.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="362.0" y="311.0" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">ledger</text>
+<text x="362.0" y="324.6" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">唯一写入金额的模块：LedgerWriter</text>
+<text x="362.0" y="338.2" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">不依赖任何业务模块</text>
+<rect x="498.0" y="30.0" width="132.0" height="334.0" rx="7" fill="#fff8ee" stroke="#e6c69a" stroke-width="1"/>
+<text x="507.0" y="45.0" font-size="10" fill="#6b3b05" text-anchor="start" font-weight="600">清算模拟器进程</text>
+<rect x="508.0" y="64.0" width="112.0" height="62.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="564.0" y="85.0" font-size="10" fill="#6b3b05" text-anchor="middle" font-weight="600">指令接口</text>
+<text x="564.0" y="98.6" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">POST /internal/</text>
+<text x="564.0" y="112.2" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">operations</text>
+<rect x="508.0" y="150.0" width="112.0" height="62.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="564.0" y="171.0" font-size="10" fill="#6b3b05" text-anchor="middle" font-weight="600">回调派发器</text>
+<text x="564.0" y="184.6" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">HMAC 签名、序号</text>
+<text x="564.0" y="198.2" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">8 次退避后 DEAD</text>
+<path d="M508.0,255.5 A56.0,5.5 0 0 1 620.0,255.5 V302.5 A56.0,5.5 0 0 1 508.0,302.5 Z" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<path d="M508.0,255.5 A56.0,5.5 0 0 0 620.0,255.5" fill="none" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="564.0" y="278.6" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">模拟器数据库</text>
+<text x="564.0" y="292.2" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">独立 PostgreSQL 库</text>
+<polyline points="564.0,126.0 564.0,145.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="564.0,150.0 568.0,141.1 560.0,141.1" fill="#5b6776"/>
+<polyline points="564.0,212.0 564.0,245.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="564.0,250.0 568.0,241.1 560.0,241.1" fill="#5b6776"/>
+<text x="508.0" y="334.0" font-size="9.2" fill="#5b6776" text-anchor="start" font-weight="normal">只经签名 HTTP</text>
+<text x="508.0" y="346.7" font-size="9.2" fill="#5b6776" text-anchor="start" font-weight="normal">与银行交互</text>
+</svg>

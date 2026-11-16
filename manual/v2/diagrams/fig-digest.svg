@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" width="640" height="300" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">不可变的批准意图：摘要覆盖什么，谁在何时校验</text>
+<rect x="10.0" y="30.0" width="250.0" height="262.0" rx="7" fill="#f0f8f6" stroke="#a9d6cd" stroke-width="1"/>
+<text x="19.0" y="45.0" font-size="10" fill="#0b4f48" text-anchor="start" font-weight="600">SHA-256 输入（长度前缀的二进制编码）</text>
+<rect x="22.0" y="56.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="77.0" y="74.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">FORMAT 标签</text>
+<rect x="138.0" y="56.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="193.0" y="74.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">payment id</text>
+<rect x="22.0" y="94.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="77.0" y="112.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">organization id</text>
+<rect x="138.0" y="94.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="193.0" y="112.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">source account id</text>
+<rect x="22.0" y="132.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="77.0" y="150.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">创建者 id</text>
+<rect x="138.0" y="132.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="193.0" y="150.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">收款人名称</text>
+<rect x="22.0" y="170.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="77.0" y="188.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">收款账户引用</text>
+<rect x="138.0" y="170.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="193.0" y="188.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">路由代码</text>
+<rect x="22.0" y="208.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="77.0" y="226.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">amount_minor</text>
+<rect x="138.0" y="208.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="193.0" y="226.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">currency</text>
+<rect x="22.0" y="246.0" width="110.0" height="30.0" rx="5.0" fill="#ffffff" stroke="#9aa5b1" stroke-width="1.2"/>
+<text x="77.0" y="264.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">version</text>
+<rect x="286.0" y="48.0" width="342.0" height="50.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="457.0" y="69.8" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">submit：计算 intent_digest 并保存</text>
+<text x="457.0" y="83.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">之后任何内容变更都被触发器拒绝</text>
+<rect x="286.0" y="112.0" width="342.0" height="50.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="457.0" y="133.8" font-size="10" fill="#1d5c38" text-anchor="middle" font-weight="600">approve：重新计算，必须等于 intent_digest</text>
+<text x="457.0" y="147.4" font-size="9.5" fill="#1d5c38" text-anchor="middle" font-weight="normal">相同才写入 approved_digest 并记账</text>
+<rect x="286.0" y="176.0" width="342.0" height="50.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="457.0" y="197.8" font-size="10" fill="#6b3b05" text-anchor="middle" font-weight="600">派发：instruction.intent_digest = approved_digest</text>
+<text x="457.0" y="211.4" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">模拟器回显摘要不一致 → 拒绝该响应</text>
+<rect x="286.0" y="240.0" width="342.0" height="50.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="457.0" y="261.8" font-size="10" fill="#7a1f16" text-anchor="middle" font-weight="600">回调：摘要不符 → CLEARING_INTENT_MISMATCH</text>
+<text x="457.0" y="275.4" font-size="9.5" fill="#7a1f16" text-anchor="middle" font-weight="normal">CRITICAL 例外，不产生任何资金效果</text>
+<polyline points="457.0,98.0 457.0,107.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="457.0,112.0 461.0,103.1 453.0,103.1" fill="#5b6776"/>
+<polyline points="457.0,162.0 457.0,171.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="457.0,176.0 461.0,167.1 453.0,167.1" fill="#5b6776"/>
+<polyline points="457.0,226.0 457.0,235.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="457.0,240.0 461.0,231.1 453.0,231.1" fill="#5b6776"/>
+</svg>

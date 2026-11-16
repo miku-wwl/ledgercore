@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 318" width="640" height="318" font-family="'Segoe UI','Microsoft YaHei','Noto Sans SC',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="12.0" y="19.0" font-size="13" fill="#1b2430" text-anchor="start" font-weight="600">欠下的资金效果如何被看见：工作项、例外与严重度</text>
+<rect x="12.0" y="40.0" width="190.0" height="64.0" rx="5.0" fill="#eaf2fb" stroke="#3d7cc9" stroke-width="1.2"/>
+<text x="107.0" y="68.8" font-size="10" fill="#1b2430" text-anchor="middle" font-weight="600">工作项 PENDING/PROCESSING</text>
+<text x="107.0" y="82.4" font-size="9.5" fill="#1b2430" text-anchor="middle" font-weight="normal">自动重试中（≤ 5 次）</text>
+<rect x="12.0" y="130.0" width="190.0" height="54.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="107.0" y="153.8" font-size="10" fill="#7a1f16" text-anchor="middle" font-weight="600">工作项 DEAD</text>
+<text x="107.0" y="167.4" font-size="9.5" fill="#7a1f16" text-anchor="middle" font-weight="normal">需要受治理的重试</text>
+<rect x="12.0" y="210.0" width="190.0" height="54.0" rx="5.0" fill="#e6f4ea" stroke="#2e8b57" stroke-width="1.2"/>
+<text x="107.0" y="233.8" font-size="10" fill="#1d5c38" text-anchor="middle" font-weight="600">工作项 DELIVERED</text>
+<text x="107.0" y="247.4" font-size="9.5" fill="#1d5c38" text-anchor="middle" font-weight="normal">效果已过账或确认已存在</text>
+<polyline points="107.0,104.0 107.0,125.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="107.0,130.0 111.0,121.1 103.0,121.1" fill="#5b6776"/>
+<rect x="110.0" y="111.5" width="45.0" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="113.0" y="120.0" font-size="9.5" fill="#5b6776" text-anchor="start" font-weight="normal">5 次失败</text>
+<polyline points="107.0,184.0 107.0,205.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="107.0,210.0 111.0,201.1 103.0,201.1" fill="#5b6776"/>
+<rect x="110.0" y="191.5" width="82.5" height="13.5" fill="#ffffff" stroke="none" stroke-width="1" rx="2" opacity="0.86"/>
+<text x="113.0" y="200.0" font-size="9.5" fill="#5b6776" text-anchor="start" font-weight="normal">OPERATIONS 重试</text>
+<rect x="240.0" y="40.0" width="388.0" height="76.0" rx="5.0" fill="#fff4e0" stroke="#d9730d" stroke-width="1.2"/>
+<text x="434.0" y="68.0" font-size="10" fill="#6b3b05" text-anchor="middle" font-weight="600">对账 CLEARING_FINANCIAL_EFFECT_PENDING</text>
+<text x="434.0" y="81.6" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">HIGH：仍有自动重试，且最终结果到达不足 60 s</text>
+<text x="434.0" y="95.2" font-size="9.5" fill="#6b3b05" text-anchor="middle" font-weight="normal">CRITICAL：没有待执行的重试，或已超过 60 s</text>
+<rect x="240.0" y="130.0" width="388.0" height="54.0" rx="5.0" fill="#fdecea" stroke="#c0392b" stroke-width="1.2"/>
+<text x="434.0" y="153.8" font-size="10" fill="#7a1f16" text-anchor="middle" font-weight="600">掩盖检查：工作项 DELIVERED 但效果仍欠</text>
+<text x="434.0" y="167.4" font-size="9.5" fill="#7a1f16" text-anchor="middle" font-weight="normal">评分器字段 deliveredWorkMaskingOwedEffect 必须为 0</text>
+<rect x="240.0" y="198.0" width="388.0" height="66.0" rx="5.0" fill="#e8f5f2" stroke="#0f8a7e" stroke-width="1.2"/>
+<text x="434.0" y="221.0" font-size="10" fill="#0b4f48" text-anchor="middle" font-weight="600">运营界面与指标</text>
+<text x="434.0" y="234.6" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">Owed settlements/refunds（数量、最早时间）</text>
+<text x="434.0" y="248.2" font-size="9.5" fill="#0b4f48" text-anchor="middle" font-weight="normal">ledgercore_clearing_effects_pending、…_oldest_pending_age_seconds</text>
+<polyline points="202.0,72.0 221.0,72.0 221.0,78.0 235.0,78.0" fill="none" stroke="#5b6776" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+<polygon points="240.0,78.0 231.1,74.0 231.1,82.0" fill="#5b6776"/>
+<text x="14.0" y="290.0" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">关闭例外不能靠一句备注：resolve 先重新检查（STATE_DERIVED 类别重跑 inspect，模拟器类别做签名询价），</text>
+<text x="14.0" y="302.9" font-size="9.4" fill="#1b2430" text-anchor="start" font-weight="normal">仍然欠着就返回 409。</text>
+</svg>
