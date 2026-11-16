@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "label": "E12 lab 6119274",
+  "sourceSha": "6119274cd0c91fb5a2183267bc2a626ebeaf02a8",
+  "startedAt": "2026-11-16T01:23:37.3233098Z",
+  "transfer-precommit-crash": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "updatedAt": "2026-11-16T01:24:51.7403248Z",
+  "transfer-postcommit-response-crash": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "transfer-outbox-before-dispatch": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "payroll-mark-failure-crash": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-callback-commit-crash": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-effect-precommit-crash": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-effect-ack-crash": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-effect-session-kill": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-reserve-shortage": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-lost-callback": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-simulator-restart": {
+    "recovery": "HARNESS_ERROR",
+    "failure": "无法处理参数 'Action' 上的自变量转换。无法将值转换为 System.String 类型。",
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  }
+}

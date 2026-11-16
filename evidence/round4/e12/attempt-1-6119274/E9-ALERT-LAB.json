@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "runId": "c458ef98-372a-4935-9059-e993afb70935",
+  "label": "E9 alert lab 6119274",
+  "sourceSha": "6119274cd0c91fb5a2183267bc2a626ebeaf02a8",
+  "trackedTreeDirty": false,
+  "bankJarSha256": "b76031d679f87fe5471ea52c4b16f66d49b0cc6556e68776b767d038e6a77c87",
+  "prometheus": "3.13.3",
+  "baselineAlerts": null,
+  "baselineShortfall": null,
+  "controlPayment": {
+    "paymentId": "c1682703-291d-4b2f-9fd1-26e5d6ea0dca",
+    "status": "COMPLETED/SETTLED"
+  },
+  "alertsAfterControl": null,
+  "failureCreatedAt": "2026-11-16T01:27:50.9562998Z",
+  "firing": [
+    {
+      "alert": "LedgerCoreClearingEffectPending",
+      "state": "firing",
+      "activeAt": "2026-11-16T01:28:58.801199135Z",
+      "value": "1e+00"
+    },
+    {
+      "alert": "LedgerCoreClearingReserveShortfall",
+      "state": "firing",
+      "activeAt": "2026-11-16T01:27:56.801199135Z",
+      "value": "3e+03"
+    }
+  ],
+  "firingAt": "2026-11-16T01:28:59.3904922Z",
+  "shortfallWhileFiring": "3000",
+  "effectsPendingWhileFiring": "1",
+  "retryPath": "governed dead-letter retry",
+  "resolved": null,
+  "resolvedAt": "2026-11-16T01:29:25.0384462Z",
+  "shortfallAfterRecovery": "0",
+  "finalBank": {
+    "database": "ledgercore_e6_c458ef98372a4935",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T14:29:25.484869+13:00",
+    "paymentStatus": "COMPLETED",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 1,
+    "refundJournalCount": 0,
+    "settlementLinked": true,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      }
+    ],
+    "payableLedgerMinor": 0,
+    "payableProjectionMinor": 0,
+    "reserveLedgerMinor": 7000,
+    "reserveProjectionMinor": 7000,
+    "sourceDepositLedgerMinor": 91877,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": [
+      {
+        "category": "CLEARING_RESERVE_INSUFFICIENT",
+        "severity": "CRITICAL",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "checks": {
+    "quiet_before_failure": true,
+    "control_settled_without_alert": true,
+    "effect_pending_alert_fired": true,
+    "reserve_shortfall_alert_fired": true,
+    "shortfall_measured": true,
+    "alerts_resolved_after_recovery": true,
+    "settled_exactly_once": true
+  },
+  "verdict": "PASS",
+  "completedAt": "2026-11-16T01:29:37.2780518Z",
+  "runDirectory": "work/e6-lab/runs/c458ef98-372a-4935-9059-e993afb70935"
+}

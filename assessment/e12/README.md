@@ -35,9 +35,10 @@ Prerequisites: the local toolchain from `docs/v2/REPRODUCE.md` (Temurin 21, Post
 
 ```powershell
 # 1. Quick, non-destructive: both Maven suites on fresh databases, the E8 matrix, and the SQL grader.
-$verify = (& .\assessment\e12\run-e12.ps1 -Mode verify -Label 'E12 verify' | ConvertFrom-Json).runId
+#    Pass your own run ids: the console summary is abbreviated; the full summary is evidence/round4/e12/runs/<id>.json.
+$verify = [guid]::NewGuid().ToString(); & .\assessment\e12\run-e12.ps1 -Mode verify -RunId $verify -Label 'E12 verify'
 # 2. Real processes + real-API Chromium + SQL grader (frees ports 18196, 18197 and 5173 first).
-$fullstack = (& .\assessment\e12\run-e12.ps1 -Mode fullstack -Label 'E12 full stack' | ConvertFrom-Json).runId
+$fullstack = [guid]::NewGuid().ToString(); & .\assessment\e12\run-e12.ps1 -Mode fullstack -RunId $fullstack -Label 'E12 full stack'
 # 3. Destructive, about 45 minutes: every E6 fault case, sequentially.
 & .\assessment\e12\run-e12-lab.ps1 -Label 'E12 lab'
 # 4. Representative restore (bank restored, simulator not).

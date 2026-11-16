@@ -1,0 +1,2579 @@
+{
+  "runDirectory": "c458ef98-372a-4935-9059-e993afb70935",
+  "paymentId": "c1682703-291d-4b2f-9fd1-26e5d6ea0dca",
+  "spanCount": 129,
+  "traceCount": 114,
+  "settlementChain": [
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.217837Z",
+      "traceId": "042012718e8d3fa1146b95c9ee4d8538",
+      "spanId": "56f39ce2b6ae6d6c",
+      "parentId": null,
+      "name": "POST /api/payments/{paymentId}/approve",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 42040,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/payments/{paymentId}/approve",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      },
+      "step": "bank: payment approval (books the payable, commits clearing.instruction.ready)"
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.141365300Z",
+      "traceId": "363b800ed9de0137b833a52c773eb115",
+      "spanId": "101485be43f163de",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.instruction.ready",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 296884,
+      "links": [
+        "00-042012718e8d3fa1146b95c9ee4d8538-56f39ce2b6ae6d6c-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "f253583d-2a88-4a9b-b150-6b0f67b84bab",
+        "outbox.outcome": "success",
+        "outbox.event_type": "clearing.instruction.ready"
+      },
+      "step": "bank: new trace for the dispatch, linked to the approval span"
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.134748900Z",
+      "traceId": "363b800ed9de0137b833a52c773eb115",
+      "spanId": "fbbf199fe30708a6",
+      "parentId": "101485be43f163de",
+      "name": "POST simulator submit",
+      "kind": "CLIENT",
+      "status": "OK",
+      "durationUs": 288281,
+      "links": [],
+      "attributes": {
+        "outcome": "success",
+        "clearing.operation": "submit"
+      },
+      "step": "bank: client span of the signed simulator request"
+    },
+    {
+      "system": "simulator",
+      "end": "2026-11-16T01:27:32.118264200Z",
+      "traceId": "363b800ed9de0137b833a52c773eb115",
+      "spanId": "912459ada6e627dc",
+      "parentId": "fbbf199fe30708a6",
+      "name": "POST /internal/operations",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 185970,
+      "links": [],
+      "attributes": {
+        "http.route": "/internal/operations",
+        "http.response.status_code": 200,
+        "http.request.method": "POST",
+        "trace.remote_parent": true
+      },
+      "step": "simulator: server span continues the bank trace"
+    },
+    {
+      "system": "simulator",
+      "end": "2026-11-16T01:27:32.432737500Z",
+      "traceId": "497372741272867a2d7793ac2cc42269",
+      "spanId": "077c17e2cf138f3c",
+      "parentId": null,
+      "name": "callback.dispatch",
+      "kind": "PRODUCER",
+      "status": "OK",
+      "durationUs": 234629,
+      "links": [
+        "00-363b800ed9de0137b833a52c773eb115-912459ada6e627dc-01"
+      ],
+      "attributes": {
+        "messaging.message.id": "3bf03839-adc0-4c62-bb5e-f202756e6f89",
+        "callback.attempt": 1
+      },
+      "step": "simulator: callback delivery in its own trace, linked to the request"
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.422424200Z",
+      "traceId": "497372741272867a2d7793ac2cc42269",
+      "spanId": "5f28c9dad88b157b",
+      "parentId": "077c17e2cf138f3c",
+      "name": "POST /api/clearing/callbacks",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 78569,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/clearing/callbacks",
+        "http.response.status_code": 200,
+        "trace.remote_parent": true
+      },
+      "step": "bank: callback request continues the simulator delivery trace"
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.418905100Z",
+      "traceId": "497372741272867a2d7793ac2cc42269",
+      "spanId": "1c9c727918563802",
+      "parentId": "5f28c9dad88b157b",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "OK",
+      "durationUs": 25304,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "APPLIED",
+        "effect.path": "after_commit",
+        "payment.id": "c1682703-291d-4b2f-9fd1-26e5d6ea0dca"
+      },
+      "step": "bank: after-commit settlement inside the callback trace"
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:33.164805300Z",
+      "traceId": "589f428c86bef8de77f7ec3c5ecefd49",
+      "spanId": "daa9b476bff1a45c",
+      "parentId": "f5ffe5901c040790",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "OK",
+      "durationUs": 1846,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "ALREADY_APPLIED",
+        "effect.path": "outbox",
+        "payment.id": "c1682703-291d-4b2f-9fd1-26e5d6ea0dca"
+      },
+      "step": "bank: durable work-item attempt (dispatch OK)"
+    }
+  ],
+  "chainStepsRequired": 7,
+  "clearingWorkItemAttempts": [
+    {
+      "traceId": "589f428c86bef8de77f7ec3c5ecefd49",
+      "status": "OK",
+      "attempt": 1,
+      "outcome": "success",
+      "links": [
+        "00-497372741272867a2d7793ac2cc42269-5f28c9dad88b157b-01"
+      ],
+      "end": "2026-11-16T01:27:33.170317Z"
+    },
+    {
+      "traceId": "ca51a917fe1a26e7d0b6aed0294ddfc3",
+      "status": "ERROR",
+      "attempt": 1,
+      "outcome": "failure",
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "end": "2026-11-16T01:27:52.427287700Z"
+    },
+    {
+      "traceId": "589211518fad3825aa746dc342cb4f53",
+      "status": "ERROR",
+      "attempt": 2,
+      "outcome": "failure",
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "end": "2026-11-16T01:27:53.453877900Z"
+    },
+    {
+      "traceId": "d0e8db5ebcb6e16ac136fc7f6ab986c3",
+      "status": "ERROR",
+      "attempt": 3,
+      "outcome": "failure",
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "end": "2026-11-16T01:27:55.484596200Z"
+    },
+    {
+      "traceId": "4afeed1e7553c311e301c631bd817349",
+      "status": "ERROR",
+      "attempt": 4,
+      "outcome": "failure",
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "end": "2026-11-16T01:27:59.534033600Z"
+    },
+    {
+      "traceId": "00a2bb609dbf218815a2ddbd6d2db653",
+      "status": "ERROR",
+      "attempt": 5,
+      "outcome": "failure",
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "end": "2026-11-16T01:28:07.629627Z"
+    },
+    {
+      "traceId": "6ddfbf1dab50a9dabefc125fdab974ec",
+      "status": "OK",
+      "attempt": 1,
+      "outcome": "success",
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "end": "2026-11-16T01:29:17.447585200Z"
+    }
+  ],
+  "spans": [
+    {
+      "system": "simulator",
+      "end": "2026-11-16T01:26:54.467426400Z",
+      "traceId": "7b8c9689c293d0a7a33ae4fd32ed3fe6",
+      "spanId": "af37a44cfffcc060",
+      "parentId": null,
+      "name": "GET /**",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 44156,
+      "links": [],
+      "attributes": {
+        "http.route": "/**",
+        "http.response.status_code": 404,
+        "http.request.method": "GET",
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:17.591296Z",
+      "traceId": "014a40cdd3f324a2bd3d4ec3d1461774",
+      "spanId": "5be0971316bd2f38",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 67184,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:19.107131700Z",
+      "traceId": "4dabce576d5f1c0a6014cc2dd98fc0a5",
+      "spanId": "6d14b777375fa7e7",
+      "parentId": null,
+      "name": "POST /api/auth/register",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 1503926,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/auth/register",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:19.116349400Z",
+      "traceId": "7745bbf5f4b11864d02c2bf5c6f2e2fb",
+      "spanId": "1d6071af15392ce5",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 4637,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:19.179752Z",
+      "traceId": "51204f47822282f9301caabe19633275",
+      "spanId": "8c950ab7f210e2a2",
+      "parentId": null,
+      "name": "POST /api/organizations",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 57447,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:19.189275100Z",
+      "traceId": "978875cab71eaee4a38d9a3a59c918ae",
+      "spanId": "6965cc95528a5661",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 5001,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:19.370744Z",
+      "traceId": "743e88363bc1887286b2dbad59e8b07b",
+      "spanId": "083e5d6419d8be4f",
+      "parentId": null,
+      "name": "POST /api/organizations/{organizationId}/accounts",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 175975,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations/{organizationId}/accounts",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:19.380725900Z",
+      "traceId": "153f5e0073d37649d0cc841ace8703d3",
+      "spanId": "e3b9203e562fabd6",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 5339,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:20.279691200Z",
+      "traceId": "2f0ed223fe3512e57e207f1c5daddd7a",
+      "spanId": "dd2c0a54084e5d42",
+      "parentId": null,
+      "name": "POST /api/auth/register",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 894878,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/auth/register",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:20.287702800Z",
+      "traceId": "9e34ae8616dbb197ad764b4f89475c88",
+      "spanId": "17dbc42da3394bf1",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3340,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:20.335371400Z",
+      "traceId": "ce94c5612758bd445ddb14e83568344c",
+      "spanId": "8186c83b6fc63852",
+      "parentId": null,
+      "name": "POST /api/organizations/{organizationId}/members",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 42947,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations/{organizationId}/members",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:20.343408600Z",
+      "traceId": "899a9e0e68e7d0f92a770ed5c2b295ea",
+      "spanId": "f5330e6c42460e2f",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3853,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:20.653522900Z",
+      "traceId": "a73df31b295bc3435e867934fb821e12",
+      "spanId": "633582de53709813",
+      "parentId": null,
+      "name": "outbox.dispatch organization.role.granted",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 11091,
+      "links": [
+        "00-ce94c5612758bd445ddb14e83568344c-8186c83b6fc63852-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "29fa55dc-9f7e-4e53-a8cf-441e8edd2e53",
+        "outbox.outcome": "success",
+        "outbox.event_type": "organization.role.granted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:21.249277800Z",
+      "traceId": "3ac43e4d17d179de5d02bd0b3550225b",
+      "spanId": "3abf1835e4ed083d",
+      "parentId": null,
+      "name": "POST /api/auth/register",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 901962,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/auth/register",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:21.258931400Z",
+      "traceId": "af80e67cd574272e71ab02608cd39d3b",
+      "spanId": "af83640a57c0cfe8",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3866,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:21.276985500Z",
+      "traceId": "9eb6d0cb6b605aa4360b3e9ceb0b47bd",
+      "spanId": "22c9a60415b6171a",
+      "parentId": null,
+      "name": "POST /api/organizations/{organizationId}/members",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 14421,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations/{organizationId}/members",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:21.285571900Z",
+      "traceId": "3754d9e48c4043e4a6c81f8edc7f6b4e",
+      "spanId": "52e4718073efe70a",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3434,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:21.684452700Z",
+      "traceId": "d2d8649d2a12bef88f880a2eb45887d3",
+      "spanId": "f352900799f70356",
+      "parentId": null,
+      "name": "outbox.dispatch organization.role.granted",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 4782,
+      "links": [
+        "00-9eb6d0cb6b605aa4360b3e9ceb0b47bd-22c9a60415b6171a-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "a812086f-af68-4621-a68b-e885d9ac91c5",
+        "outbox.outcome": "success",
+        "outbox.event_type": "organization.role.granted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.194566600Z",
+      "traceId": "93603294df181aa0b4ffde6597e4a4aa",
+      "spanId": "c9206ada01f2e927",
+      "parentId": null,
+      "name": "POST /api/auth/register",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 904134,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/auth/register",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.203077200Z",
+      "traceId": "4201dd09fd213c2c2213cf1c5f63efd4",
+      "spanId": "9afe9f64c5de427f",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3588,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.222932500Z",
+      "traceId": "535d5cb7074cf351173080a651a5f617",
+      "spanId": "46de68497fc2f1a9",
+      "parentId": null,
+      "name": "POST /api/organizations/{organizationId}/members",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 14749,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations/{organizationId}/members",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.229969800Z",
+      "traceId": "dcf873fff29719268a7dda28833f4f6c",
+      "spanId": "a9ccd953212f1eab",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 2972,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.310564500Z",
+      "traceId": "5ac30eb5bdf2e96e453a2e9a3f424745",
+      "spanId": "c854b854b2575e38",
+      "parentId": null,
+      "name": "POST /api/organizations/{organizationId}/payments",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 75303,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations/{organizationId}/payments",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.319137800Z",
+      "traceId": "f31d3e4a1c1492b68c432a340a829c8e",
+      "spanId": "470b8fb06d999eb6",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3374,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.341719900Z",
+      "traceId": "097c9d179a1d929b6a204fbdc1b06f67",
+      "spanId": "51185212c300f374",
+      "parentId": null,
+      "name": "POST /api/payments/{paymentId}/submit",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 18762,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/payments/{paymentId}/submit",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.354266600Z",
+      "traceId": "f3195c1277284f8e07a54b1566e5af6e",
+      "spanId": "2a9027185d59dd51",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3743,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.706394100Z",
+      "traceId": "0bc1b6daefbd2704545baef887bc9d1f",
+      "spanId": "9e9f725abd6ca5e6",
+      "parentId": null,
+      "name": "outbox.dispatch organization.role.granted",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 4836,
+      "links": [
+        "00-535d5cb7074cf351173080a651a5f617-46de68497fc2f1a9-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "fea7154a-a999-4038-a7e5-7fd6d7aacd89",
+        "outbox.outcome": "success",
+        "outbox.event_type": "organization.role.granted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.713912100Z",
+      "traceId": "b42e3090d46249278d9b0efbe4d1bd87",
+      "spanId": "bdf8d94a5a97bfe4",
+      "parentId": null,
+      "name": "outbox.dispatch corporate.payment.created",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 5175,
+      "links": [
+        "00-5ac30eb5bdf2e96e453a2e9a3f424745-c854b854b2575e38-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "86adb5ac-879c-4217-91e3-73dc33ccf59b",
+        "outbox.outcome": "success",
+        "outbox.event_type": "corporate.payment.created"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.723437500Z",
+      "traceId": "c4628d80b3329d69576b0085185586c0",
+      "spanId": "6a8cdac25d456fbe",
+      "parentId": null,
+      "name": "outbox.dispatch corporate.payment.submitted",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 4605,
+      "links": [
+        "00-097c9d179a1d929b6a204fbdc1b06f67-51185212c300f374-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "53ad0040-0ca0-4774-bce7-d461def13bdc",
+        "outbox.outcome": "success",
+        "outbox.event_type": "corporate.payment.submitted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:22.814659100Z",
+      "traceId": "cd979db594102bd0df548267021fb6f6",
+      "spanId": "c229728f1ab4114c",
+      "parentId": null,
+      "name": "POST /api/auth/login",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 456127,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/auth/login",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.118736200Z",
+      "traceId": "ce5dd3167ffccc644bbe31b7b0833c3f",
+      "spanId": "40f16a95910a6a8a",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 2693,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.137602100Z",
+      "traceId": "e8c0bf45e2982690f10b302e88a4c5ee",
+      "spanId": "6677f9babb30e002",
+      "parentId": null,
+      "name": "POST /api/organizations/{organizationId}/payments",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 14771,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations/{organizationId}/payments",
+        "http.response.status_code": 201,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.144661600Z",
+      "traceId": "9e088ff2b563d6e2d054937c8c582709",
+      "spanId": "e7af83a78c932b83",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 2956,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.162437900Z",
+      "traceId": "e208c28f901762b5964f31f939e4e10f",
+      "spanId": "dfa9c16391614c58",
+      "parentId": null,
+      "name": "POST /api/payments/{paymentId}/submit",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 13092,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/payments/{paymentId}/submit",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.169503700Z",
+      "traceId": "1539ac43192717228bca88c0dde6f556",
+      "spanId": "515a4997b0140416",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 3436,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.217837Z",
+      "traceId": "042012718e8d3fa1146b95c9ee4d8538",
+      "spanId": "56f39ce2b6ae6d6c",
+      "parentId": null,
+      "name": "POST /api/payments/{paymentId}/approve",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 42040,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/payments/{paymentId}/approve",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.269862100Z",
+      "traceId": "cce02c3eaef841483cec99b68716ca35",
+      "spanId": "e359078070f36fa8",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 2017395,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.499660100Z",
+      "traceId": "14e0de6ab1fea51a2537fe45d9557d38",
+      "spanId": "69dbf14101daa162",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 258672,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.827470100Z",
+      "traceId": "8d0ea4b259bb28c0a08d50afed376a65",
+      "spanId": "b62ae2d8e0d056b2",
+      "parentId": null,
+      "name": "outbox.dispatch corporate.payment.created",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 3966,
+      "links": [
+        "00-e8c0bf45e2982690f10b302e88a4c5ee-6677f9babb30e002-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "1417f579-7fa0-4099-931c-ab492ea217e6",
+        "outbox.outcome": "success",
+        "outbox.event_type": "corporate.payment.created"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.833469Z",
+      "traceId": "474792fc1e542aab4d80bdd26789cbc6",
+      "spanId": "73da83b9c04ae264",
+      "parentId": null,
+      "name": "outbox.dispatch corporate.payment.submitted",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 3622,
+      "links": [
+        "00-e208c28f901762b5964f31f939e4e10f-dfa9c16391614c58-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "76721b45-5abd-4521-ad44-f049e8bf9887",
+        "outbox.outcome": "success",
+        "outbox.event_type": "corporate.payment.submitted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:31.841425200Z",
+      "traceId": "3587b9d23df56b78be3975426bf6952b",
+      "spanId": "9356b0ce183b4a5b",
+      "parentId": null,
+      "name": "outbox.dispatch corporate.payment.approved",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 4158,
+      "links": [
+        "00-042012718e8d3fa1146b95c9ee4d8538-56f39ce2b6ae6d6c-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "3a98da0d-fdb7-4ff2-9289-7ae3ebbaf956",
+        "outbox.outcome": "success",
+        "outbox.event_type": "corporate.payment.approved"
+      }
+    },
+    {
+      "system": "simulator",
+      "end": "2026-11-16T01:27:32.118264200Z",
+      "traceId": "363b800ed9de0137b833a52c773eb115",
+      "spanId": "912459ada6e627dc",
+      "parentId": "fbbf199fe30708a6",
+      "name": "POST /internal/operations",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 185970,
+      "links": [],
+      "attributes": {
+        "http.route": "/internal/operations",
+        "http.response.status_code": 200,
+        "http.request.method": "POST",
+        "trace.remote_parent": true
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.134748900Z",
+      "traceId": "363b800ed9de0137b833a52c773eb115",
+      "spanId": "fbbf199fe30708a6",
+      "parentId": "101485be43f163de",
+      "name": "POST simulator submit",
+      "kind": "CLIENT",
+      "status": "OK",
+      "durationUs": 288281,
+      "links": [],
+      "attributes": {
+        "outcome": "success",
+        "clearing.operation": "submit"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.141365300Z",
+      "traceId": "363b800ed9de0137b833a52c773eb115",
+      "spanId": "101485be43f163de",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.instruction.ready",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 296884,
+      "links": [
+        "00-042012718e8d3fa1146b95c9ee4d8538-56f39ce2b6ae6d6c-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "f253583d-2a88-4a9b-b150-6b0f67b84bab",
+        "outbox.outcome": "success",
+        "outbox.event_type": "clearing.instruction.ready"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.418905100Z",
+      "traceId": "497372741272867a2d7793ac2cc42269",
+      "spanId": "1c9c727918563802",
+      "parentId": "5f28c9dad88b157b",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "OK",
+      "durationUs": 25304,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "APPLIED",
+        "effect.path": "after_commit",
+        "payment.id": "c1682703-291d-4b2f-9fd1-26e5d6ea0dca"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:32.422424200Z",
+      "traceId": "497372741272867a2d7793ac2cc42269",
+      "spanId": "5f28c9dad88b157b",
+      "parentId": "077c17e2cf138f3c",
+      "name": "POST /api/clearing/callbacks",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 78569,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/clearing/callbacks",
+        "http.response.status_code": 200,
+        "trace.remote_parent": true
+      }
+    },
+    {
+      "system": "simulator",
+      "end": "2026-11-16T01:27:32.432737500Z",
+      "traceId": "497372741272867a2d7793ac2cc42269",
+      "spanId": "077c17e2cf138f3c",
+      "parentId": null,
+      "name": "callback.dispatch",
+      "kind": "PRODUCER",
+      "status": "OK",
+      "durationUs": 234629,
+      "links": [
+        "00-363b800ed9de0137b833a52c773eb115-912459ada6e627dc-01"
+      ],
+      "attributes": {
+        "messaging.message.id": "3bf03839-adc0-4c62-bb5e-f202756e6f89",
+        "callback.attempt": 1
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:33.164805300Z",
+      "traceId": "589f428c86bef8de77f7ec3c5ecefd49",
+      "spanId": "daa9b476bff1a45c",
+      "parentId": "f5ffe5901c040790",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "OK",
+      "durationUs": 1846,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "ALREADY_APPLIED",
+        "effect.path": "outbox",
+        "payment.id": "c1682703-291d-4b2f-9fd1-26e5d6ea0dca"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:33.170317Z",
+      "traceId": "589f428c86bef8de77f7ec3c5ecefd49",
+      "spanId": "f5ffe5901c040790",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.callback.accepted",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 8687,
+      "links": [
+        "00-497372741272867a2d7793ac2cc42269-5f28c9dad88b157b-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "6c0e395c-f6ab-4752-9fb1-d71c066e0138",
+        "outbox.outcome": "success",
+        "outbox.event_type": "clearing.callback.accepted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:33.533318200Z",
+      "traceId": "4ab0a24e8ec80f641cbed4787803ab46",
+      "spanId": "e81f9c8a3f7d99e0",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 302401,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:35.497626900Z",
+      "traceId": "61c3e934ff6d98dc4da1934673cafb95",
+      "spanId": "a07e44546528b071",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 266311,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:37.635662500Z",
+      "traceId": "60ba0e9d79a281a54f68638d5f3ef2e7",
+      "spanId": "b56aa6e251e102b5",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 404817,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:39.514390500Z",
+      "traceId": "df01e8d6dbcc603d3e50f861ca499133",
+      "spanId": "2aee1f784c15eb46",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 283474,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:41.528816200Z",
+      "traceId": "d0a45f604a85e942c6e59aca3267113e",
+      "spanId": "0fa5bd5b0ae496ff",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 298102,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:43.520686100Z",
+      "traceId": "d1ed12a8f7cd48c5653a80441fb33487",
+      "spanId": "e57e53b85949914c",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 289906,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:45.499500300Z",
+      "traceId": "41067b006018bbe8e169a278db5455d1",
+      "spanId": "c83a47aa25b4e25f",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 269065,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:47.498429500Z",
+      "traceId": "6c49b303c124c78b7207de4a5c8b80ac",
+      "spanId": "941174de51e5f475",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 268021,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:49.579227Z",
+      "traceId": "0b8f4bf2c4c1b08e05f2b17be46de16e",
+      "spanId": "48e91a65e4a503bc",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 348609,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:50.924612Z",
+      "traceId": "fa036585802d91368d833a4e4b9b1349",
+      "spanId": "2e54871b60f1b43d",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 2518,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:50.953680800Z",
+      "traceId": "5aaadfa336a9bba0e65b71f2f14d0127",
+      "spanId": "8a63b18a924d5290",
+      "parentId": null,
+      "name": "POST /api/payments/{paymentId}/approve",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 25055,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/payments/{paymentId}/approve",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:51.375169200Z",
+      "traceId": "6693097865c821e13d07eb17273db3b8",
+      "spanId": "8a503f90eee92dbe",
+      "parentId": null,
+      "name": "outbox.dispatch corporate.payment.approved",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 4397,
+      "links": [
+        "00-5aaadfa336a9bba0e65b71f2f14d0127-8a63b18a924d5290-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "60308d41-de39-4985-af6f-b24b364750a3",
+        "outbox.outcome": "success",
+        "outbox.event_type": "corporate.payment.approved"
+      }
+    },
+    {
+      "system": "simulator",
+      "end": "2026-11-16T01:27:51.395045400Z",
+      "traceId": "9c5b3bb25c4d0e859139e4949b1f2a5b",
+      "spanId": "abf83b9b402ace76",
+      "parentId": "38abc0d0b43c8441",
+      "name": "POST /internal/operations",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 9052,
+      "links": [],
+      "attributes": {
+        "http.route": "/internal/operations",
+        "http.response.status_code": 200,
+        "http.request.method": "POST",
+        "trace.remote_parent": true
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:51.397046Z",
+      "traceId": "9c5b3bb25c4d0e859139e4949b1f2a5b",
+      "spanId": "38abc0d0b43c8441",
+      "parentId": "80d3a1ed440c74ac",
+      "name": "POST simulator submit",
+      "kind": "CLIENT",
+      "status": "OK",
+      "durationUs": 18024,
+      "links": [],
+      "attributes": {
+        "outcome": "success",
+        "clearing.operation": "submit"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:51.401566900Z",
+      "traceId": "9c5b3bb25c4d0e859139e4949b1f2a5b",
+      "spanId": "80d3a1ed440c74ac",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.instruction.ready",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 24169,
+      "links": [
+        "00-5aaadfa336a9bba0e65b71f2f14d0127-8a63b18a924d5290-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "5f8698d8-2f91-490a-a6d0-92df33db941d",
+        "outbox.outcome": "success",
+        "outbox.event_type": "clearing.instruction.ready"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:51.489456300Z",
+      "traceId": "ec8f55c5915bb43df398579f336e3919",
+      "spanId": "eb7314cd2f95e1c3",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 258719,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:51.509595500Z",
+      "traceId": "e513b2eb1710bb4b2402f31269737238",
+      "spanId": "d7fa8146fb94d509",
+      "parentId": "f833c09679949bd7",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "ERROR",
+      "durationUs": 17691,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "RESERVE_INSUFFICIENT",
+        "effect.path": "after_commit",
+        "payment.id": "347281cb-8e1c-4b63-bd4c-95a496e42b49"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:51.511595Z",
+      "traceId": "e513b2eb1710bb4b2402f31269737238",
+      "spanId": "f833c09679949bd7",
+      "parentId": "b183f71ab5254e00",
+      "name": "POST /api/clearing/callbacks",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 32588,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/clearing/callbacks",
+        "http.response.status_code": 200,
+        "trace.remote_parent": true
+      }
+    },
+    {
+      "system": "simulator",
+      "end": "2026-11-16T01:27:51.516541500Z",
+      "traceId": "e513b2eb1710bb4b2402f31269737238",
+      "spanId": "b183f71ab5254e00",
+      "parentId": null,
+      "name": "callback.dispatch",
+      "kind": "PRODUCER",
+      "status": "OK",
+      "durationUs": 52289,
+      "links": [
+        "00-9c5b3bb25c4d0e859139e4949b1f2a5b-abf83b9b402ace76-01"
+      ],
+      "attributes": {
+        "messaging.message.id": "c51d38b1-8e69-4d1f-b0f1-6e92d685c129",
+        "callback.attempt": 1
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:52.422285500Z",
+      "traceId": "ca51a917fe1a26e7d0b6aed0294ddfc3",
+      "spanId": "7a829e8d4660042b",
+      "parentId": "3f4b88f5d053e767",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "ERROR",
+      "durationUs": 5646,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "RESERVE_INSUFFICIENT",
+        "effect.path": "outbox",
+        "payment.id": "347281cb-8e1c-4b63-bd4c-95a496e42b49"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:52.427287700Z",
+      "traceId": "ca51a917fe1a26e7d0b6aed0294ddfc3",
+      "spanId": "3f4b88f5d053e767",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.callback.accepted",
+      "kind": "CONSUMER",
+      "status": "ERROR",
+      "durationUs": 11324,
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "d340bf84-7095-4292-9b84-a7e84652d691",
+        "outbox.outcome": "failure",
+        "outbox.event_type": "clearing.callback.accepted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:53.450353Z",
+      "traceId": "589211518fad3825aa746dc342cb4f53",
+      "spanId": "aa933a0809fe1f16",
+      "parentId": "957f57c1c9188eaf",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "ERROR",
+      "durationUs": 6577,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "RESERVE_INSUFFICIENT",
+        "effect.path": "outbox",
+        "payment.id": "347281cb-8e1c-4b63-bd4c-95a496e42b49"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:53.453877900Z",
+      "traceId": "589211518fad3825aa746dc342cb4f53",
+      "spanId": "957f57c1c9188eaf",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.callback.accepted",
+      "kind": "CONSUMER",
+      "status": "ERROR",
+      "durationUs": 10832,
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 2,
+        "messaging.message.id": "d340bf84-7095-4292-9b84-a7e84652d691",
+        "outbox.outcome": "failure",
+        "outbox.event_type": "clearing.callback.accepted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:53.488757900Z",
+      "traceId": "78b8623bcf2fc10f4eb47fa43a601c3e",
+      "spanId": "b9192aff845d3814",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 258063,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:55.481520100Z",
+      "traceId": "d0e8db5ebcb6e16ac136fc7f6ab986c3",
+      "spanId": "393b01be82960323",
+      "parentId": "e56e75f0f54f607a",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "ERROR",
+      "durationUs": 5771,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "RESERVE_INSUFFICIENT",
+        "effect.path": "outbox",
+        "payment.id": "347281cb-8e1c-4b63-bd4c-95a496e42b49"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:55.482936400Z",
+      "traceId": "9150b7845844f62034a77ee1c056863b",
+      "spanId": "2352c7bbd2361fc1",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 252624,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:55.484596200Z",
+      "traceId": "d0e8db5ebcb6e16ac136fc7f6ab986c3",
+      "spanId": "e56e75f0f54f607a",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.callback.accepted",
+      "kind": "CONSUMER",
+      "status": "ERROR",
+      "durationUs": 9886,
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 3,
+        "messaging.message.id": "d340bf84-7095-4292-9b84-a7e84652d691",
+        "outbox.outcome": "failure",
+        "outbox.event_type": "clearing.callback.accepted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:57.482738800Z",
+      "traceId": "53a5a8404627553cd3069d03c9c42e13",
+      "spanId": "32dc6ad6db164abb",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 252320,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:59.488152Z",
+      "traceId": "6fb63f869f9a0b7650c43eecb8b39f9d",
+      "spanId": "cb57d8e77a466979",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 257428,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:59.530498300Z",
+      "traceId": "4afeed1e7553c311e301c631bd817349",
+      "spanId": "f1855b7e5ad1a9a8",
+      "parentId": "1b3608cc683c9762",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "ERROR",
+      "durationUs": 4632,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "RESERVE_INSUFFICIENT",
+        "effect.path": "outbox",
+        "payment.id": "347281cb-8e1c-4b63-bd4c-95a496e42b49"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:27:59.534033600Z",
+      "traceId": "4afeed1e7553c311e301c631bd817349",
+      "spanId": "1b3608cc683c9762",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.callback.accepted",
+      "kind": "CONSUMER",
+      "status": "ERROR",
+      "durationUs": 8641,
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 4,
+        "messaging.message.id": "d340bf84-7095-4292-9b84-a7e84652d691",
+        "outbox.outcome": "failure",
+        "outbox.event_type": "clearing.callback.accepted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:01.591984100Z",
+      "traceId": "4bc611ab03d8f76b8f62f01240a69924",
+      "spanId": "b3d3afe0cfa70d06",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 362024,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:03.525424500Z",
+      "traceId": "12157e388167c5d5135712b3c4ec6728",
+      "spanId": "15d6185bf74030d9",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 292768,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:05.483915100Z",
+      "traceId": "01240e0d5033f97f3b4cfdb1ea2e3eec",
+      "spanId": "1e7e8bbd233255c3",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 253066,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:07.491757300Z",
+      "traceId": "f954d13610e8cab55cf28858ddcdec04",
+      "spanId": "0b327c1de6c3fae1",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 260952,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:07.626630300Z",
+      "traceId": "00a2bb609dbf218815a2ddbd6d2db653",
+      "spanId": "f226e564772e8a25",
+      "parentId": "8eac420fd63f64f9",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "ERROR",
+      "durationUs": 5734,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "RESERVE_INSUFFICIENT",
+        "effect.path": "outbox",
+        "payment.id": "347281cb-8e1c-4b63-bd4c-95a496e42b49"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:07.629627Z",
+      "traceId": "00a2bb609dbf218815a2ddbd6d2db653",
+      "spanId": "8eac420fd63f64f9",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.callback.accepted",
+      "kind": "CONSUMER",
+      "status": "ERROR",
+      "durationUs": 9971,
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 5,
+        "messaging.message.id": "d340bf84-7095-4292-9b84-a7e84652d691",
+        "outbox.outcome": "failure",
+        "outbox.event_type": "clearing.callback.accepted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:09.487056Z",
+      "traceId": "9b77507cf59b10d64befca4224322292",
+      "spanId": "c5570c88f4a96e31",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 256014,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:11.493476400Z",
+      "traceId": "0cbf0d41847704d174118c6fa4363734",
+      "spanId": "c53b50730d2d9b17",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 263040,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:13.487121300Z",
+      "traceId": "ac015768a8bf7fa43820f998b71c1173",
+      "spanId": "1ffe1c5834451a4b",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 256117,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:15.502650100Z",
+      "traceId": "cf110650517914648c05f92474d4000b",
+      "spanId": "8910346fba999df1",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 272869,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:17.483418900Z",
+      "traceId": "64d7a58a0c8fb6a153176bb8055a8253",
+      "spanId": "9fb308c5dc1b346f",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 253059,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:19.490201800Z",
+      "traceId": "3f278118fc621c34d7ea4cb06876b1ef",
+      "spanId": "6db4f63beaf92f00",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 259241,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:21.486477700Z",
+      "traceId": "5d09d8ed82a8509f1b346dc01efa1c26",
+      "spanId": "3e18b2ca48f76640",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 255540,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:23.482078800Z",
+      "traceId": "f959a07829fe66b0d5a2c394c6563523",
+      "spanId": "a67d37c61b9e0465",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 251778,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:25.494608100Z",
+      "traceId": "48cc2780791b0cfc22b0eb56a8f92243",
+      "spanId": "78dd49b70fdbd145",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 264011,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:27.496820700Z",
+      "traceId": "81fcc725dda173e2d666304bb0129b96",
+      "spanId": "95337500503bf958",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 266346,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:29.496983200Z",
+      "traceId": "50f36ecc0aba61fef999a9f2e3f7e382",
+      "spanId": "a493e352288b8193",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 266770,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:31.478668500Z",
+      "traceId": "a9cf876fa14c2e62505148ae4a2dbfd6",
+      "spanId": "e9cb404c3583ce67",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 248215,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:33.528042300Z",
+      "traceId": "b250661b9bf9962323137d910c23460b",
+      "spanId": "cbf7faefe0dfe02f",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 296414,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:35.494034200Z",
+      "traceId": "2aac95243630cdb3a0445314bc05b48d",
+      "spanId": "abd703db7ddee896",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 263314,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:37.504281300Z",
+      "traceId": "a541fcf76990cecd89823ac1bd0cda24",
+      "spanId": "5e8bb0c1cbb36d2c",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 273834,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:39.496753600Z",
+      "traceId": "0bfe48b0bb1f20f317cee5e760f62fd0",
+      "spanId": "034490fc006d9d9a",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 266073,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:41.487103600Z",
+      "traceId": "43c6837226d9a182dd7759a33340b6d9",
+      "spanId": "fe474b0769514f15",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 256187,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:43.495145500Z",
+      "traceId": "dd98fb290d68f178be9bcfae4c8189fc",
+      "spanId": "47713439dd7fc07c",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 264607,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:45.497301300Z",
+      "traceId": "6ae332cb1837edeca983f7e5b4a26cae",
+      "spanId": "bd5c5a618355cf01",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 266052,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:47.529861200Z",
+      "traceId": "7e532794ec7a6b75f5d4c0a715eeeecc",
+      "spanId": "e3e04eef4d568474",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 299800,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:49.486529200Z",
+      "traceId": "5f58b4d6f11dc6cef24dea60ff3a49b7",
+      "spanId": "700ca5f8d244bcc7",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 255934,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:51.483192400Z",
+      "traceId": "87c5843b5f0152384405fd75912b2bfd",
+      "spanId": "4ce2e42e0eadad69",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 252521,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:53.495601600Z",
+      "traceId": "b14f74da561d57b06acaf438d193bafc",
+      "spanId": "26f3fc54417d9d31",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 265360,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:55.516238Z",
+      "traceId": "78921b2005448868cef5ef9cb7f97d5b",
+      "spanId": "f82f5a6f0ccfb807",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 285383,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:57.502577100Z",
+      "traceId": "8ecf3fcd1df370bc2f4ab647e94c7d99",
+      "spanId": "f1a12da0424dbe50",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 270658,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:28:59.487617700Z",
+      "traceId": "04a5472a684b713180a3cf634b1fb9ba",
+      "spanId": "651aa1230b5265c1",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 257400,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:01.502320900Z",
+      "traceId": "85b30a3b11e2e3d255aa3ff42a3bdee8",
+      "spanId": "7f880e23a47b5e50",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 271357,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:03.514474700Z",
+      "traceId": "48aa8e3123b4d9fb50aa8c2b74af0cd6",
+      "spanId": "13c0e5b0462cd21e",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 283660,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:05.512729300Z",
+      "traceId": "b89841557c78d64a4f58204b5993a516",
+      "spanId": "2faf984919d97552",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 282393,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:07.537399700Z",
+      "traceId": "654ddc2ac2f208cdd41455f2bbbe50b8",
+      "spanId": "a4bdf38608d8c346",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 306283,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:09.496316700Z",
+      "traceId": "9910e461bfbc931a0fc4b25bd6283077",
+      "spanId": "0563b5e7bd110a66",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 264956,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:11.529180900Z",
+      "traceId": "3c70e2ac84393ad24ece142bd916c938",
+      "spanId": "08b962e82f52f1a6",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 298163,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:13.529410900Z",
+      "traceId": "cdb79d00a9133e66e842b2bd6834ef37",
+      "spanId": "48d357eb50c12aee",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 298922,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:15.511129700Z",
+      "traceId": "9bb30230a1f6f09692360099f026b18f",
+      "spanId": "dd3d1ebffc5748c6",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 279968,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:16.972045600Z",
+      "traceId": "3c4dc85b0c15ed24c956317ea2e9fac8",
+      "spanId": "b302829ee788f21f",
+      "parentId": null,
+      "name": "GET /api/auth/csrf",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 1948,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/api/auth/csrf",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:16.994146500Z",
+      "traceId": "0e50aead4f97854bdccc46163b5c630b",
+      "spanId": "c90b31f9c297fa40",
+      "parentId": null,
+      "name": "POST /api/organizations/{organizationId}/operations/outbox/{eventId}/retry",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 16770,
+      "links": [],
+      "attributes": {
+        "http.request.method": "POST",
+        "http.route": "/api/organizations/{organizationId}/operations/outbox/{eventId}/retry",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:17.443013400Z",
+      "traceId": "6ddfbf1dab50a9dabefc125fdab974ec",
+      "spanId": "6b0d168856d32875",
+      "parentId": "7808c5a4866a62b7",
+      "name": "clearing.financial_effect",
+      "kind": "INTERNAL",
+      "status": "OK",
+      "durationUs": 12259,
+      "links": [],
+      "attributes": {
+        "effect.outcome": "APPLIED",
+        "effect.path": "outbox",
+        "payment.id": "347281cb-8e1c-4b63-bd4c-95a496e42b49"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:17.447585200Z",
+      "traceId": "6ddfbf1dab50a9dabefc125fdab974ec",
+      "spanId": "7808c5a4866a62b7",
+      "parentId": null,
+      "name": "outbox.dispatch clearing.callback.accepted",
+      "kind": "CONSUMER",
+      "status": "OK",
+      "durationUs": 17452,
+      "links": [
+        "00-e513b2eb1710bb4b2402f31269737238-f833c09679949bd7-01"
+      ],
+      "attributes": {
+        "outbox.attempt": 1,
+        "messaging.message.id": "d340bf84-7095-4292-9b84-a7e84652d691",
+        "outbox.outcome": "success",
+        "outbox.event_type": "clearing.callback.accepted"
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:17.495779400Z",
+      "traceId": "73a5ea8d615525f053c12622a932d5a5",
+      "spanId": "fc4fb56a91400eba",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 264887,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:19.492116100Z",
+      "traceId": "1d16134702651d9ae4c81d02ccaa6552",
+      "spanId": "755aeff047549e0a",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 261551,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:21.633930400Z",
+      "traceId": "093e66cc6ae0e3698257e2084fd9edac",
+      "spanId": "f4ac32adb8513856",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 403100,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:23.536131400Z",
+      "traceId": "dfab61566fbad4a69560b3b2850cba05",
+      "spanId": "d244860698c309a5",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 305103,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    },
+    {
+      "system": "bank",
+      "end": "2026-11-16T01:29:25.490966100Z",
+      "traceId": "1400056b8e1001a5f88e9cc6f4ac6405",
+      "spanId": "d07d5655f4ce27f0",
+      "parentId": null,
+      "name": "GET /actuator/prometheus",
+      "kind": "SERVER",
+      "status": "OK",
+      "durationUs": 260466,
+      "links": [],
+      "attributes": {
+        "http.request.method": "GET",
+        "http.route": "/actuator/prometheus",
+        "http.response.status_code": 200,
+        "trace.remote_parent": false
+      }
+    }
+  ],
+  "chainComplete": true
+}
