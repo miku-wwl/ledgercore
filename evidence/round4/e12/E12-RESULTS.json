@@ -1,0 +1,981 @@
+{
+  "schemaVersion": 1,
+  "runId": "2cd9995a-3c4d-40c6-b803-ae1d8162bdeb",
+  "mode": "collect",
+  "label": "E12 results 2c25ef4",
+  "sourceSha": "2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd",
+  "trackedTreeDirty": false,
+  "startedAt": "2026-11-16T02:19:34.9379227Z",
+  "included": [
+    "238be480-46bf-4b96-905b-7b80797a8263",
+    "2322a13e-45cd-4c73-b181-520a74de8502"
+  ],
+  "cases": [
+    {
+      "id": "E12-A01",
+      "category": "A Ledger and internal transfer",
+      "dimension": "financial",
+      "title": "Every committed journal balances; amounts are exact NZD minor units; posted history is append-only",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.ledger.MoneyTests#parsesAndFormatsExactMinorUnits",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#postgresRejectsAnUnbalancedJournalAtCommitAndRollsBackItsRows",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.JournalEntryTests#reversalIsANewEntryWithEveryPostingSideFlipped",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#openingFundingPersistsTwoBalancedPostingsAndARebuildableProjection",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#databaseRejectsMutationAndDeletionOfPostedHistory",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#accountSuspensionStopsFundingUntilTheAccountIsReactivated",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#aFailureAfterAccountAndJournalWritesRollsBackTheWholeOpeningTransaction",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#simulatedDepositUpdatesLedgerAndProjectionInTheSameTransaction",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#reversalsAppendOppositePostingsAndAllowAZeroBalanceAccountToClose",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#preventsDuplicateOpeningFundingForTheSameCustomerAccount",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.MoneyTests#rejectsZeroNegativeNonCanonicalAndOverflowAmounts",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#rejectsZeroNegativeAndUnknownAccountFunding",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.JournalEntryTests#rejectsUnbalancedDuplicateAndSingleAccountEntries",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.JournalEntryTests#openingFundingBalancesTheSimulationReserveAndCustomerLiability",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.ledger.MoneyTests#detectsArithmeticOverflow",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#transferIsDoubleEntryAtomicAndItsSuccessfulReceiptIsDurable",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#postgresRejectsTransferRowsThatDoNotMatchTheirJournalPostings",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_238be480_verify",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_2322a13e_fsbank",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-A02",
+      "category": "A Ledger and internal transfer",
+      "dimension": "financial",
+      "title": "Identical idempotency key returns the original receipt; a changed payload under the same key is rejected; a lost response recovers with the original key",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentSameKeyWithDifferentIntentHasOneWinnerAndOneConflict",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentSameKeyAndSameIntentReturnOnePersistedReceipt",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#originalKeyRecoversACommittedTransferWhenTheFirstResponseIsLost",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#successfulReplayRechecksSourceOwnershipBeforeReturningTheReceipt",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-A03",
+      "category": "A Ledger and internal transfer",
+      "dimension": "financial",
+      "title": "Concurrent debits of one hot payer never overdraw; opposing transfers use a deterministic lock order without deadlock",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentDifferentKeysCannotOverdrawOneSourceAccount",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentCrossTransfersUseDeterministicAccountLocksWithoutDeadlock",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-A04",
+      "category": "A Ledger and internal transfer",
+      "dimension": "financial",
+      "title": "Any failure inside the transfer transaction rolls back journal, postings, projection, receipt and outbox together; crash before commit leaves nothing",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#secondPostingFailureRollsBackFirstPostingAndIdempotencyReservation",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#receiptPersistenceFailureRollsBackLedgerAndTransferWrites",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#journalInsertFailureRollsBackIdempotencyReservationAndTransferState",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#projectionUpdateFailureRollsBackPostingsAndIdempotencyReservation",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#transferAndItsOutboxFactRollBackTogether",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::transfer-precommit-crash.recovery",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::transfer-postcommit-response-crash.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-B01",
+      "category": "B Corporate identity and Policy B",
+      "dimension": "security",
+      "title": "Executed role x route x object matrix: 12 principals x 44 routes, concealment 404, missing role 403, denied mutations without side effects",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#everyRoleRouteAndObjectCombinationIsEnforcedWithoutSideEffects",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-B02",
+      "category": "B Corporate identity and Policy B",
+      "dimension": "security",
+      "title": "Maker cannot approve their own payment or payroll even when holding both roles; approval binds the immutable digest and version",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#aMemberHoldingBothMakerAndApproverRolesCannotApproveTheirOwnPaymentOrPayroll",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#concurrentApprovalRetriesCreateOneFinancialBookingAndClearingInstruction",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#itemChangesRacingApprovalCannotAlterTheApprovedContent",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-B03",
+      "category": "B Corporate identity and Policy B",
+      "dimension": "security",
+      "title": "Generic transfers cannot debit a corporate account; payroll identities cannot be claimed by public transfers",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#receiptRecorderCannotBypassApprovedCorporateOperationBoundary",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#publicTransfersCannotClaimReservedPayrollIdempotencyKeys",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-B04",
+      "category": "B Corporate identity and Policy B",
+      "dimension": "security",
+      "title": "Role revocation, member suspension and organization suspension remove authority; admin self-grant is refused; actions are audited",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#anApproverWhoseRoleIsRevokedAfterSubmissionCanNoLongerBookThePayment",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#corporateOwnershipMembershipRolesAndTransfersUsePostgres",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#concurrentApprovalRetriesCreateOneFinancialBookingAndClearingInstruction",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#suspendedPaymentApproverRequiresExplicitAuditedReactivation",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#suspendedOrganizationCannotStartPayrollExecution",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#suspendedCreatorMembershipFailsItemsClosedWithAnExplicitReason",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#revokedCreatorRoleFailsItemsClosedWithAnExplicitReason",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-B05",
+      "category": "B Corporate identity and Policy B",
+      "dimension": "security",
+      "title": "State changes without or with a forged CSRF token are rejected; sessions rotate on authentication",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#stateChangingRequestsWithoutCsrfAreRejectedForEveryAuthenticatedPrincipalClass",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.FullStackApiPostgresIntegrationTests#sessionsCsrfOwnershipTransfersReceiptsHistoryAndReconciliationUsePostgres",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-C01",
+      "category": "C Payroll",
+      "dimension": "financial",
+      "title": "500 synthetic employees are paid exactly once with deterministic per-item identity and reconciled balances",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#processesAndReconcilesFiveHundredSyntheticEmployeesExactlyOnce",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_238be480_verify",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_2322a13e_fsbank",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-C02",
+      "category": "C Payroll",
+      "dimension": "async",
+      "title": "Competing executors and batches sharing a payer pay each item once and never overdraw",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#overlappingExecutionsOfOneBatchPayEachItemExactlyOnce",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#concurrentBatchesSharingOnePayerNeverOverdrawIt",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-C03",
+      "category": "C Payroll",
+      "dimension": "recovery",
+      "title": "Worker crash after a failed item rolled back but before its failure was recorded: restart records it once, pays the rest once",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::payroll-mark-failure-crash.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-C04",
+      "category": "C Payroll",
+      "dimension": "async",
+      "title": "Transient and terminal item failures are durable; results cannot be forged, deleted or completed early",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#insufficientFundsAreDurableWithoutPostingOrOverdraft",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#transferAndPayrollResultRollbackTogetherOnDatabaseWriteFailure",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#payrollResultsCannotBeDeletedInAnyState",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#batchCompletionFailsClosedWhenAResultRowIsMissing",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#resultsCannotBeForgedOrAdvancedOutsideProcessing",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#unclassifiedTransferFailureLeavesTheItemPendingAndStopsExecution",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-D01",
+      "category": "D Durable events",
+      "dimension": "async",
+      "title": "Business fact and outbox event commit together; concurrent publishers and dispatchers deliver each event once",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#concurrentPublishersAndDispatchersDeliverEveryEventOnce",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#retriesExpiredLeasesIdempotentlyAndAllowsAuditedDeadLetterRecovery",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#transferAndItsOutboxFactRollBackTogether",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#carriesPersistedCorrelationIdIntoBackgroundHandlerAndRestoresWorkerContext",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-D02",
+      "category": "D Durable events",
+      "dimension": "recovery",
+      "title": "Interrupted dispatch: an event persisted before a crash is delivered after restart; expired leases are retried idempotently",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#retriesExpiredLeasesIdempotentlyAndAllowsAuditedDeadLetterRecovery",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::transfer-outbox-before-dispatch.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-D03",
+      "category": "D Durable events",
+      "dimension": "async",
+      "title": "Retry exhaustion dead-letters visibly; a governed retry is role-gated, audited and idempotent",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#genuinelyFiniteReserveHoldsTheObligationUntilAuditedReplenishmentAndGovernedRetry",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E01",
+      "category": "E Clearing",
+      "dimension": "financial",
+      "title": "Settlement, definitive rejection and accepted/pending outcomes post exactly the journals their persisted outcome justifies",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallbackWhoseEffectNeverRanIsDetectedThenCompletedOnceFromItsDurableWorkItem",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#rejectedCallbackWhoseRefundNeverRanIsDetectedThenRefundedOnceWithoutSettlement",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#acceptedOperationMovesThroughPendingBeforeSettlement",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_238be480_verify",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_2322a13e_fsbank",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E02",
+      "category": "E Clearing",
+      "dimension": "async",
+      "title": "UNKNOWN outcome is resolved by inquiry under the original operation identity and digest; no refund or new identity",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#unknownOutcomeCanBeResolvedByInquiryWithoutChangingOperationIdentity",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#operationIdentityCannotBeReusedWithDifferentFinancialFacts",
+          "outcome": "PASS"
+        },
+        {
+          "source": "enterprise-operations.spec.ts#Operations resolves an UNKNOWN clearing result and records a verified reconciliation exception",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E03",
+      "category": "E Clearing",
+      "dimension": "security",
+      "title": "Signed callbacks: tampered, missing-header, replayed, reused-id, wrong-digest, colliding, gapped and contradictory callbacks never move money twice",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingCallbackLifecyclePostgresIntegrationTests#signedCallbackLifecycleRejectsTamperingAndRecordsEveryConflictWithoutASecondEffect(CapturedOutput)",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingCallbackSecurityIntegrationTests#callbackEndpointRejectsBadAndExpiredMacsButAcceptsSignedUnknownOperationAsException",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E04",
+      "category": "E Clearing",
+      "dimension": "recovery",
+      "title": "Crash after the callback commit, inside the uncommitted settlement, or before the acknowledgement: the original identity settles exactly once after restart without simulator redelivery",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::clearing-callback-commit-crash.recovery",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::clearing-effect-precommit-crash.recovery",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::clearing-effect-ack-crash.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E05",
+      "category": "E Clearing",
+      "dimension": "recovery",
+      "title": "A terminated database session during the settlement leaves durable work that completes it once",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectFastPathFailurePostgresIntegrationTests#terminatedSettlementSessionStillAcknowledgesButLeavesDurableWorkThatCompletesOnce",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::clearing-effect-session-kill.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E06",
+      "category": "E Clearing",
+      "dimension": "recovery",
+      "title": "Genuinely insufficient reserve: obligation kept, CRITICAL exception, restart, audited replenishment, one governed retry, exactly one settlement",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#genuinelyFiniteReserveHoldsTheObligationUntilAuditedReplenishmentAndGovernedRetry",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#reserveLiquidityTransfersAreBalancedReplayableAndCannotOverdrawEitherAsset",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::clearing-reserve-shortage.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E07",
+      "category": "E Clearing",
+      "dimension": "recovery",
+      "title": "Callbacks lost beyond the simulator's delivery budget are detected and redelivered in order after an authenticated inquiry",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#authenticatedInquiryRearmsDeadCallbacksWithTheirOriginalIdentity",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#rearmingCannotRewriteCallbackFactsOrKeepTheSpentBudget",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::clearing-lost-callback.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E08",
+      "category": "E Clearing",
+      "dimension": "async",
+      "title": "Competing workers, a duplicate callback and a direct retry produce exactly one settlement",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#competingWorkersDuplicateCallbackAndDirectRetryPostExactlyOneSettlement",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-E09",
+      "category": "E Clearing",
+      "dimension": "recovery",
+      "title": "Simulator crash with an ACCEPTED operation: the bank's inquiry fails and is reported, nothing is assumed; after restart the same operation settles once",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "evidence/round4/e12/lab/E12-LAB.json::clearing-simulator-restart.recovery",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-F01",
+      "category": "F Reconciliation",
+      "dimension": "financial",
+      "title": "Projection drift is detected exactly and repaired from immutable postings only",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.reconciliation.ReconciliationPostgresIntegrationTests#reconcilesHealthyOrganizationThenDetectsAndResolvesProjectionAnomaly",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-F02",
+      "category": "F Reconciliation",
+      "dimension": "financial",
+      "title": "A terminal external outcome without its local journal is detected while the payment is not COMPLETED, also after restart and without a new callback",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallbackWhoseEffectNeverRanIsDetectedThenCompletedOnceFromItsDurableWorkItem",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectFastPathFailurePostgresIntegrationTests#terminatedSettlementSessionStillAcknowledgesButLeavesDurableWorkThatCompletesOnce",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-F03",
+      "category": "F Reconciliation",
+      "dimension": "financial",
+      "title": "Negative fixtures: corrupt payment, journal, payroll and event states are refused by PostgreSQL with valid rows unchanged; recoverable dead work is reported",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#concurrentReconciliationRunsKeepOneOpenExceptionPerAnomalyAndNeverLeakToAnotherTenant",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#corruptPayrollHistoryIsRefusedAndDeadWorkIsDetected",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#corruptPaymentAndLedgerStatesAreRefusedByTheDatabaseWithoutTouchingValidRows",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#approvedItemsCannotBeMovedToAnotherBatchOrRewrittenThere",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#completedPayrollHistoryCannotBeMovedOrErased",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-F04",
+      "category": "F Reconciliation",
+      "dimension": "security",
+      "title": "CRITICAL exceptions close only after an independent recheck; the actor and the recheck are audited; undispatched instructions are reported",
+      "hardGate": true,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallbackWhoseEffectNeverRanIsDetectedThenCompletedOnceFromItsDurableWorkItem",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#bookedInstructionAcknowledgedWithoutDispatchIsReportedInsteadOfStayingSilentlyPending",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-F05",
+      "category": "F Reconciliation",
+      "dimension": "security",
+      "title": "Exceptions and Operations views stay inside the tenant",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.operations.OperationsConsolePostgresIntegrationTests#showsScopedMetricsAuditAndCorrelationSearchOnlyToOperationsMembers",
+          "outcome": "PASS"
+        },
+        {
+          "source": "enterprise-operations.spec.ts#Operations endpoints conceal a different organization",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-G01",
+      "category": "G Backup and recovery",
+      "dimension": "recovery",
+      "title": "Migrations: fresh install, populated V4/V5/V6/V8/V11 upgrades without rewriting history, V7 and V15 refuse inconsistent history; checksums pinned",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV5CorporateSchemaUpgradesThroughPayrollMigrations",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#applicationFlywayRegistersTheV5LegacyBackfillCallback",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#v7RefusesToMigratePayrollHistoryWithAMissingResult",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#v15RefusesToMigrateACompletedPaymentThatHasNoSettlementJournal",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV8ClearingIntentUpgradesAndEnforcesForwardOnlyOutcomeTransitions",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV4PersonalBankingSchemaUpgradesWithoutChangingItsHistory",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#publishedMigrationsKeepTheirRecordedFlywayChecksums",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#freshSchemaMigratesToTheLatestVersionWithPublishedChecksums",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV11WithAStrandedSettlementUpgradesToDurableWorkWithoutPostingMoney",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV6PayrollSchemaUpgradesToV8WithoutRewritingResults",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-G02",
+      "category": "G Backup and recovery",
+      "dimension": "recovery",
+      "title": "Logical backup (pg_dump -Fc) of the bank while a payment is only ACCEPTED, restore into a new database after the live bank settled it, and recovery of the simulator's later callbacks under the original operation identity with no second booking; measured RPO/RTO of this run",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "evidence/round4/e12/lab/E12-RESTORE.json::verdict",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": "Logical backup and restore of the bank database on one workstation: not PITR, not offsite, not a storage failure. Round 3 E10 holds the only PITR run (one local run, RPO 118.922 s, RTO 670.008 s); it is cited, not re-executed."
+    },
+    {
+      "id": "E12-H01",
+      "category": "H React and operations",
+      "dimension": "fullstack",
+      "title": "Real-API Chromium journeys: personal banking, corporate maker/checker settlement, payroll with lost response, UNKNOWN inquiry, exception, concealment, role denial and revocation",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "banking-flow.spec.ts#registers, transfers, recovers a lost response, pages history, and enforces ownership",
+          "outcome": "PASS"
+        },
+        {
+          "source": "organization-flow.spec.ts#organization admin grants a payroll maker access without exposing corporate funds to generic transfers",
+          "outcome": "PASS"
+        },
+        {
+          "source": "payroll-flow.spec.ts#maker imports and submits payroll; independent approver executes once after a lost response",
+          "outcome": "PASS"
+        },
+        {
+          "source": "enterprise-operations.spec.ts#Operations resolves an UNKNOWN clearing result and records a verified reconciliation exception",
+          "outcome": "PASS"
+        },
+        {
+          "source": "enterprise-operations.spec.ts#maker/checker payment reaches a real settlement and self-approval is rejected",
+          "outcome": "PASS"
+        },
+        {
+          "source": "enterprise-operations.spec.ts#revoked Operations role cannot inquire during a pending business operation",
+          "outcome": "PASS"
+        },
+        {
+          "source": "enterprise-operations.spec.ts#non-Operations member is denied a reconciliation action by the backend",
+          "outcome": "PASS"
+        },
+        {
+          "source": "enterprise-operations.spec.ts#Operations endpoints conceal a different organization",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_238be480_verify",
+          "outcome": "PASS"
+        },
+        {
+          "source": "grader:ledgercore_e12_2322a13e_fsbank",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": null
+    },
+    {
+      "id": "E12-H02",
+      "category": "H React and operations",
+      "dimension": "fullstack",
+      "title": "Accessibility subset on the real application: on nine screens every interactive control and image has an accessible name in the computed accessibility tree, one main landmark, a level-1 heading, a document language and title, and no duplicate element ids",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "accessibility.spec.ts#main screens expose named controls, landmarks, headings, language and unique ids",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": "Not an axe-core or WCAG conformance audit: colour contrast, complete focus order and real screen-reader behaviour are not assessed. E11 keyboard paths and the 390 px overflow check are cited from Round 3."
+    },
+    {
+      "id": "E12-H03",
+      "category": "H React and operations",
+      "dimension": "observability",
+      "title": "Alerting: a real Prometheus 3.13.3 scrape fires the owed-effect and reserve-shortfall alerts on a genuinely created shortage (shortfall 30.00 NZD measured) and both resolve after the audited replenishment and one governed retry",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "evidence/round4/e5-e9/E9-ALERT-LAB.json::verdict",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": "Rule evaluation only; notification delivery (Alertmanager, paging) is out of scope."
+    },
+    {
+      "id": "E12-H04",
+      "category": "H React and operations",
+      "dimension": "observability",
+      "title": "W3C trace continuity: approval -> instruction dispatch -> simulator request -> callback delivery -> bank callback -> settlement, stitched only through recorded parent ids and links; client trace ids are never authority",
+      "hardGate": false,
+      "verdict": "PASS",
+      "evidence": [
+        {
+          "source": "nz.ac.ledgercore.TracePropagationPostgresIntegrationTests#inboundTraceIsContinuedPersistedWithOutboxWorkAndLinkedFromItsDispatchTrace(CapturedOutput)",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.api.TraceContextTests#acceptsVersionZeroTraceparentAndContinuesTheSameTrace",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.api.TraceContextTests#rejectsMalformedUnknownVersionUppercaseAndAllZeroIdentifiers",
+          "outcome": "PASS"
+        },
+        {
+          "source": "nz.ac.ledgercore.api.TraceContextTests#newRootsAreRandomSampledAndScopesRestoreThePreviousContext",
+          "outcome": "PASS"
+        },
+        {
+          "source": "evidence/round4/e5-e9/E9-TRACES.json::chainComplete",
+          "outcome": "PASS"
+        }
+      ],
+      "limitation": "Spans are retained as structured local log records; there is no trace backend or sampling policy."
+    }
+  ],
+  "counts": {
+    "total": 36,
+    "pass": 36,
+    "partial": 0,
+    "fail": 0,
+    "notRun": 0,
+    "hardGateFailures": 0
+  },
+  "dimensions": {
+    "async": {
+      "total": 6,
+      "pass": 6,
+      "notPass": []
+    },
+    "financial": {
+      "total": 9,
+      "pass": 9,
+      "notPass": []
+    },
+    "fullstack": {
+      "total": 2,
+      "pass": 2,
+      "notPass": []
+    },
+    "observability": {
+      "total": 2,
+      "pass": 2,
+      "notPass": []
+    },
+    "recovery": {
+      "total": 9,
+      "pass": 9,
+      "notPass": []
+    },
+    "security": {
+      "total": 8,
+      "pass": 8,
+      "notPass": []
+    }
+  },
+  "sources": [
+    {
+      "runId": "238be480-46bf-4b96-905b-7b80797a8263",
+      "mode": "verify",
+      "sourceSha": "2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd",
+      "trackedTreeDirty": false
+    },
+    {
+      "runId": "2322a13e-45cd-4c73-b181-520a74de8502",
+      "mode": "fullstack",
+      "sourceSha": "2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd",
+      "trackedTreeDirty": false
+    }
+  ]
+}

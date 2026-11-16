@@ -19,3 +19,21 @@
 | R3-E11-FULLSTACK | E11 | Verify real API-backed personal/corporate banking, payroll, operations, security boundaries, responsive behavior, and genuine screenshots | `evidence/round3/e11/LOCAL-VALIDATION.md`; Chromium transcript and screenshots in `evidence/round3/e11/` | VALIDATED: feature commit `fdd4e0d7ef7aef7f944b24db5463efe9c34141b4`; CI-fix commit `de0624c34cbd11f7d847e5dc5c48ee5efc20a475`; exact CI [43626858589](https://github.com/miku-wwl/ledgercore/actions/runs/43626858589) passed both jobs, including 8/8 Chromium tests and Maven OSV; local backend 95/95, simulator 6/6, lint/build/OpenAPI, and Chromium 8/8 passed |
 
 Round 2 experiments were pre-registered at commit `1b6ed68` in `evidence/round2/performance/PRE-REGISTRATION.md` before measurement; Round 2 annotations on E3 are in `evidence/round2/performance/ROUND-1-ANNOTATIONS.md`. The full E3 result synthesis and figures are in `evidence/e3/analysis/SUMMARY.md`; generated figures are derived from the preserved samples and PostgreSQL output. None of the local performance values are production capacity claims.
+
+## Round 4 experiments (Claude Opus 5.5)
+
+| ID | Stage | Purpose | Evidence location | Status |
+|---|---|---|---|---|
+| R4-BASELINE | Round 4 | Reproduce the Round 3 handoff on fresh databases | `evidence/round4/baseline/BASELINE.md` | Executed; 95/95 backend, 6/6 simulator, 0 unbalanced journals |
+| R4-01-REPRO | Round 4 | Crash windows A–E around the callback/effect boundary before the fix (instrumented `94a2978`) | `evidence/round4/reproductions/` | Executed; A, C, D recovery FAIL (defect reproduced); red tests preserved |
+| R4-04-REPRO | Round 4 | Bank outage longer than the simulator delivery budget before the fix | `evidence/round4/reproductions/R4-04-prefix-lost-callback.json` | Executed; callbacks never redelivered (defect reproduced) |
+| R4-REMEDIATION | Round 4 | Same crash windows, A*, reserve shortage and lost callback after the fix (`d529208`) | `evidence/round4/remediation/` | Executed; all recoveries PASS |
+| E12-SHAKEDOWN | E12 | Dirty-tree trial of never-executed E12 scripts | `evidence/round4/e12/shakedown/` | Executed; two harness defects found and fixed; not acceptance evidence |
+| E12-ATTEMPT-1 | E12 | First official E12 sequence at `6119274` | `evidence/round4/e12/attempt-1-6119274/` | Superseded: lab runner HARNESS_ERROR (no fault injected); 28/36 |
+| E12-VERIFY | E12 | Backend + simulator suites, E8 matrix, SQL grader at `2c25ef4` | `evidence/round4/e12/runs/238be480-46bf-4b96-905b-7b80797a8263.json` | Executed; 118 + 9 passed, grader PASS |
+| E12-FULLSTACK | E12 | 9 Chromium journeys on real bank + simulator, SQL grader | `evidence/round4/e12/runs/2322a13e-45cd-4c73-b181-520a74de8502.json` | Executed; 9/9, grader PASS |
+| E12-LAB | E6/E12 | 11 fault cases with independent SQL grades | `evidence/round4/e12/lab/E12-LAB.json` | Executed; 11/11 injection and recovery PASS |
+| E12-G02-RESTORE | E12 | Logical backup/restore with a simulator that moved on (R4-07) | `evidence/round4/e12/lab/E12-RESTORE.json` | Executed; PASS; RPO 5.274 s, RTO 22.963/26.201 s (one local run) |
+| E9-ALERT-LAB | E9/E12 | Real Prometheus 3.13.3 rule evaluation on a genuine reserve shortage | `evidence/round4/e5-e9/E9-ALERT-LAB.json` | Executed; both alerts fired and resolved; shortfall 3000 minor units |
+| E9-TRACES | E9/E12 | Rebuild a settlement trace chain from retained spans | `evidence/round4/e5-e9/E9-TRACES.json` | Executed; chain complete |
+| E12-RESULTS | E12 | Collect all sources into case verdicts | `evidence/round4/e12/E12-RESULTS.json` | 36/36 PASS, 25/25 hard gates |

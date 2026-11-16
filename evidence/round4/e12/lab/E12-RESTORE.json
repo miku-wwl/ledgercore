@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 1,
+  "runId": "8eb4e9a0-a511-42ea-9145-db9a8db4b066",
+  "label": "E12-G02 restore 2c25ef4",
+  "sourceSha": "2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd",
+  "trackedTreeDirty": false,
+  "bankJarSha256": "b76031d679f87fe5471ea52c4b16f66d49b0cc6556e68776b767d038e6a77c87",
+  "simJarSha256": "7aa70c06a4c6f80284343d6e45e422e7ca3c3647fa86bd3aea81e18998872384",
+  "beforeBackup": {
+    "database": "ledgercore_e6_8eb4e9a0a51142ea",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T15:15:59.935443+13:00",
+    "paymentStatus": "PENDING_CLEARING",
+    "externalStatus": "ACCEPTED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 0,
+    "refundJournalCount": 0,
+    "settlementLinked": false,
+    "instructionStatus": "ACCEPTED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 0,
+    "callbackEvents": [
+      {
+        "status": "PENDING",
+        "attempts": 0,
+        "lastError": null,
+        "receipts": []
+      }
+    ],
+    "payableLedgerMinor": 555,
+    "payableProjectionMinor": 555,
+    "reserveLedgerMinor": 100000,
+    "reserveProjectionMinor": 100000,
+    "sourceDepositLedgerMinor": 99445,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": []
+  },
+  "backup": {
+    "seconds": 0.486,
+    "bytes": 150123,
+    "sha256": "84c956ec2078992cdeabdb6584457ea938987b0c8ad25771386c5d147a19f50d",
+    "takenAt": "2026-11-16T02:16:01.1630333Z"
+  },
+  "liveBankBeforeFailure": {
+    "database": "ledgercore_e6_8eb4e9a0a51142ea",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T15:16:04.608645+13:00",
+    "paymentStatus": "COMPLETED",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 1,
+    "refundJournalCount": 0,
+    "settlementLinked": true,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 3,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      },
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      },
+      {
+        "status": "PENDING",
+        "attempts": 0,
+        "lastError": null,
+        "receipts": []
+      }
+    ],
+    "payableLedgerMinor": 0,
+    "payableProjectionMinor": 0,
+    "reserveLedgerMinor": 99445,
+    "reserveProjectionMinor": 99445,
+    "sourceDepositLedgerMinor": 99445,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": []
+  },
+  "simulatorBeforeFailure": {
+    "database": "ledgercore_e6sim_8eb4e9a0a51142ea",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T15:16:06.222442+13:00",
+    "operationStatus": "SETTLED",
+    "inquiryCount": 2,
+    "callbacks": [
+      {
+        "sequence": 1,
+        "status": "ACCEPTED",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      },
+      {
+        "sequence": 2,
+        "status": "PENDING",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      },
+      {
+        "sequence": 3,
+        "status": "SETTLED",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      }
+    ]
+  },
+  "restore": {
+    "seconds": 0.624,
+    "database": "ledgercore_e6_8eb4e9a0a51142ea_r",
+    "originalDatabase": "ledgercore_e6_8eb4e9a0a51142ea"
+  },
+  "bankReadyAfterFailureSeconds": 22.963,
+  "restoredBank": {
+    "database": "ledgercore_e6_8eb4e9a0a51142ea_r",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T15:16:29.79765+13:00",
+    "paymentStatus": "PENDING_CLEARING",
+    "externalStatus": "ACCEPTED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 0,
+    "refundJournalCount": 0,
+    "settlementLinked": false,
+    "instructionStatus": "ACCEPTED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 0,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      }
+    ],
+    "payableLedgerMinor": 555,
+    "payableProjectionMinor": 555,
+    "reserveLedgerMinor": 100000,
+    "reserveProjectionMinor": 100000,
+    "sourceDepositLedgerMinor": 99445,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": []
+  },
+  "reconciliation": {
+    "runId": "aba6cf59-de80-4743-9d7d-88984df46afd",
+    "findingCount": 1,
+    "checkedDomains": [
+      "LEDGER_PROJECTION",
+      "TRANSFER_JOURNAL_RECEIPT",
+      "PAYROLL_RESULTS_AND_TERMINAL_STATES",
+      "CORPORATE_PAYMENT_JOURNALS",
+      "DURABLE_EVENT_COVERAGE",
+      "ORGANIZATION_OWNERSHIP",
+      "INDEPENDENT_CLEARING_SIMULATOR_INQUIRY"
+    ],
+    "skippedDomains": [],
+    "findingCounts": {
+      "CLEARING_CALLBACK_MISSING": 1
+    },
+    "paymentFindings": [
+      {
+        "category": "CLEARING_CALLBACK_MISSING",
+        "severity": "HIGH",
+        "resourceType": "CLEARING_INSTRUCTION",
+        "resourceId": "0527ce88-3661-49ef-9ae7-132867f14fc4"
+      }
+    ]
+  },
+  "recoverySeconds": 1.349,
+  "measured": {
+    "backupStartedAt": "2026-11-16T02:16:01.1630333Z",
+    "failureAt": "2026-11-16T02:16:06.4374992Z",
+    "rpoSeconds": 5.274,
+    "rtoServiceSeconds": 22.963,
+    "rtoReconciledSeconds": 26.201
+  },
+  "finalBank": {
+    "database": "ledgercore_e6_8eb4e9a0a51142ea_r",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T15:16:36.047723+13:00",
+    "paymentStatus": "COMPLETED",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 1,
+    "refundJournalCount": 0,
+    "settlementLinked": true,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 3,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      },
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      },
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      }
+    ],
+    "payableLedgerMinor": 0,
+    "payableProjectionMinor": 0,
+    "reserveLedgerMinor": 99445,
+    "reserveProjectionMinor": 99445,
+    "sourceDepositLedgerMinor": 99445,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": [
+      {
+        "category": "CLEARING_CALLBACK_MISSING",
+        "severity": "HIGH",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "finalSimulator": {
+    "database": "ledgercore_e6sim_8eb4e9a0a51142ea",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-16T15:16:36.761266+13:00",
+    "operationStatus": "SETTLED",
+    "inquiryCount": 3,
+    "callbacks": [
+      {
+        "sequence": 1,
+        "status": "ACCEPTED",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      },
+      {
+        "sequence": 2,
+        "status": "PENDING",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      },
+      {
+        "sequence": 3,
+        "status": "SETTLED",
+        "delivery": "DELIVERED",
+        "attempts": 1,
+        "lastError": null
+      }
+    ]
+  },
+  "grader": {
+    "database": "ledgercore_e6_8eb4e9a0a51142ea_r",
+    "capturedAt": "2026-11-16T15:16:37.098637+13:00",
+    "journals": 3,
+    "postings": 6,
+    "unbalancedJournals": 0,
+    "nonPositiveOrForeignCurrencyPostings": 0,
+    "projectionMismatches": 0,
+    "negativeNormalBalances": 0,
+    "balanceSheetDifferenceMinor": 0,
+    "duplicatePaymentJournals": 0,
+    "completedWithoutSettlement": 0,
+    "settlementWithoutSettledOutcome": 0,
+    "refundAfterSettlementOrWithoutRejection": 0,
+    "bookedWithoutIndependentApproval": 0,
+    "bookedPaymentJournalMismatches": 0,
+    "transfersWithoutExactJournal": 0,
+    "transfersWithoutOneSucceededReceipt": 0,
+    "payrollSucceededWithoutTransfer": 0,
+    "payrollItemsPaidMoreThanOnce": 0,
+    "completedPayrollWithUnfinishedItems": 0,
+    "callbackInboxDuplicateSequences": 0,
+    "deliveredWorkMaskingOwedEffect": 0,
+    "informationalOwedEffects": 0,
+    "informationalReserveMinor": 99445,
+    "informationalPayableMinor": 0
+  },
+  "checks": {
+    "restored_to_the_backup_point": true,
+    "gap_detected": true,
+    "one_booking": true,
+    "one_settlement": true,
+    "no_refund": true,
+    "completed": true,
+    "payable_cleared": true,
+    "customer_debited_once": true,
+    "reserve_debited_once": true,
+    "all_callbacks_received_in_order": true,
+    "grader_hard_gates": true
+  },
+  "verdict": "PASS",
+  "completedAt": "2026-11-16T02:16:47.6713057Z"
+}

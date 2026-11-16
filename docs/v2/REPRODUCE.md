@@ -210,3 +210,15 @@ synthetic `example.test` addresses; no database reset is needed between browser 
    If local raw data is ever retired, verify that the resolved target is exactly under
    `work/e11-lab/runs/20261115-fullstack/` and that all intended evidence has another retained copy before removing
    only that run directory.
+
+## Round 4 (Claude Opus 5.5)
+
+Round 4 used a disposable cluster at `work/round4-lab/pg-r4` on `127.0.0.1:55450` (databases `ledgercore_r4_*`, created
+fresh for each verify), per-run E6 clusters on `127.0.0.1:55437`, and the E12 cluster `work/e12-lab/pg` on
+`127.0.0.1:55460`. The persistent service on 55432 and the earlier clusters on 55434/55436/55438 were never touched.
+
+- Fault-lab cases: `assessment/e6/README.md` (`clearing-lab.ps1`, `clearing-recovery-lab.ps1`, `payroll-lab.ps1`,
+  `e6-lab.ps1`; every case is `inject` then `restore`, with `-RunId` from the inject output).
+- E12: `assessment/e12/README.md` (verify, full stack, lab, restore, alert lab, trace extraction, collect). Run only on a
+  clean tracked tree; pass explicit run ids.
+- V2 textbook: `manual/v2/README.md` (diagrams, build and QA from the frozen source).

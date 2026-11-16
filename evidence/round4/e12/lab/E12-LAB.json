@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "label": "E12 lab 2c25ef4",
+  "sourceSha": "2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd",
+  "trackedTreeDirty": false,
+  "startedAt": "2026-11-16T01:41:30.9199502Z",
+  "transfer-precommit-crash": {
+    "runId": "93d6929b-43dd-45cd-8045-7549aabab42b",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "updatedAt": "2026-11-16T02:15:15.0916064Z",
+  "transfer-postcommit-response-crash": {
+    "runId": "06b6f26e-cc0b-42b7-a972-32edb8f46b8b",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "transfer-outbox-before-dispatch": {
+    "runId": "c77482b6-a52b-48ed-b65c-4119c8bb3378",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "payroll-mark-failure-crash": {
+    "runId": "c18f40fa-d3c0-4960-ab90-1eb9b7b328a2",
+    "injection": "PASS",
+    "injectionObserved": null,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-callback-commit-crash": {
+    "runId": "76552736-6e73-419e-970b-8afa8896c716",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-effect-precommit-crash": {
+    "runId": "c1710d60-d29f-4f72-b830-ece08fd3f054",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-effect-ack-crash": {
+    "runId": "e4827aec-d680-4354-b128-4b841f86cc0e",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-effect-session-kill": {
+    "runId": "7620a29d-4784-4be6-92c0-4d36d0cde327",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-reserve-shortage": {
+    "runId": "5087c9d6-4e93-4c99-bf8b-440c3f35371c",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-lost-callback": {
+    "runId": "fddfd4bf-d4d7-4af4-b3cf-346e62720234",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  },
+  "clearing-simulator-restart": {
+    "runId": "4f787181-c64a-48a1-b480-dd18527803da",
+    "injection": "PASS",
+    "injectionObserved": true,
+    "recovery": "PASS",
+    "failedChecks": null,
+    "cleanup": "PROCESSES_STOPPED_PORTS_FREE"
+  }
+}

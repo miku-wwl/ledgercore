@@ -1,0 +1,683 @@
+{
+  "schemaVersion": 1,
+  "runId": "238be480-46bf-4b96-905b-7b80797a8263",
+  "mode": "verify",
+  "label": "E12 verify 2c25ef4",
+  "sourceSha": "2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd",
+  "trackedTreeDirty": false,
+  "startedAt": "2026-11-16T01:32:34.8044683Z",
+  "backendExitCode": 0,
+  "backendTests": [
+    {
+      "test": "nz.ac.ledgercore.accounts.AccountDomainTests#accountLifecycleUsesExplicitLegalTransitions",
+      "outcome": "PASS",
+      "seconds": 0.26
+    },
+    {
+      "test": "nz.ac.ledgercore.accounts.AccountDomainTests#fundedOrClosedAccountsCannotBeClosedOrReopened",
+      "outcome": "PASS",
+      "seconds": 0.025
+    },
+    {
+      "test": "nz.ac.ledgercore.accounts.AccountDomainTests#corporateAccountsHaveAnExclusiveOrganizationOwner",
+      "outcome": "PASS",
+      "seconds": 0.004
+    },
+    {
+      "test": "nz.ac.ledgercore.api.TraceContextTests#rejectsMalformedUnknownVersionUppercaseAndAllZeroIdentifiers",
+      "outcome": "PASS",
+      "seconds": 0.009
+    },
+    {
+      "test": "nz.ac.ledgercore.api.TraceContextTests#newRootsAreRandomSampledAndScopesRestoreThePreviousContext",
+      "outcome": "PASS",
+      "seconds": 0.13
+    },
+    {
+      "test": "nz.ac.ledgercore.api.TraceContextTests#acceptsVersionZeroTraceparentAndContinuesTheSameTrace",
+      "outcome": "PASS",
+      "seconds": 0.002
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingCallbackLifecyclePostgresIntegrationTests#signedCallbackLifecycleRejectsTamperingAndRecordsEveryConflictWithoutASecondEffect(CapturedOutput)",
+      "outcome": "PASS",
+      "seconds": 6.457
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingCallbackSecurityIntegrationTests#callbackEndpointRejectsBadAndExpiredMacsButAcceptsSignedUnknownOperationAsException",
+      "outcome": "PASS",
+      "seconds": 0.094
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#bookedInstructionAcknowledgedWithoutDispatchIsReportedInsteadOfStayingSilentlyPending",
+      "outcome": "PASS",
+      "seconds": 4.572
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#genuinelyFiniteReserveHoldsTheObligationUntilAuditedReplenishmentAndGovernedRetry",
+      "outcome": "PASS",
+      "seconds": 19.775
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#rejectedCallbackWhoseRefundNeverRanIsDetectedThenRefundedOnceWithoutSettlement",
+      "outcome": "PASS",
+      "seconds": 3.855
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallbackWhoseEffectNeverRanIsDetectedThenCompletedOnceFromItsDurableWorkItem",
+      "outcome": "PASS",
+      "seconds": 3.805
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#competingWorkersDuplicateCallbackAndDirectRetryPostExactlyOneSettlement",
+      "outcome": "PASS",
+      "seconds": 3.396
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#reserveLiquidityTransfersAreBalancedReplayableAndCannotOverdrawEitherAsset",
+      "outcome": "PASS",
+      "seconds": 0.055
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingEffectFastPathFailurePostgresIntegrationTests#terminatedSettlementSessionStillAcknowledgesButLeavesDurableWorkThatCompletesOnce",
+      "outcome": "PASS",
+      "seconds": 4.681
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ClearingReserveFailureIntegrationTests#insufficientReserveResultKeepsObligationAndExactDuplicateCanRecover",
+      "outcome": "PASS",
+      "seconds": 3.944
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#corruptPayrollHistoryIsRefusedAndDeadWorkIsDetected",
+      "outcome": "PASS",
+      "seconds": 6.683
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#concurrentReconciliationRunsKeepOneOpenExceptionPerAnomalyAndNeverLeakToAnotherTenant",
+      "outcome": "PASS",
+      "seconds": 7.451
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#corruptPaymentAndLedgerStatesAreRefusedByTheDatabaseWithoutTouchingValidRows",
+      "outcome": "PASS",
+      "seconds": 7.293
+    },
+    {
+      "test": "nz.ac.ledgercore.CorrelationIdTests#preservesAValidCallerProvidedId",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.CorrelationIdTests#generatesUuidForMissingOrMalformedIds",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#carriesPersistedCorrelationIdIntoBackgroundHandlerAndRestoresWorkerContext",
+      "outcome": "PASS",
+      "seconds": 0.243
+    },
+    {
+      "test": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#concurrentPublishersAndDispatchersDeliverEveryEventOnce",
+      "outcome": "PASS",
+      "seconds": 0.617
+    },
+    {
+      "test": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#retriesExpiredLeasesIdempotentlyAndAllowsAuditedDeadLetterRecovery",
+      "outcome": "PASS",
+      "seconds": 0.986
+    },
+    {
+      "test": "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#transferAndItsOutboxFactRollBackTogether",
+      "outcome": "PASS",
+      "seconds": 0.94
+    },
+    {
+      "test": "nz.ac.ledgercore.FullStackApiPostgresIntegrationTests#sessionsCsrfOwnershipTransfersReceiptsHistoryAndReconciliationUsePostgres",
+      "outcome": "PASS",
+      "seconds": 2.055
+    },
+    {
+      "test": "nz.ac.ledgercore.identity.CustomerPrincipalTests#stringRepresentationOmitsEmailAndPasswordHash",
+      "outcome": "PASS",
+      "seconds": 0.0
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.JournalEntryTests#reversalIsANewEntryWithEveryPostingSideFlipped",
+      "outcome": "PASS",
+      "seconds": 0.004
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.JournalEntryTests#rejectsUnbalancedDuplicateAndSingleAccountEntries",
+      "outcome": "PASS",
+      "seconds": 0.002
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.JournalEntryTests#openingFundingBalancesTheSimulationReserveAndCustomerLiability",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#rejectsZeroNegativeAndUnknownAccountFunding",
+      "outcome": "PASS",
+      "seconds": 0.029
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#simulatedDepositUpdatesLedgerAndProjectionInTheSameTransaction",
+      "outcome": "PASS",
+      "seconds": 0.03
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#preventsDuplicateOpeningFundingForTheSameCustomerAccount",
+      "outcome": "PASS",
+      "seconds": 0.023
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#postgresRejectsAnUnbalancedJournalAtCommitAndRollsBackItsRows",
+      "outcome": "PASS",
+      "seconds": 0.03
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#openingFundingPersistsTwoBalancedPostingsAndARebuildableProjection",
+      "outcome": "PASS",
+      "seconds": 0.027
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#aFailureAfterAccountAndJournalWritesRollsBackTheWholeOpeningTransaction",
+      "outcome": "PASS",
+      "seconds": 0.027
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#reversalsAppendOppositePostingsAndAllowAZeroBalanceAccountToClose",
+      "outcome": "PASS",
+      "seconds": 0.206
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#accountSuspensionStopsFundingUntilTheAccountIsReactivated",
+      "outcome": "PASS",
+      "seconds": 0.039
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.LedgerPostgresIntegrationTests#databaseRejectsMutationAndDeletionOfPostedHistory",
+      "outcome": "PASS",
+      "seconds": 0.02
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.MoneyTests#detectsArithmeticOverflow",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.MoneyTests#rejectsZeroNegativeNonCanonicalAndOverflowAmounts",
+      "outcome": "PASS",
+      "seconds": 0.002
+    },
+    {
+      "test": "nz.ac.ledgercore.ledger.MoneyTests#parsesAndFormatsExactMinorUnits",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreApplicationTests#missingCorrelationIdIsGenerated",
+      "outcome": "PASS",
+      "seconds": 0.066
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreApplicationTests#healthEndpointChecksTheRealPostgresConnectionAndEchoesCorrelationId",
+      "outcome": "PASS",
+      "seconds": 0.014
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreApplicationTests#faultInjectionHookIsAbsentWithoutTheDedicatedE6Profile",
+      "outcome": "PASS",
+      "seconds": 0.003
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreApplicationTests#flywayCreatedTheCustomerAndAccountTablesInPostgres",
+      "outcome": "PASS",
+      "seconds": 0.008
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreApplicationTests#unauthenticatedApiRequestReturnsAStandardProblemResponse",
+      "outcome": "PASS",
+      "seconds": 0.011
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreApplicationTests#openApiDocumentIsAvailableAndIdentifiesTheApplication",
+      "outcome": "PASS",
+      "seconds": 1.021
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreApplicationTests#reserveLiquidityLabCommandIsAbsentWithoutItsDedicatedProfile",
+      "outcome": "PASS",
+      "seconds": 0.007
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreObservabilityAlertTests#clearingEffectAndReserveShortfallAlertsFireOnRealThresholdsAndClear",
+      "outcome": "PASS",
+      "seconds": 0.002
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreObservabilityAlertTests#unavailableMonitorDoesNotMisreportDatabaseBacklogOrLockAlerts",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreObservabilityAlertTests#alertsFireOnRegisteredThresholdsAndClearAfterResolution",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreObservabilityPostgresIntegrationTests#actuatorMetricsAndAlertEndpointRequireAnActiveOperationsMembership",
+      "outcome": "PASS",
+      "seconds": 3.378
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreObservabilityPostgresIntegrationTests#separatelyDetectsAndClearsApplicationPoolWait",
+      "outcome": "PASS",
+      "seconds": 0.12
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreObservabilityPostgresIntegrationTests#publishesLiveDatabaseAndPoolGaugesWithoutIdentityTags",
+      "outcome": "PASS",
+      "seconds": 0.257
+    },
+    {
+      "test": "nz.ac.ledgercore.LedgerCoreObservabilityPostgresIntegrationTests#separatelyDetectsAndClearsPostgresRowLockWait",
+      "outcome": "PASS",
+      "seconds": 0.722
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV8ClearingIntentUpgradesAndEnforcesForwardOnlyOutcomeTransitions",
+      "outcome": "PASS",
+      "seconds": 2.693
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV11WithAStrandedSettlementUpgradesToDurableWorkWithoutPostingMoney",
+      "outcome": "PASS",
+      "seconds": 4.079
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#applicationFlywayRegistersTheV5LegacyBackfillCallback",
+      "outcome": "PASS",
+      "seconds": 0.012
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#v15RefusesToMigrateACompletedPaymentThatHasNoSettlementJournal",
+      "outcome": "PASS",
+      "seconds": 1.962
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV6PayrollSchemaUpgradesToV8WithoutRewritingResults",
+      "outcome": "PASS",
+      "seconds": 3.074
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV4PersonalBankingSchemaUpgradesWithoutChangingItsHistory",
+      "outcome": "PASS",
+      "seconds": 1.875
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#populatedV5CorporateSchemaUpgradesThroughPayrollMigrations",
+      "outcome": "PASS",
+      "seconds": 1.835
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#publishedMigrationsKeepTheirRecordedFlywayChecksums",
+      "outcome": "PASS",
+      "seconds": 0.007
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#v7RefusesToMigratePayrollHistoryWithAMissingResult",
+      "outcome": "PASS",
+      "seconds": 2.393
+    },
+    {
+      "test": "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#freshSchemaMigratesToTheLatestVersionWithPublishedChecksums",
+      "outcome": "PASS",
+      "seconds": 1.008
+    },
+    {
+      "test": "nz.ac.ledgercore.ModuleArchitectureTests#moduleBoundariesAreAcyclic",
+      "outcome": "PASS",
+      "seconds": 3.73
+    },
+    {
+      "test": "nz.ac.ledgercore.operations.OperationsConsolePostgresIntegrationTests#showsScopedMetricsAuditAndCorrelationSearchOnlyToOperationsMembers",
+      "outcome": "PASS",
+      "seconds": 1.386
+    },
+    {
+      "test": "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#concurrentApprovalRetriesCreateOneFinancialBookingAndClearingInstruction",
+      "outcome": "PASS",
+      "seconds": 2.809
+    },
+    {
+      "test": "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#corporateOwnershipMembershipRolesAndTransfersUsePostgres",
+      "outcome": "PASS",
+      "seconds": 6.034
+    },
+    {
+      "test": "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#suspendedPaymentApproverRequiresExplicitAuditedReactivation",
+      "outcome": "PASS",
+      "seconds": 2.751
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollContentDigestTests#digestIsStableAndBindsEveryBusinessIntentField",
+      "outcome": "PASS",
+      "seconds": 0.001
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#operationsCanResumeOnlyAnIndependentlyApprovedPayrollBatch",
+      "outcome": "PASS",
+      "seconds": 2.822
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#unclassifiedTransferFailureLeavesTheItemPendingAndStopsExecution",
+      "outcome": "PASS",
+      "seconds": 2.752
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#payrollResultsCannotBeDeletedInAnyState",
+      "outcome": "PASS",
+      "seconds": 2.333
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#progressCountsStayExactAndIsolatedWhenOtherOrganizationsHavePayrollRows",
+      "outcome": "PASS",
+      "seconds": 4.507
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#publicTransfersCannotClaimReservedPayrollIdempotencyKeys",
+      "outcome": "PASS",
+      "seconds": 2.259
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#suspendedOrganizationCannotStartPayrollExecution",
+      "outcome": "PASS",
+      "seconds": 2.238
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#resultsCannotBeForgedOrAdvancedOutsideProcessing",
+      "outcome": "PASS",
+      "seconds": 2.275
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#approvedItemsCannotBeMovedToAnotherBatchOrRewrittenThere",
+      "outcome": "PASS",
+      "seconds": 2.304
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#batchCompletionFailsClosedWhenAResultRowIsMissing",
+      "outcome": "PASS",
+      "seconds": 2.28
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#succeededResultMustReferenceTheTransferThatPaysItsItem",
+      "outcome": "PASS",
+      "seconds": 2.754
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#approvalRemainsValidAfterTheApproverLosesTheirRole",
+      "outcome": "PASS",
+      "seconds": 2.306
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#suspendedCreatorMembershipFailsItemsClosedWithAnExplicitReason",
+      "outcome": "PASS",
+      "seconds": 2.275
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#payrollRejectsZeroNonCanonicalAndOverflowingAmounts",
+      "outcome": "PASS",
+      "seconds": 2.272
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#draftItemsStayInTheirBatchButCanBeDeletedWithTheirPendingResult",
+      "outcome": "PASS",
+      "seconds": 2.285
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#revokedCreatorRoleFailsItemsClosedWithAnExplicitReason",
+      "outcome": "PASS",
+      "seconds": 2.266
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#overlappingExecutionsOfOneBatchPayEachItemExactlyOnce",
+      "outcome": "PASS",
+      "seconds": 2.714
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#nonMembersCannotProbeBatchStateThroughApprovalOrRejection",
+      "outcome": "PASS",
+      "seconds": 2.672
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#completedPayrollHistoryCannotBeMovedOrErased",
+      "outcome": "PASS",
+      "seconds": 2.288
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#concurrentBatchesSharingOnePayerNeverOverdrawIt",
+      "outcome": "PASS",
+      "seconds": 2.974
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#itemChangesRacingApprovalCannotAlterTheApprovedContent",
+      "outcome": "PASS",
+      "seconds": 2.323
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#transferAndPayrollResultRollbackTogetherOnDatabaseWriteFailure",
+      "outcome": "PASS",
+      "seconds": 1.909
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#processesAndReconcilesFiveHundredSyntheticEmployeesExactlyOnce",
+      "outcome": "PASS",
+      "seconds": 13.008
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#insufficientFundsAreDurableWithoutPostingOrOverdraft",
+      "outcome": "PASS",
+      "seconds": 1.825
+    },
+    {
+      "test": "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#concurrentContentMutationWaitsForApprovalAndThenIsRejected",
+      "outcome": "PASS",
+      "seconds": 1.829
+    },
+    {
+      "test": "nz.ac.ledgercore.reconciliation.ReconciliationPostgresIntegrationTests#reconcilesHealthyOrganizationThenDetectsAndResolvesProjectionAnomaly",
+      "outcome": "PASS",
+      "seconds": 4.835
+    },
+    {
+      "test": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#aMemberHoldingBothMakerAndApproverRolesCannotApproveTheirOwnPaymentOrPayroll",
+      "outcome": "PASS",
+      "seconds": 11.132
+    },
+    {
+      "test": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#anApproverWhoseRoleIsRevokedAfterSubmissionCanNoLongerBookThePayment",
+      "outcome": "PASS",
+      "seconds": 10.933
+    },
+    {
+      "test": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#everyRoleRouteAndObjectCombinationIsEnforcedWithoutSideEffects",
+      "outcome": "PASS",
+      "seconds": 35.058
+    },
+    {
+      "test": "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#stateChangingRequestsWithoutCsrfAreRejectedForEveryAuthenticatedPrincipalClass",
+      "outcome": "PASS",
+      "seconds": 9.887
+    },
+    {
+      "test": "nz.ac.ledgercore.TracePropagationPostgresIntegrationTests#inboundTraceIsContinuedPersistedWithOutboxWorkAndLinkedFromItsDispatchTrace(CapturedOutput)",
+      "outcome": "PASS",
+      "seconds": 9.9
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#postgresRejectsTransferRowsThatDoNotMatchTheirJournalPostings",
+      "outcome": "PASS",
+      "seconds": 0.04
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#successfulReplayRechecksSourceOwnershipBeforeReturningTheReceipt",
+      "outcome": "PASS",
+      "seconds": 0.085
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#receiptRecorderCannotBypassApprovedCorporateOperationBoundary",
+      "outcome": "PASS",
+      "seconds": 0.041
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentCrossTransfersUseDeterministicAccountLocksWithoutDeadlock",
+      "outcome": "PASS",
+      "seconds": 0.059
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentSameKeyWithDifferentIntentHasOneWinnerAndOneConflict",
+      "outcome": "PASS",
+      "seconds": 0.038
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#transferIsDoubleEntryAtomicAndItsSuccessfulReceiptIsDurable",
+      "outcome": "PASS",
+      "seconds": 0.039
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#receiptPersistenceFailureRollsBackLedgerAndTransferWrites",
+      "outcome": "PASS",
+      "seconds": 0.039
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentSameKeyAndSameIntentReturnOnePersistedReceipt",
+      "outcome": "PASS",
+      "seconds": 0.035
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#projectionUpdateFailureRollsBackPostingsAndIdempotencyReservation",
+      "outcome": "PASS",
+      "seconds": 0.033
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#journalInsertFailureRollsBackIdempotencyReservationAndTransferState",
+      "outcome": "PASS",
+      "seconds": 0.03
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentDifferentKeysCannotOverdrawOneSourceAccount",
+      "outcome": "PASS",
+      "seconds": 0.04
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#secondPostingFailureRollsBackFirstPostingAndIdempotencyReservation",
+      "outcome": "PASS",
+      "seconds": 0.032
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#rejectsUnauthorizedSourceAndInsufficientFundsWithoutPersistingFailureReceipts",
+      "outcome": "PASS",
+      "seconds": 0.029
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#rejectsClosedRecipientWithoutLeavingAnIdempotencyReservation",
+      "outcome": "PASS",
+      "seconds": 0.034
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#originalKeyRecoversACommittedTransferWhenTheFirstResponseIsLost",
+      "outcome": "PASS",
+      "seconds": 0.033
+    },
+    {
+      "test": "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#postgresRejectsAnIdempotencyReservationWithoutItsSuccessReceiptAtCommit",
+      "outcome": "PASS",
+      "seconds": 0.008
+    }
+  ],
+  "simulatorExitCode": 0,
+  "simulatorTests": [
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#repeatedInquiryOfTerminalOperationKeepsPersistedCallbackSequence",
+      "outcome": "PASS",
+      "seconds": 1.43
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#submissionIsDurableAndSameOperationIdentityIsIdempotent",
+      "outcome": "PASS",
+      "seconds": 0.026
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#rearmingCannotRewriteCallbackFactsOrKeepTheSpentBudget",
+      "outcome": "PASS",
+      "seconds": 0.041
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#authenticatedInquiryRearmsDeadCallbacksWithTheirOriginalIdentity",
+      "outcome": "PASS",
+      "seconds": 0.023
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#operationIdentityCannotBeReusedWithDifferentFinancialFacts",
+      "outcome": "PASS",
+      "seconds": 0.02
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#unknownOutcomeCanBeResolvedByInquiryWithoutChangingOperationIdentity",
+      "outcome": "PASS",
+      "seconds": 0.021
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#inquiryFromABankBehindTheDeliveredSequenceRedeliversOnlyTheLaterCallbacks",
+      "outcome": "PASS",
+      "seconds": 0.035
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#preservesCorrelationIdForCallbackDispatchAcrossOperationAndInquiry",
+      "outcome": "PASS",
+      "seconds": 0.017
+    },
+    {
+      "test": "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#acceptedOperationMovesThroughPendingBeforeSettlement",
+      "outcome": "PASS",
+      "seconds": 0.022
+    }
+  ],
+  "grader": {
+    "database": "ledgercore_e12_238be480_verify",
+    "result": {
+      "database": "ledgercore_e12_238be480_verify",
+      "capturedAt": "2026-11-16T14:38:27.964627+13:00",
+      "journals": 1327,
+      "postings": 2654,
+      "unbalancedJournals": 0,
+      "nonPositiveOrForeignCurrencyPostings": 0,
+      "projectionMismatches": 0,
+      "negativeNormalBalances": 0,
+      "balanceSheetDifferenceMinor": 0,
+      "duplicatePaymentJournals": 0,
+      "completedWithoutSettlement": 0,
+      "settlementWithoutSettledOutcome": 0,
+      "refundAfterSettlementOrWithoutRejection": 0,
+      "bookedWithoutIndependentApproval": 0,
+      "bookedPaymentJournalMismatches": 0,
+      "transfersWithoutExactJournal": 0,
+      "transfersWithoutOneSucceededReceipt": 0,
+      "payrollSucceededWithoutTransfer": 0,
+      "payrollItemsPaidMoreThanOnce": 0,
+      "completedPayrollWithUnfinishedItems": 0,
+      "callbackInboxDuplicateSequences": 0,
+      "deliveredWorkMaskingOwedEffect": 0,
+      "informationalOwedEffects": 0,
+      "informationalReserveMinor": 65088941,
+      "informationalPayableMinor": 722
+    },
+    "failedHardGates": [],
+    "pass": true
+  },
+  "completedAt": "2026-11-16T01:38:28.2565740Z"
+}

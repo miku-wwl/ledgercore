@@ -35,3 +35,15 @@ The historical matrix below remains the Round 1/2 record. A Round 3 stage will m
 | Independent findings disposition | Every Round 2 finding has severity, evidence, and a disposition | n/a | n/a | n/a | n/a | PASS: 18 findings in `evidence/round2/findings/FINDINGS-REGISTER.md` |
 
 A NOT_RUN or blocked mandatory gate cannot be represented as PASS. Stage status also requires a direct-main commit and verification of its relevant GitHub Actions run.
+
+## Round 4 update (Claude Opus 5.5) — appended; Round 3 rows above are kept as recorded
+
+| Stage | Round 4 status | Evidence at frozen `2c25ef4` |
+|---|---|---|
+| E5 clearing simulator | VALIDATED | E12-E01/E02/E06/E07/E09, E12-G02; R4-02/R4-04/R4-07 fixes; `evidence/round4/e12/` |
+| E6 fault laboratory | VALIDATED (acceptance-critical matrix; listed classes NOT_RUN) | 11/11 lab cases injected and recovered; `evidence/round4/e12/lab/E12-LAB.json`; NOT_RUN classes in `E12-ACCEPTANCE.md` § 8 |
+| E7 independent reconciliation | VALIDATED | E12-F01–F05; `ReconciliationNegativeFixturesPostgresIntegrationTests`; R4-03/R4-05/R4-06 |
+| E8 security and audit | VALIDATED | E12-B01–B05; 528-cell executed matrix; CSRF; maker-checker; revocation |
+| E9 observability | VALIDATED | E12-H03 (real Prometheus fire/clear), E12-H04 (trace chain), ADR 0007 |
+| E12 assessment | ACCEPTED_WITH_NONBLOCKING_LIMITATIONS | `E12-ACCEPTANCE.md`, `E12-SOURCE-FREEZE.md`; 36/36 PASS, 25/25 hard gates |
+| V2 PDF | see manifest | `manual/v2/PUBLICATION-MANIFEST.md` |

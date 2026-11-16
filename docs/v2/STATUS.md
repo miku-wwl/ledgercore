@@ -7,11 +7,11 @@
 | 1 | GPT-6 Luna | E0–E3 | **FINISHED** (`b584b95`, CI run 43553101864) |
 | 2 | Claude Opus 5.5 | Independent audit and remediation of E0–E3 | **ACCEPTED_WITH_NONBLOCKING_RISKS** — `ROUND-2-AUDIT.md`, `ROUND-2-HANDOFF.md` |
 | 3 | GPT-6 Luna | E4–E11 | **COMPLETE — E4, E10, and E11 VALIDATED; E5–E9 PARTIAL; handoff ready** |
-| 4 | Claude Opus 5.5 | E12, final audit, V2 PDF | **NOT_STARTED** |
+| 4 | Claude Opus 5.5 | E12, final audit, V2 PDF | **COMPLETE — E12 ACCEPTED_WITH_NONBLOCKING_LIMITATIONS at `2c25ef4`; E5–E9 VALIDATED (Round 4 section); V2 textbook: `manual/v2/PUBLICATION-MANIFEST.md`** |
 
-- Next owner: Claude Opus 5.5 (Round 4, after E11 handoff).
+- Next owner: none. Round 4 was the final round (no Round 5); see `ROUND-4-HANDOFF.md`.
 - Branch policy: direct work on main only; no branch, worktree, or PR.
-- Final V2 PDF: reserved for Round 4; not started.
+- Final V2 PDF: produced in Round 4 from the frozen source `2c25ef4`; see `manual/v2/PUBLICATION-MANIFEST.md`.
 
 ## Round 3 execution
 
@@ -103,3 +103,19 @@ The E0 local test database was a separate disposable PostgreSQL 18.7 cluster on 
 - Reproduction details: `evidence/e1/VALIDATION.md`.
 - E1 implementation commit: eab8175501e77dfc57b1d9ea404a73ed86c8ae26.
 - Direct push to `origin/main` succeeded; GitHub Actions: https://github.com/miku-wwl/ledgercore/actions/runs/43536790093 — full-stack acceptance and OSV dependency scan succeeded.
+
+## Round 4 execution (Claude Opus 5.5)
+
+Starting point `ba36f90` (Round 3 handoff); baseline reproduced (95 backend + 6 simulator tests). Findings R4-01–R4-07
+are registered in `ROUND-4-FINDINGS.md` (five P1, two P2; all CONFIRMED_FIXED, R4-05 re-send path DEFERRED_WITH_RISK).
+Architecture and remediations: `ROUND-4-AUDIT.md`. Acceptance: `E12-ACCEPTANCE.md`. Frozen source: `E12-SOURCE-FREEZE.md`.
+
+| Stage | Round 4 status | Evidence |
+|---|---|---|
+| E5 clearing | **VALIDATED** | Settlement, rejection, UNKNOWN inquiry, simulator restart (E12-E09), genuine reserve shortage (R4-02, E12-E06), lost callbacks (R4-04, E12-E07), restore redelivery (R4-07, E12-G02) at `2c25ef4`. Limitation: toy simulator. |
+| E6 fault laboratory | **VALIDATED** (acceptance-critical matrix) | 11 cases (3 transfer, 1 payroll, 4 clearing incl. `pg_terminate_backend`, 3 recovery) all injected and recovered at `2c25ef4` (`evidence/round4/e12/lab/E12-LAB.json`). NOT_RUN: PostgreSQL lock-timeout faults, bank-side submit-timeout process kill, payroll worker points other than mark-failure, storage and network-partition faults. |
+| E7 reconciliation | **VALIDATED** | `CLEARING_FINANCIAL_EFFECT_PENDING`, `CLEARING_INSTRUCTION_NOT_DISPATCHED`, escalation, recheck-before-resolve; executed negative fixtures (18 refusals by constraint name, payroll history, DEAD detection, concurrent graders, tenant isolation); signed callback lifecycle test. NOT_RUN: a forged organization-ownership fixture. |
+| E8 security | **VALIDATED** | Executed matrix 12 principals × 44 routes = 528 cells, 243 denied mutations side-effect free; CSRF for every principal; maker-checker with both roles; revocation after submission. Not a penetration test; P3 shared HMAC key noted. |
+| E9 observability | **VALIDATED** | W3C Trace Context with retained spans across bank, outbox and simulator (ADR 0007; E12-H04); owed-effect and reserve-shortfall gauges; two Prometheus rules fired on a genuine shortage and cleared after recovery (E12-H03). No tracing backend or notification delivery. |
+| E12 | **ACCEPTED_WITH_NONBLOCKING_LIMITATIONS** | 36/36 cases PASS, 25/25 hard gates, at `2c25ef4`; CI [43786857336](https://github.com/miku-wwl/ledgercore/actions/runs/43786857336). Attempt 1 at `6119274` superseded (harness defect). |
+| V2 textbook | see `manual/v2/PUBLICATION-MANIFEST.md` | Built from the frozen source only. |

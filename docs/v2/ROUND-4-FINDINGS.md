@@ -191,3 +191,9 @@ Checked against code, constraints and executed tests; no further P0/P1 found.
 | Tenant concealment | `OrganizationAuthorizationService` (404 non-member, 403 missing role, ACTIVE organization required) | Sound; executed in the E8 matrix |
 | Outbox concurrency | `claimNext` lease + `SKIP LOCKED`; `markDelivered` lease check | Sound; a lost lease is retried idempotently |
 | Shared HMAC key for both directions | same key signs bank→simulator requests and simulator→bank callbacks, no direction label | P3 hygiene: cross-direction replay is rejected by body validation today; a direction label in the signature base is recommended before any real integration |
+
+## E12 confirmation (appended after the source freeze)
+
+Every remediation above was re-executed at the frozen source `2c25ef459f2e49bcc1a8b237a1a652d7c205fbcd`: E12 36/36 cases
+PASS, 25/25 hard gates, all 11 fault-lab cases injected and recovered (`E12-ACCEPTANCE.md`, `E12-SOURCE-FREEZE.md`).
+The dispositions in the register are unchanged.
