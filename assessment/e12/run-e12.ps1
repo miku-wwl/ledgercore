@@ -177,12 +177,14 @@ switch ($Mode) {
             Push-Location (Join-Path $repo 'frontend')
             try {
                 $env:PLAYWRIGHT_JSON_OUTPUT_NAME = Join-Path $runDir 'playwright.json'
-                & npx playwright test --reporter=list,json *> (Join-Path $runDir 'playwright.log')
+                & npx playwright test '--reporter=list,json' *> (Join-Path $runDir 'playwright.log')
                 $summary.playwrightExitCode = $LASTEXITCODE
             }
             finally { Pop-Location; Remove-Item Env:PLAYWRIGHT_JSON_OUTPUT_NAME -ErrorAction SilentlyContinue }
             Start-Sleep -Seconds 5
-            $report = Get-Content -LiteralPath (Join-Path $runDir 'playwright.json') -Raw | ConvertFrom-Json
+            $reportPath = Join-Path $runDir 'playwright.json'
+            if (-not (Test-Path -LiteralPath $reportPath)) { throw "Playwright wrote no JSON report (exit $($summary.playwrightExitCode)); see playwright.log." }
+            $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
             $tests = @()
             foreach ($suite in $report.suites) {
                 foreach ($spec in @($suite.specs) + @($suite.suites | ForEach-Object { $_.specs })) {
@@ -239,8 +241,8 @@ switch ($Mode) {
                 elseif (@($evidence | Where-Object { $_.outcome -like 'FAIL*' -or $_.outcome -eq 'ERROR' }).Count -gt 0) { 'FAIL' }
                 elseif (@($evidence | Where-Object { $_.outcome -eq 'NOT_RUN' -or $_.outcome -eq 'SKIPPED' }).Count -gt 0) { 'PARTIAL' }
                 else { 'PASS' }
-            $results += [ordered]@{ id = $case.id; category = $case.category; title = $case.title; hardGate = [bool]$case.hardGate
-                verdict = $verdict; evidence = $evidence; limitation = $case.limitation }
+            $results += [ordered]@{ id = $case.id; category = $case.category; dimension = $case.dimension; title = $case.title
+                hardGate = [bool]$case.hardGate; verdict = $verdict; evidence = $evidence; limitation = $case.limitation }
         }
         $summary.included = $Include
         $summary.cases = $results
@@ -252,6 +254,15 @@ switch ($Mode) {
             notRun = @($results | Where-Object verdict -eq 'NOT_RUN').Count
             hardGateFailures = @($results | Where-Object { $_.hardGate -and $_.verdict -ne 'PASS' }).Count
         }
+        $summary.dimensions = [ordered]@{}
+        foreach ($group in ($results | Group-Object { $_.dimension })) {
+            $summary.dimensions[$group.Name] = [ordered]@{ total = $group.Count
+                pass = @($group.Group | Where-Object verdict -eq 'PASS').Count
+                notPass = @($group.Group | Where-Object verdict -ne 'PASS' | ForEach-Object { "$($_.id):$($_.verdict)" }) }
+        }
+        $summary.sources = @($Include | ForEach-Object {
+            $run = Get-Content -LiteralPath (Join-Path $evidenceRoot "runs/$_.json") -Raw | ConvertFrom-Json
+            [ordered]@{ runId = $run.runId; mode = $run.mode; sourceSha = $run.sourceSha; trackedTreeDirty = $run.trackedTreeDirty } })
         Write-Json (Join-Path $evidenceRoot 'E12-RESULTS.json') $summary
     }
 }

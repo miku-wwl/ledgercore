@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "description": "E12 case catalog. A case passes only if every listed source passed: JUnit/Playwright results (patterns use PowerShell -like), lab verdict files (value at path must equal expect) and, when grader is true, the independent SQL financial hard gates of every included run.",
+  "description": "E12 case catalog. A case passes only if every listed source passed: JUnit/Playwright results (patterns use PowerShell -like), lab verdict files (value at path must equal expect) and, when grader is true, the independent SQL financial hard gates of every included run. Each case carries the acceptance-matrix dimension it scores; reproducibility is scored from the exact-SHA CI run and the clean-tree flags.",
   "cases": [
     {
       "id": "E12-A01",
@@ -12,7 +12,8 @@
         "nz.ac.ledgercore.ledger.*",
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#transferIsDoubleEntryAtomic*",
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#postgresRejectsTransferRowsThatDoNotMatch*"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-A02",
@@ -23,7 +24,8 @@
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentSameKey*",
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#originalKeyRecovers*",
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#successfulReplayRechecks*"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-A03",
@@ -33,7 +35,8 @@
       "tests": [
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentDifferentKeysCannotOverdraw*",
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#concurrentCrossTransfers*"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-A04",
@@ -55,7 +58,8 @@
           "path": "transfer-postcommit-response-crash.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-B01",
@@ -64,7 +68,8 @@
       "title": "Executed role x route x object matrix: 12 principals x 44 routes, concealment 404, missing role 403, denied mutations without side effects",
       "tests": [
         "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#everyRoleRouteAndObjectCombination*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-B02",
@@ -75,7 +80,8 @@
         "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#aMemberHoldingBothMakerAndApprover*",
         "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#concurrentApprovalRetries*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#itemChangesRacingApproval*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-B03",
@@ -85,7 +91,8 @@
       "tests": [
         "nz.ac.ledgercore.transfers.TransferPostgresIntegrationTests#receiptRecorderCannotBypass*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#publicTransfersCannotClaimReserved*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-B04",
@@ -97,7 +104,8 @@
         "nz.ac.ledgercore.organizations.OrganizationPostgresIntegrationTests#*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#suspended*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#revokedCreatorRole*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-B05",
@@ -107,7 +115,8 @@
       "tests": [
         "nz.ac.ledgercore.security.AuthorizationMatrixPostgresIntegrationTests#stateChangingRequestsWithoutCsrf*",
         "nz.ac.ledgercore.FullStackApiPostgresIntegrationTests#*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-C01",
@@ -117,7 +126,8 @@
       "title": "500 synthetic employees are paid exactly once with deterministic per-item identity and reconciled balances",
       "tests": [
         "nz.ac.ledgercore.payroll.PayrollPostgresIntegrationTests#processesAndReconcilesFiveHundred*"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-C02",
@@ -127,7 +137,8 @@
       "tests": [
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#overlappingExecutions*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#concurrentBatchesSharingOnePayer*"
-      ]
+      ],
+      "dimension": "async"
     },
     {
       "id": "E12-C03",
@@ -140,7 +151,8 @@
           "path": "payroll-mark-failure-crash.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-C04",
@@ -154,7 +166,8 @@
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#batchCompletionFailsClosed*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#resultsCannotBeForged*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#unclassifiedTransferFailure*"
-      ]
+      ],
+      "dimension": "async"
     },
     {
       "id": "E12-D01",
@@ -163,7 +176,8 @@
       "title": "Business fact and outbox event commit together; concurrent publishers and dispatchers deliver each event once",
       "tests": [
         "nz.ac.ledgercore.events.DurableOutboxPostgresIntegrationTests#*"
-      ]
+      ],
+      "dimension": "async"
     },
     {
       "id": "E12-D02",
@@ -179,18 +193,18 @@
           "path": "transfer-outbox-before-dispatch.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-D03",
       "category": "D Durable events",
       "hardGate": false,
-      "title": "Retry exhaustion dead-letters visibly; a governed retry is role-gated, audited and idempotent; trace context links producer and consumer",
+      "title": "Retry exhaustion dead-letters visibly; a governed retry is role-gated, audited and idempotent",
       "tests": [
-        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#genuinelyFiniteReserve*",
-        "nz.ac.ledgercore.TracePropagationPostgresIntegrationTests#*",
-        "nz.ac.ledgercore.api.TraceContextTests#*"
-      ]
+        "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#genuinelyFiniteReserve*"
+      ],
+      "dimension": "async"
     },
     {
       "id": "E12-E01",
@@ -202,7 +216,8 @@
         "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallback*",
         "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#rejectedCallback*",
         "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#acceptedOperationMovesThroughPending*"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-E02",
@@ -213,7 +228,8 @@
         "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#unknownOutcome*",
         "nz.ac.ledgercore.clearing.simulator.SimulatorOperationPostgresIntegrationTests#operationIdentityCannotBeReused*",
         "*enterprise-operations.spec.ts#Operations resolves an UNKNOWN*"
-      ]
+      ],
+      "dimension": "async"
     },
     {
       "id": "E12-E03",
@@ -223,7 +239,8 @@
       "tests": [
         "nz.ac.ledgercore.clearing.ClearingCallbackLifecyclePostgresIntegrationTests#*",
         "nz.ac.ledgercore.clearing.ClearingCallbackSecurityIntegrationTests#*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-E04",
@@ -246,7 +263,8 @@
           "path": "clearing-effect-ack-crash.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-E05",
@@ -262,7 +280,8 @@
           "path": "clearing-effect-session-kill.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-E06",
@@ -279,7 +298,8 @@
           "path": "clearing-reserve-shortage.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-E07",
@@ -296,7 +316,8 @@
           "path": "clearing-lost-callback.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-E08",
@@ -305,7 +326,8 @@
       "title": "Competing workers, a duplicate callback and a direct retry produce exactly one settlement",
       "tests": [
         "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#competingWorkers*"
-      ]
+      ],
+      "dimension": "async"
     },
     {
       "id": "E12-E09",
@@ -318,7 +340,8 @@
           "path": "clearing-simulator-restart.recovery",
           "expect": "PASS"
         }
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-F01",
@@ -327,7 +350,8 @@
       "title": "Projection drift is detected exactly and repaired from immutable postings only",
       "tests": [
         "nz.ac.ledgercore.reconciliation.ReconciliationPostgresIntegrationTests#*"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-F02",
@@ -337,7 +361,8 @@
       "tests": [
         "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallback*",
         "nz.ac.ledgercore.clearing.ClearingEffectFastPathFailurePostgresIntegrationTests#*"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-F03",
@@ -348,7 +373,8 @@
         "nz.ac.ledgercore.clearing.ReconciliationNegativeFixturesPostgresIntegrationTests#*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#approvedItemsCannotBeMoved*",
         "nz.ac.ledgercore.payroll.PayrollIntegrityPostgresIntegrationTests#completedPayrollHistoryCannotBeMovedOrErased"
-      ]
+      ],
+      "dimension": "financial"
     },
     {
       "id": "E12-F04",
@@ -358,7 +384,8 @@
       "tests": [
         "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#settledCallback*",
         "nz.ac.ledgercore.clearing.ClearingEffectDurabilityPostgresIntegrationTests#bookedInstructionAcknowledged*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-F05",
@@ -368,7 +395,8 @@
       "tests": [
         "nz.ac.ledgercore.operations.OperationsConsolePostgresIntegrationTests#*",
         "*enterprise-operations.spec.ts#Operations endpoints conceal*"
-      ]
+      ],
+      "dimension": "security"
     },
     {
       "id": "E12-G01",
@@ -377,13 +405,14 @@
       "title": "Migrations: fresh install, populated V4/V5/V6/V8/V11 upgrades without rewriting history, V7 and V15 refuse inconsistent history; checksums pinned",
       "tests": [
         "nz.ac.ledgercore.MigrationCompatibilityPostgresIntegrationTests#*"
-      ]
+      ],
+      "dimension": "recovery"
     },
     {
       "id": "E12-G02",
       "category": "G Backup and recovery",
       "hardGate": false,
-      "title": "Physical backup, verified restore and independent grade of a populated bank database; the simulator's later state is reconciled without duplicate booking",
+      "title": "Logical backup (pg_dump -Fc) of the bank while a payment is only ACCEPTED, restore into a new database after the live bank settled it, and recovery of the simulator's later callbacks under the original operation identity with no second booking; measured RPO/RTO of this run",
       "lab": [
         {
           "file": "evidence/round4/e12/lab/E12-RESTORE.json",
@@ -391,7 +420,8 @@
           "expect": "PASS"
         }
       ],
-      "limitation": "Round 3 E10 holds the only full PITR (one local run, RPO 118.922 s, RTO 670.008 s). Round 4 reruns a representative restore only if listed here as PASS."
+      "limitation": "Logical backup and restore of the bank database on one workstation: not PITR, not offsite, not a storage failure. Round 3 E10 holds the only PITR run (one local run, RPO 118.922 s, RTO 670.008 s); it is cited, not re-executed.",
+      "dimension": "recovery"
     },
     {
       "id": "E12-H01",
@@ -400,16 +430,65 @@
       "grader": true,
       "title": "Real-API Chromium journeys: personal banking, corporate maker/checker settlement, payroll with lost response, UNKNOWN inquiry, exception, concealment, role denial and revocation",
       "tests": [
-        "*.spec.ts#*"
-      ]
+        "banking-flow.spec.ts#*",
+        "organization-flow.spec.ts#*",
+        "payroll-flow.spec.ts#*",
+        "enterprise-operations.spec.ts#*"
+      ],
+      "dimension": "fullstack"
     },
     {
       "id": "E12-H02",
       "category": "H React and operations",
       "hardGate": false,
-      "notRun": true,
-      "title": "Automated accessibility scan (axe/WCAG) and screen-reader review",
-      "limitation": "Not installed; E11 checked semantic roles, keyboard focus and 390 px overflow only."
+      "title": "Accessibility subset on the real application: on nine screens every interactive control and image has an accessible name in the computed accessibility tree, one main landmark, a level-1 heading, a document language and title, and no duplicate element ids",
+      "limitation": "Not an axe-core or WCAG conformance audit: colour contrast, complete focus order and real screen-reader behaviour are not assessed. E11 keyboard paths and the 390 px overflow check are cited from Round 3.",
+      "dimension": "fullstack",
+      "tests": [
+        "accessibility.spec.ts#*"
+      ]
+    },
+    {
+      "id": "E12-H03",
+      "category": "H React and operations",
+      "hardGate": false,
+      "title": "Alerting: a real Prometheus 3.13.3 scrape fires the owed-effect and reserve-shortfall alerts on a genuinely created shortage (shortfall 30.00 NZD measured) and both resolve after the audited replenishment and one governed retry",
+      "lab": [
+        {
+          "file": "evidence/round4/e5-e9/E9-ALERT-LAB.json",
+          "path": "verdict",
+          "expect": "PASS"
+        }
+      ],
+      "limitation": "Rule evaluation only; notification delivery (Alertmanager, paging) is out of scope.",
+      "dimension": "observability"
+    },
+    {
+      "id": "E12-H04",
+      "category": "H React and operations",
+      "hardGate": false,
+      "title": "W3C trace continuity: approval -> instruction dispatch -> simulator request -> callback delivery -> bank callback -> settlement, stitched only through recorded parent ids and links; client trace ids are never authority",
+      "tests": [
+        "nz.ac.ledgercore.TracePropagationPostgresIntegrationTests#*",
+        "nz.ac.ledgercore.api.TraceContextTests#*"
+      ],
+      "lab": [
+        {
+          "file": "evidence/round4/e5-e9/E9-TRACES.json",
+          "path": "chainComplete",
+          "expect": "True"
+        }
+      ],
+      "limitation": "Spans are retained as structured local log records; there is no trace backend or sampling policy.",
+      "dimension": "observability"
     }
-  ]
+  ],
+  "dimensions": {
+    "financial": "Financial correctness: balanced, exact, once-only money movement and its reconciliation",
+    "security": "Security and authorization: Policy B, maker/checker, tenant concealment, signed callbacks, CSRF",
+    "async": "Asynchronous reliability: durable events, competing workers, retries, stable operation identity",
+    "recovery": "Recovery: process crashes, terminated sessions, reserve shortage, lost callbacks, restarts, restore, migrations",
+    "observability": "Observability: alerts on real failure states, trace continuity",
+    "fullstack": "Full-stack behavior: real-API browser journeys and accessibility"
+  }
 }

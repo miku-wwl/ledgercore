@@ -20,7 +20,7 @@ function Get-PayrollSnapshot {
 SELECT json_build_object('database', current_database(), 'serverPort', inet_server_port(), 'capturedAt', clock_timestamp(),
   'batchStatus', (SELECT status FROM payroll_batches WHERE id = '$batch'),
   'results', (SELECT json_agg(json_build_object('sequence', i.sequence_no, 'amountMinor', i.amount_minor, 'status', r.status,
-       'failureCode', r.failure_code, 'attempts', r.attempt_count, 'transferId', r.transfer_id) ORDER BY i.sequence_no)
+       'failureCode', r.error_code, 'attempts', r.attempt_count, 'transferId', r.transfer_id) ORDER BY i.sequence_no)
      FROM payroll_items i JOIN payroll_item_results r ON r.item_id = i.id WHERE i.batch_id = '$batch'),
   'transfersForBatch', (SELECT count(*) FROM transfers t JOIN payroll_item_results r ON r.transfer_id = t.id WHERE r.batch_id = '$batch'),
   'payrollReceipts', (SELECT count(*) FROM idempotency_records WHERE idempotency_key LIKE 'payroll-$batch-%' AND status = 'SUCCEEDED'),

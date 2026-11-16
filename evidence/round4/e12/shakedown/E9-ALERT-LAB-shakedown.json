@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "runId": "77970756-b87d-45c3-b4aa-ce2b95841a5c",
+  "label": "shakedown alert lab (dirty tree)",
+  "sourceSha": "292976b2a2adc40c3251366a493ac5b2fa2a089d",
+  "trackedTreeDirty": true,
+  "bankJarSha256": "b76031d679f87fe5471ea52c4b16f66d49b0cc6556e68776b767d038e6a77c87",
+  "prometheus": "3.13.3",
+  "baselineAlerts": null,
+  "baselineShortfall": null,
+  "controlPayment": {
+    "paymentId": "5d7e59e6-6160-4344-864b-88416449640f",
+    "status": "COMPLETED/SETTLED"
+  },
+  "alertsAfterControl": null,
+  "failureCreatedAt": "2026-11-15T07:05:42.0839185Z",
+  "firing": [
+    {
+      "alert": "LedgerCoreClearingEffectPending",
+      "state": "firing",
+      "activeAt": "2026-11-15T07:06:50.801199135Z",
+      "value": "1e+00"
+    },
+    {
+      "alert": "LedgerCoreClearingReserveShortfall",
+      "state": "firing",
+      "activeAt": "2026-11-15T07:05:48.801199135Z",
+      "value": "3e+03"
+    }
+  ],
+  "firingAt": "2026-11-15T07:06:52.5684838Z",
+  "shortfallWhileFiring": "3000",
+  "effectsPendingWhileFiring": "1",
+  "retryPath": "governed dead-letter retry",
+  "resolved": null,
+  "resolvedAt": "2026-11-15T07:07:18.3276288Z",
+  "shortfallAfterRecovery": "0",
+  "finalBank": {
+    "database": "ledgercore_e6_77970756b87d45c3",
+    "serverPort": 55437,
+    "capturedAt": "2026-11-15T20:07:18.782376+13:00",
+    "paymentStatus": "COMPLETED",
+    "externalStatus": "SETTLED",
+    "bookingJournalCount": 1,
+    "settlementJournalCount": 1,
+    "refundJournalCount": 0,
+    "settlementLinked": true,
+    "instructionStatus": "SETTLED",
+    "inboxCallbacks": 1,
+    "inboxTerminalCallbacks": 1,
+    "callbackEvents": [
+      {
+        "status": "DELIVERED",
+        "attempts": 1,
+        "lastError": null,
+        "receipts": [
+          "clearing-financial-effect-v1"
+        ]
+      }
+    ],
+    "payableLedgerMinor": 0,
+    "payableProjectionMinor": 0,
+    "reserveLedgerMinor": 7000,
+    "reserveProjectionMinor": 7000,
+    "sourceDepositLedgerMinor": 91877,
+    "unbalancedJournalCount": 0,
+    "projectionMismatchCount": 0,
+    "negativeProjectionCount": 0,
+    "exceptions": [
+      {
+        "category": "CLEARING_RESERVE_INSUFFICIENT",
+        "severity": "CRITICAL",
+        "status": "OPEN"
+      }
+    ]
+  },
+  "checks": {
+    "quiet_before_failure": true,
+    "control_settled_without_alert": true,
+    "effect_pending_alert_fired": true,
+    "reserve_shortfall_alert_fired": true,
+    "shortfall_measured": true,
+    "alerts_resolved_after_recovery": true,
+    "settled_exactly_once": true
+  },
+  "verdict": "PASS",
+  "completedAt": "2026-11-15T07:07:34.3737298Z",
+  "runDirectory": "work/e6-lab/runs/77970756-b87d-45c3-b4aa-ce2b95841a5c"
+}

@@ -82,9 +82,17 @@ try {
     $recoveryStart = [DateTime]::UtcNow
     $result.reconciliation = Invoke-ReconciliationRun
     $deadline = [DateTime]::UtcNow.AddSeconds(90)
-    do { $bank = Get-BankSnapshot; Start-Sleep -Seconds 1 } while ([int]$bank.settlementJournalCount -lt 1 -and [DateTime]::UtcNow -lt $deadline)
+    do { $bank = Get-BankSnapshot; if ([int]$bank.settlementJournalCount -lt 1) { Start-Sleep -Seconds 1 } } while ([int]$bank.settlementJournalCount -lt 1 -and [DateTime]::UtcNow -lt $deadline)
+    $settledAt = if ([int]$bank.settlementJournalCount -ge 1) { [DateTime]::UtcNow } else { $null }
     Start-Sleep -Seconds 3
-    $result.recoverySeconds = if ([int]$bank.settlementJournalCount -ge 1) { [math]::Round(([DateTime]::UtcNow - $recoveryStart).TotalSeconds, 3) } else { $null }
+    $result.recoverySeconds = if ($settledAt) { [math]::Round(($settledAt - $recoveryStart).TotalSeconds, 3) } else { $null }
+    # Measured for this run only. RPO: committed bank history lost by restoring the dump (dump start to failure); it was
+    # recovered from the simulator, not from the backup. RTO: failure to a healthy restored bank, and to the settlement
+    # posted again under the original operation identity.
+    $result.measured = [ordered]@{ backupStartedAt = $backupStart.ToString('o'); failureAt = $failureAt.ToString('o')
+        rpoSeconds = [math]::Round(($failureAt - $backupStart).TotalSeconds, 3)
+        rtoServiceSeconds = $result.bankReadyAfterFailureSeconds
+        rtoReconciledSeconds = if ($settledAt) { [math]::Round(($settledAt - $failureAt).TotalSeconds, 3) } else { $null } }
     $bank = Get-BankSnapshot
     $sim = Get-SimSnapshot
     $grader = (Invoke-Sql $restored $script:state.bank.role $script:state.bank.password `

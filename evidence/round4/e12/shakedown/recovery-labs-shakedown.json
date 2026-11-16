@@ -1,0 +1,59 @@
+{
+  "payroll": "HARNESS_ERROR: Independent payroll SQL grade failed with exit code 1.",
+  "simRestart": {
+    "run": "9bc56164-2943-49d1-a8cd-da71bc83b141",
+    "injection": "PASS",
+    "injChecks": {
+      "simulator_down": true,
+      "inquiry_failed_not_assumed": true,
+      "inquiry_failure_reported": true,
+      "still_accepted": true,
+      "obligation_kept": true,
+      "no_settlement_or_refund": true,
+      "no_unbalanced_journals": true
+    },
+    "recovery": "PASS",
+    "recChecks": {
+      "exactly_one_booking": true,
+      "exactly_one_settlement": true,
+      "no_refund": true,
+      "payment_completed": true,
+      "terminal_callback_recorded_once": true,
+      "payable_cleared": true,
+      "no_unbalanced_journals": true,
+      "projections_match_ledger": true,
+      "no_negative_projection": true,
+      "simulator_settled": true,
+      "same_operation_after_restart": true,
+      "customer_debited_once": true,
+      "reserve_debited_once": true,
+      "all_callbacks_received_in_order": true
+    },
+    "failure": null
+  },
+  "restore": {
+    "run": "2c686582-56c3-467d-9309-34f46c24aef9",
+    "verdict": "PASS",
+    "checks": {
+      "restored_to_the_backup_point": true,
+      "gap_detected": true,
+      "one_booking": true,
+      "one_settlement": true,
+      "no_refund": true,
+      "completed": true,
+      "payable_cleared": true,
+      "customer_debited_once": true,
+      "reserve_debited_once": true,
+      "all_callbacks_received_in_order": true,
+      "grader_hard_gates": true
+    },
+    "measured": {
+      "backupStartedAt": "2026-11-15T07:12:33.4461405Z",
+      "failureAt": "2026-11-15T07:12:38.8439635Z",
+      "rpoSeconds": 5.398,
+      "rtoServiceSeconds": 24.521,
+      "rtoReconciledSeconds": 27.704
+    },
+    "failure": null
+  }
+}

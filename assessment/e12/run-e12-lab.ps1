@@ -46,6 +46,11 @@ foreach ($step in $plan) {
         if ($restore.failure) { $record.failure = $restore.failure }
     }
     catch { $record.recovery = 'HARNESS_ERROR'; $record.failure = $_.Exception.Message }
+    # Cleanup result: every process the case started must be gone and the lab ports free before the next case.
+    $leftovers = @(foreach ($port in 55437, 18095, 18094) {
+        $listener = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($listener) { "$port(pid $($listener.OwningProcess))" } })
+    $record.cleanup = if ($leftovers.Count -eq 0) { 'PROCESSES_STOPPED_PORTS_FREE' } else { "LEFTOVER $($leftovers -join ', ')" }
     $results[$step.name] = $record
     $results.updatedAt = [DateTime]::UtcNow.ToString('o')
     $parent = Split-Path -Parent $out

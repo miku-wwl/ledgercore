@@ -36,6 +36,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Round 4 R4-01/R4-02/R4-03 regression tests. The after-commit fast path is switched off, so every accepted callback
@@ -47,6 +49,8 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "ledgercore.clearing.effect.fast-path-enabled=false")
 class ClearingEffectDurabilityPostgresIntegrationTests {
+
+    private static final JsonMapper JSON = JsonMapper.builder().build();
 
     @LocalServerPort
     int port;
@@ -225,6 +229,14 @@ class ClearingEffectDurabilityPostgresIntegrationTests {
                     WHERE operation_id = ? AND category = 'CLEARING_RESERVE_INSUFFICIENT' AND severity = 'CRITICAL'
                       AND status = 'OPEN'
                     """, Integer.class, payment)).isEqualTo(1);
+            // Section 18: the Operations console shows the owed effect, the payable still held and the reserve block.
+            JsonNode blocked = metrics(fixture);
+            assertThat(blocked.path("pendingFinancialEffects").asLong()).isEqualTo(1);
+            assertThat(blocked.path("oldestPendingEffectAt").isMissingNode() || blocked.path("oldestPendingEffectAt").isNull()).isFalse();
+            assertThat(blocked.path("reserveBlockedSettlements").asLong()).isEqualTo(1);
+            assertThat(blocked.path("unresolvedPayableMinor").asLong()).isEqualTo(8_000);
+            assertThat(blocked.path("failedEvents").asLong()).isEqualTo(1);
+            assertThat(blocked.path("retryingEvents").asLong()).isZero();
 
             ReconciliationRunResult run = reconciliation.reconcileOrganization(fixture.operations.customerId,
                     fixture.organizationId, 50);
@@ -284,6 +296,11 @@ class ClearingEffectDurabilityPostgresIntegrationTests {
                     .statusCode()).isEqualTo(200);
             assertThat(resolve(fixture, pending.exceptionId(), "Settlement posted once after governed retry.")
                     .statusCode()).isEqualTo(200);
+            JsonNode cleared = metrics(fixture);
+            assertThat(cleared.path("pendingFinancialEffects").asLong()).isZero();
+            assertThat(cleared.path("reserveBlockedSettlements").asLong()).isZero();
+            assertThat(cleared.path("unresolvedPayableMinor").asLong()).isZero();
+            assertThat(cleared.path("failedEvents").asLong()).isZero();
         }
         finally {
             long treasury = fixture.ledgerMinor(TREASURY);
@@ -353,6 +370,13 @@ class ClearingEffectDurabilityPostgresIntegrationTests {
                 SELECT COALESCE(sum(CASE WHEN p.side = la.normal_side THEN p.amount_minor ELSE -p.amount_minor END), 0)
                 FROM ledger_accounts la LEFT JOIN postings p ON p.ledger_account_id = la.id WHERE la.id = ?
                 """, Long.class, ledgerAccountId);
+    }
+
+    private JsonNode metrics(ClearingTestFixture fixture) throws Exception {
+        HttpResponse<String> response = fixture.operations.call("GET", "/api/organizations/" + fixture.organizationId
+                + "/operations/metrics", null);
+        assertThat(response.statusCode()).as(response.body()).isEqualTo(200);
+        return JSON.readTree(response.body());
     }
 
     private HttpResponse<String> resolve(ClearingTestFixture fixture, UUID exceptionId, String note) throws Exception {

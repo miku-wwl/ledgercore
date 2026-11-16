@@ -1056,6 +1056,12 @@ export interface components {
             pendingFinancialEffects?: number;
             /** Format: date-time */
             oldestPendingEffectAt?: string;
+            /** Format: int64 */
+            unresolvedPayableMinor?: number;
+            /** Format: int64 */
+            reserveBlockedSettlements?: number;
+            /** Format: int64 */
+            retryingEvents?: number;
         };
         AuditEventView: {
             /** Format: uuid */

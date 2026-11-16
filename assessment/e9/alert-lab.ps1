@@ -86,6 +86,22 @@ scrape_configs:
     $result.baselineAlerts = Wait-AlertState @() 30
     $result.baselineShortfall = Get-Sample 'ledgercore_clearing_reserve_shortfall_minor'
 
+    # Control: an ordinary 1.23 payment settles end to end while the reserve is ample; no alert may fire. Its span chain
+    # (approval -> dispatch -> simulator -> callback -> settlement) is the E12-H04 trace evidence.
+    $control = Invoke-Api $users.maker.session 'POST' "/api/organizations/$($script:state.organizationId)/payments" @{
+        sourceAccountId = $script:state.accountId; beneficiaryName = 'E9 Control Supplier'
+        beneficiaryAccountReference = "NZ-E9C-$($RunId.Substring(0, 8))"; beneficiaryRoutingCode = 'SIM-SETTLE'; amount = '1.23' }
+    Invoke-Api $users.maker.session 'POST' "/api/payments/$($control.id)/submit" $null | Out-Null
+    Invoke-Api $users.approver.session 'POST' "/api/payments/$($control.id)/approve" $null | Out-Null
+    $deadline = [DateTime]::UtcNow.AddSeconds(60)
+    do {
+        $controlStatus = Invoke-Sql $script:state.bank.database $script:state.bank.role $script:state.bank.password `
+            "SELECT status || '/' || COALESCE(external_status, '-') FROM corporate_payment_intents WHERE id = '$($control.id)'" 'Control payment status'
+        if ($controlStatus -ne 'COMPLETED/SETTLED') { Start-Sleep -Seconds 1 }
+    } while ($controlStatus -ne 'COMPLETED/SETTLED' -and [DateTime]::UtcNow -lt $deadline)
+    $result.controlPayment = [ordered]@{ paymentId = $control.id; status = $controlStatus }
+    $result.alertsAfterControl = Wait-AlertState @() 20
+
     # Genuine failure: sweep the reserve down to 50.00 through the guarded lab command, then settle an 80.00 payment.
     $bank = Get-BankSnapshot
     $sweep = [long]$bank.reserveLedgerMinor - 5000
@@ -117,6 +133,8 @@ scrape_configs:
     $firingNames = @($result.firing | Where-Object { $_.state -eq 'firing' } | ForEach-Object { $_.alert })
     $checks = [ordered]@{
         quiet_before_failure = (@($result.baselineAlerts | Where-Object { $_.state -eq 'firing' }).Count -eq 0)
+        control_settled_without_alert = ($result.controlPayment.status -eq 'COMPLETED/SETTLED' -and
+            @($result.alertsAfterControl | Where-Object { $_.state -eq 'firing' }).Count -eq 0)
         effect_pending_alert_fired = ($firingNames -contains 'LedgerCoreClearingEffectPending')
         reserve_shortfall_alert_fired = ($firingNames -contains 'LedgerCoreClearingReserveShortfall')
         shortfall_measured = ([long]$result.shortfallWhileFiring -eq 3000)
@@ -132,5 +150,6 @@ finally {
     Stop-All
 }
 $result.completedAt = [DateTime]::UtcNow.ToString('o')
+$result.runDirectory = "work/e6-lab/runs/$RunId"
 Write-JsonFile $evidence $result
 $result | ConvertTo-Json -Depth 10

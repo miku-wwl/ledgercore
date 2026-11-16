@@ -165,12 +165,15 @@ export function OperationsPage({ customerId }: { customerId: string }) {
       {organization && <>
         <Card className="border-emerald-200 bg-emerald-50/50"><CardContent className="flex flex-wrap items-center gap-2 p-4 text-sm"><Wifi size={16} className="text-emerald-800"/><strong>{organization.displayName}</strong><span className="text-muted-foreground">· Metrics are exact organization-scoped database counts.</span></CardContent></Card>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Operational metrics">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" aria-label="Operational metrics">
           <MetricCard label="Pending clearing" value={metrics?.pendingClearing} note="Payment obligations still open" icon={<Clock3 size={17}/>} loading={metricsQuery.isLoading}/>
           <MetricCard label="Unknown outcomes" value={metrics?.unknownClearing} note="Require simulator inquiry" icon={<AlertTriangle size={17}/>} loading={metricsQuery.isLoading}/>
           <MetricCard label="Queued events" value={metrics?.pendingEvents} note={metrics?.oldestPendingEventAt ? `Oldest since ${new Date(metrics.oldestPendingEventAt).toLocaleString()}` : 'No pending or processing events'} icon={<Activity size={17}/>} loading={metricsQuery.isLoading}/>
+          <MetricCard label="Retrying deliveries" value={metrics?.retryingEvents} note="Queued again after a failed attempt" icon={<RefreshCw size={17}/>} loading={metricsQuery.isLoading}/>
           <MetricCard label="Failed deliveries" value={metrics?.failedEvents} note="Dead-letter events" icon={<RefreshCw size={17}/>} loading={metricsQuery.isLoading}/>
           <MetricCard label="Owed settlements/refunds" value={metrics?.pendingFinancialEffects} note={metrics?.oldestPendingEffectAt ? `Final outcome since ${new Date(metrics.oldestPendingEffectAt).toLocaleTimeString()}` : 'Final external outcome, local journal pending'} icon={<AlertTriangle size={17}/>} loading={metricsQuery.isLoading}/>
+          <MetricCard label="Reserve-blocked settlements" value={metrics?.reserveBlockedSettlements} note="Settlement refused: reserve insufficient" icon={<AlertTriangle size={17}/>} loading={metricsQuery.isLoading}/>
+          <MetricCard label="Unresolved clearing payable" display={metrics ? formatMinor(metrics.unresolvedPayableMinor) : undefined} note="Booked, not yet settled or refunded" icon={<Clock3 size={17}/>} loading={metricsQuery.isLoading}/>
           <MetricCard label="Open exceptions" value={metrics?.openExceptions} note="Open or assigned cases" icon={<ClipboardList size={17}/>} loading={metricsQuery.isLoading}/>
         </section>
 
@@ -238,8 +241,13 @@ export function OperationsPage({ customerId }: { customerId: string }) {
   )
 }
 
-function MetricCard({ label, value, note, icon, loading }: { label: string; value?: number; note: string; icon: ReactNode; loading: boolean }) {
-  return <Card><CardContent className="min-h-28 p-4"><div className="flex items-center justify-between gap-2 text-sm text-muted-foreground"><span>{label}</span>{icon}</div><div className="mt-3 text-2xl font-semibold text-emerald-950" aria-live="polite">{loading ? '…' : value ?? '—'}</div><p className="mt-1 text-xs text-muted-foreground">{note}</p></CardContent></Card>
+function formatMinor(minor?: number): string | undefined {
+  if (minor === undefined || minor === null) return undefined
+  return formatNzd(`${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`)
+}
+
+function MetricCard({ label, value, display, note, icon, loading }: { label: string; value?: number; display?: string; note: string; icon: ReactNode; loading: boolean }) {
+  return <Card><CardContent className="min-h-28 p-4"><div className="flex items-center justify-between gap-2 text-sm text-muted-foreground"><span>{label}</span>{icon}</div><div className="mt-3 text-2xl font-semibold text-emerald-950" aria-live="polite">{loading ? '…' : display ?? value ?? '—'}</div><p className="mt-1 text-xs text-muted-foreground">{note}</p></CardContent></Card>
 }
 
 function CorrelationButton({ value, onSelect }: { value?: string; onSelect: (value: string) => void }) {

@@ -9,11 +9,13 @@ exit code or a UI toast is never accepted as proof of financial correctness.
 
 | File | Purpose |
 |---|---|
-| `cases.json` | 33 cases in categories A–H (ledger, Policy B, payroll, durable events, clearing, reconciliation, backup/migration, full stack), each with its sources and whether it is a hard gate |
+| `cases.json` | 36 cases in categories A–H (ledger, Policy B, payroll, durable events, clearing, reconciliation, backup/migration, full stack and operations), each with its sources, its acceptance-matrix dimension and whether it is a hard gate |
 | `graders/financial-hard-gates.sql` | read-only grader: balanced journals, projection agreement, balance-sheet identity, no duplicate booking/settlement/refund, terminal states bound to journals, independent approval, transfer/receipt and payroll linkage, no delivered work item masking an owed effect |
 | `run-e12.ps1` | `verify`, `fullstack` and `collect` modes (below) |
 | `run-e12-lab.ps1` | runs every E6 fault case (transfer, payroll and clearing crashes, terminated session, genuine reserve shortage, lost callbacks) once at the current commit |
-| `run-e12-restore.ps1` | representative backup/restore with a simulator that moved on while the bank was restored |
+| `run-e12-restore.ps1` | representative logical backup/restore with a simulator that moved on while the bank was restored; records measured RPO/RTO |
+| `../e9/alert-lab.ps1` | real Prometheus 3.13.3 scrape and alert evaluation on a genuinely created reserve shortage (E12-H03) |
+| `../e9/extract-traces.py` | rebuilds the settlement trace chain from a lab run's retained span records (E12-H04) |
 
 ## Isolation
 
@@ -40,6 +42,9 @@ $fullstack = (& .\assessment\e12\run-e12.ps1 -Mode fullstack -Label 'E12 full st
 & .\assessment\e12\run-e12-lab.ps1 -Label 'E12 lab'
 # 4. Representative restore (bank restored, simulator not).
 & .\assessment\e12\run-e12-restore.ps1
+# 4b. Alerts on a real failure state (Prometheus on 127.0.0.1:19090) and the trace chain of one clearing lab run.
+& .\assessment\e9\alert-lab.ps1
+python assessment/e9/extract-traces.py work/e6-lab/runs/<clearing-run-id> evidence/round4/e5-e9/E9-TRACES.json <payment-id>
 # 5. Combine into evidence/round4/e12/E12-RESULTS.json.
 & .\assessment\e12\run-e12.ps1 -Mode collect -Include $verify, $fullstack
 ```

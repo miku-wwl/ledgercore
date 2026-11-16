@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "runId": "027ea7c2-cec3-46c3-bfbf-f1819847e965",
+  "mode": "fullstack",
+  "label": "shakedown fullstack 2 (dirty tree)",
+  "sourceSha": "292976b2a2adc40c3251366a493ac5b2fa2a089d",
+  "trackedTreeDirty": true,
+  "startedAt": "2026-11-16T01:04:37.3558687Z",
+  "playwrightExitCode": 1,
+  "playwrightTests": [
+    {
+      "test": "accessibility.spec.ts#main screens expose named controls, landmarks, headings, language and unique ids",
+      "outcome": "FAIL"
+    },
+    {
+      "test": "banking-flow.spec.ts#registers, transfers, recovers a lost response, pages history, and enforces ownership",
+      "outcome": "PASS"
+    },
+    {
+      "test": "enterprise-operations.spec.ts#maker/checker payment reaches a real settlement and self-approval is rejected",
+      "outcome": "PASS"
+    },
+    {
+      "test": "enterprise-operations.spec.ts#Operations resolves an UNKNOWN clearing result and records a verified reconciliation exception",
+      "outcome": "PASS"
+    },
+    {
+      "test": "enterprise-operations.spec.ts#Operations endpoints conceal a different organization",
+      "outcome": "PASS"
+    },
+    {
+      "test": "enterprise-operations.spec.ts#non-Operations member is denied a reconciliation action by the backend",
+      "outcome": "PASS"
+    },
+    {
+      "test": "enterprise-operations.spec.ts#revoked Operations role cannot inquire during a pending business operation",
+      "outcome": "PASS"
+    },
+    {
+      "test": "organization-flow.spec.ts#organization admin grants a payroll maker access without exposing corporate funds to generic transfers",
+      "outcome": "PASS"
+    },
+    {
+      "test": "payroll-flow.spec.ts#maker imports and submits payroll; independent approver executes once after a lost response",
+      "outcome": "PASS"
+    }
+  ],
+  "grader": {
+    "database": "ledgercore_e12_027ea7c2_fsbank",
+    "result": {
+      "database": "ledgercore_e12_027ea7c2_fsbank",
+      "capturedAt": "2026-11-16T14:07:46.538786+13:00",
+      "journals": 28,
+      "postings": 56,
+      "unbalancedJournals": 0,
+      "nonPositiveOrForeignCurrencyPostings": 0,
+      "projectionMismatches": 0,
+      "negativeNormalBalances": 0,
+      "balanceSheetDifferenceMinor": 0,
+      "duplicatePaymentJournals": 0,
+      "completedWithoutSettlement": 0,
+      "settlementWithoutSettledOutcome": 0,
+      "refundAfterSettlementOrWithoutRejection": 0,
+      "bookedWithoutIndependentApproval": 0,
+      "bookedPaymentJournalMismatches": 0,
+      "transfersWithoutExactJournal": 0,
+      "transfersWithoutOneSucceededReceipt": 0,
+      "payrollSucceededWithoutTransfer": 0,
+      "payrollItemsPaidMoreThanOnce": 0,
+      "completedPayrollWithUnfinishedItems": 0,
+      "callbackInboxDuplicateSequences": 0,
+      "deliveredWorkMaskingOwedEffect": 0,
+      "informationalOwedEffects": 0,
+      "informationalReserveMinor": 1492350,
+      "informationalPayableMinor": 2550
+    },
+    "failedHardGates": [],
+    "pass": true
+  },
+  "completedAt": "2026-11-16T01:07:46.8137090Z"
+}
