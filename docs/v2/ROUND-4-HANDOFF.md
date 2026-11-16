@@ -16,7 +16,8 @@ unchanged. `miku-wwl/temp-temp` was not modified or used as a runnable source.
 | `6119274` | Operations console §18 metrics, accessibility subset, E12 harness fixes | [43784966787](https://github.com/miku-wwl/ledgercore/actions/runs/43784966787) success |
 | **`2c25ef4`** | **E12 lab-runner fix; attempt-1 evidence kept — accepted and frozen** | [**43786857336**](https://github.com/miku-wwl/ledgercore/actions/runs/43786857336) success |
 | `719a758` | E12 acceptance, source freeze, Round 4 audit, status (docs/evidence only) | [43822282146](https://github.com/miku-wwl/ledgercore/actions/runs/43822282146) success |
-| (publication) | V2 textbook sources, PDF and manifest; this handoff; status | recorded by the follow-up commit |
+| `3319069` | V2 textbook sources, PDF (180 pages) and manifest; this handoff; status | [43876414274](https://github.com/miku-wwl/ledgercore/actions/runs/43876414274) success |
+| (follow-up) | Records the publication CI and the stopped clusters (documentation only) | its own exact-SHA run |
 
 ## 2. Findings and closure
 
@@ -66,8 +67,9 @@ every check: `manual/v2/PUBLICATION-MANIFEST.md`.
 
 ## 6. Local resources
 
-Owned services to stop at the end of Round 4, after the publication commit (confirmation in the follow-up commit): the
-Round 4 cluster `work/round4-lab/pg-r4` (port 55450) and the E12 cluster `work/e12-lab/pg` (port 55460); every E6 lab
-cluster is stopped by its runner. Run directories under `work/`
+Owned services stopped at the end of Round 4 (2026-11-17, after the publication commit's CI passed): the Round 4
+cluster `work/round4-lab/pg-r4` (port 55450) and the E12 cluster `work/e12-lab/pg` (port 55460), each with
+`pg_ctl stop -m fast` after the PID and port in its `postmaster.pid` matched the listening process. Both ports were
+free afterwards, as were 55437, 18094, 18095, 5173 and 19090. Every E6 lab cluster is stopped by its runner. Run directories under `work/`
 are retained (ignored by Git). The persistent service on 55432 and the clusters on 55434, 55436 and 55438 were never
 touched.
